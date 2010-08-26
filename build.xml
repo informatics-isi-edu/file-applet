@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DEI Applet" default="build" basedir=".">
+	<property name="bin.dir" value="bin"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="source.dir" value="src"/>
+	<property name="jar.name" value="isi-misd-tagfiler-upload"/>
+	<property name="signedjar.name" value="signed-${jar.name}-applet"/>
+	<property name="singlejar.name" value="consolidated-${jar.name}"/>
+	<property name="http.dir" value="/var/www/html/tagfiler_client"/>
+	<property name="html.file" value="tagfiler_upload.html"/>
+	<property name="js.file" value="tagfiler_functions.js"/>
+	<property name="keystore.alias" value="tomcat"/>
+	<property name="keystore.location" value="/usr/share/tomcat5/.keystore"/>
+	<property name="keystore.password" value="changeme"/>
+	<property name="doc.dir" value="javadoc"/>
+
+	<target name="prepare">
+	  <mkdir dir="${bin.dir}"/>
+	</target>
+	<target name="build" depends="prepare">
+		<javac srcdir="${source.dir}" destdir="${bin.dir}" debug="true"
+			target="1.5">
+			<classpath>
+			  <fileset dir="${lib.dir}">
+			    <include name="**/*.jar"/>
+			    <exclude name="**/${jar.name}.jar"/>
+			  </fileset>
+			</classpath>
+			<include name="**/*.java"/>
+		</javac>
+	</target>
+	<target name="jar" depends="build">
+		<jar destfile="${lib.dir}/${jar.name}.jar"
+			basedir="${bin.dir}"/>
+	</target>
+	<target name="buildsinglejar" depends="jar">
+		<delete file="${lib.dir}/${singlejar.name}.jar"/>
+		<zip destfile="${lib.dir}/${singlejar.name}.jar" update="true" duplicate="preserve">
+			<zipgroupfileset dir="${lib.dir}">
+				<exclude name="${singlejar.name}.jar"/>
+				<exclude name="${signedjar.name}.jar"/>
+			</zipgroupfileset>
+		</zip>
+	</target>
+	<target name="clean">
+		<echo>Cleaning up class files...</echo>
+		<delete dir="${bin.dir}"/>
+		<delete file="${lib.dir}/${jar.name}.jar"/>
+		<delete file="${lib.dir}/${signedjar.name}.jar"/>
+		<delete file="${lib.dir}/${singlejar.name}.jar"/>
+		<delete dir="${doc.dir}"/>
+	</target>
+	<target name="signjar" depends="buildsinglejar">
+		<delete file="${lib.dir}/${signedjar.name}.jar"/>
+		<signjar jar="${lib.dir}/${singlejar.name}.jar"
+			alias="${keystore.alias}"
+			keystore="${keystore.location}"
+			storepass="${keystore.password}"
+			signedjar="${lib.dir}/${signedjar.name}.jar"
+			/>
+	</target>
+	<target name="deploy" depends="signjar">
+		<echo>Deploying to webserver...</echo>
+		<mkdir dir="${http.dir}"/>
+		<copy file="${lib.dir}/${signedjar.name}.jar" todir="${http.dir}"/>
+		<copy file="${html.file}" todir="${http.dir}"/>
+		<copy file="${js.file}" todir="${http.dir}" />
+	</target>
+	<target name="javadoc" depends="build">
+		<mkdir dir="${doc.dir}"/>
+		<delete file="${doc.dir}/**/*"/>
+		<javadoc destdir="${doc.dir}">
+			<packageset dir="${source.dir}">
+				<include name="**"/>
+			</packageset>
+		</javadoc>
+	</target>
+</project>
