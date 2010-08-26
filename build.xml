@@ -11,7 +11,6 @@
 	<property name="js.file" value="tagfiler_functions.js"/>
 	<property name="keystore.alias" value="tomcat"/>
 	<property name="keystore.location" value="/usr/share/tomcat5/.keystore"/>
-	<property name="keystore.password" value="changeme"/>
 	<property name="doc.dir" value="javadoc"/>
 
 	<target name="prepare">
@@ -55,7 +54,6 @@
 		<signjar jar="${lib.dir}/${singlejar.name}.jar"
 			alias="${keystore.alias}"
 			keystore="${keystore.location}"
-			storepass="${keystore.password}"
 			signedjar="${lib.dir}/${signedjar.name}.jar"
 			/>
 	</target>
