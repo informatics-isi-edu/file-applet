@@ -79,6 +79,7 @@ public class FileUploadAddListener extends FileUploadActionListener {
             addFilesToList(new File[] { selectedDirectory });
             fileUploadUI.enableUpload();
             fileUploadUI.enableRemove();
+            fileUploadUI.getComponent().requestFocusInWindow();
         }
         // clear out the selected files, regardless
         fileChooser.setSelectedFiles(new File[] { new File("") });

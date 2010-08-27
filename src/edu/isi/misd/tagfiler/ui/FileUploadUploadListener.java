@@ -68,6 +68,7 @@ public class FileUploadUploadListener extends FileUploadActionListener {
             JOptionPane.showMessageDialog(fileUploadUI.getComponent(),
                     TagFilerProperties
                             .getProperty("tagfiler.dialog.FieldsNotFilled"));
+            fileUploadUI.getComponent().requestFocusInWindow();
         }
     }
 
@@ -87,6 +88,7 @@ public class FileUploadUploadListener extends FileUploadActionListener {
             filesToUpload.clear();
             fileUploadUI.clearFields();
             fileUploadUI.enableAdd();
+            fileUploadUI.getComponent().requestFocusInWindow();
         }
     }
 

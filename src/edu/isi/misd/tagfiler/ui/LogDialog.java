@@ -113,5 +113,6 @@ public class LogDialog extends JDialog implements ActionListener {
         assert (e != null);
         // close the dialog
         dialog.setVisible(false);
+        dialog.getParent().requestFocusInWindow();
     }
 }
