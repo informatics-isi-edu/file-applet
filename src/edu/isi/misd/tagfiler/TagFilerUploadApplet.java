@@ -21,6 +21,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.ws.rs.core.Cookie;
 
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
@@ -40,6 +41,7 @@ import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
+import edu.isi.misd.tagfiler.util.JerseyClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
 
@@ -77,6 +79,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     private static final String FONT_SIZE_PROPERTY = "tagfiler.font.size";
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
+
+    private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
 
     // REST client used to connect to the tagfiler server
     private Client client;
@@ -120,6 +124,9 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     // contains the logging information for an upload session
     private StringBuffer logBuffer = new StringBuffer();
 
+    // cookie maintainined in the session
+    private Cookie sessionCookie = null;
+
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -127,7 +134,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      */
     public void init() {
 
-        client = new Client();
+        client = JerseyClientUtils.createClient();
 
         // arguments
         tagFilerServerURL = this.getParameter(TAGFILER_SERVER_URL_PARAM);
@@ -136,9 +143,18 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                     + " must be" + " specified as a parameter to the applet.");
         }
 
-        WebResource root = client.resource(tagFilerServerURL);
-        root.get(ClientResponse.class); // will cause the JRE to authenticate
+        // TODO: test this to make sure it works!
+        sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
+                TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
+        WebResource root = JerseyClientUtils.createWebResource(client,
+                tagFilerServerURL, sessionCookie);
 
+        ClientResponse response = root.get(ClientResponse.class); // will cause
+                                                                  // the JRE to
+                                                                  // authenticate
+        // TODO: test this
+        sessionCookie = JerseyClientUtils.getCookieFromClientResponse(response,
+                TagFilerProperties.getProperty("tagfiler.cookie.name"));
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
@@ -325,8 +341,11 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         fileChooser.setMultiSelectionEnabled(false);
 
         // the file uploader itself
+        // TODO: create container for cookie so that the object reference
+        // remains intact when
+        // they are replaced
         fileUpload = new FileUploadImplementation(tagFilerServerURL,
-                new TagFilerAppletUploadListener(), customTagMap);
+                new TagFilerAppletUploadListener(), customTagMap, sessionCookie);
 
         // listeners
         uploadBtn.addActionListener(new FileUploadUploadListener(this,

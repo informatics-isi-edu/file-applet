@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.Client;
@@ -13,7 +14,9 @@ import com.sun.jersey.api.client.WebResource;
 
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
+import edu.isi.misd.tagfiler.util.JerseyClientUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
+import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
  * Default implementation of the {@link edu.isi.misd.tagfiler.upload.FileUpload}
@@ -45,6 +48,9 @@ public class FileUploadImplementation implements FileUpload {
     // custom tags that are used
     private final CustomTagMap customTagMap;
 
+    // the session cookie
+    private Cookie cookie = null;
+
     /**
      * Constructs a new file upload
      * 
@@ -54,17 +60,20 @@ public class FileUploadImplementation implements FileUpload {
      *            listener for file upload progress
      * @param tagMap
      *            map of the custom tags
+     * @param c
+     *            session cookie
      */
     public FileUploadImplementation(String url, FileUploadListener l,
-            CustomTagMap tagMap) {
+            CustomTagMap tagMap, Cookie c) {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (tagMap != null);
 
         tagFilerServerURL = url;
         fileUploadListener = l;
-        client = new Client();
+        client = JerseyClientUtils.createClient();
         customTagMap = tagMap;
+        cookie = c;
     }
 
     /**
@@ -176,10 +185,17 @@ public class FileUploadImplementation implements FileUpload {
         fileUploadListener.notifyLogMessage("Creating dataset URL entry");
         fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
                 + " Body:" + datasetURLBody);
-        WebResource webResource = client.resource(datasetURLQuery);
+
+        // TODO: get the cookie and pass it here to the call
+        WebResource webResource = JerseyClientUtils.createWebResource(client,
+                datasetURLQuery, cookie);
         ClientResponse response = webResource.type(
                 MediaType.APPLICATION_FORM_URLENCODED_TYPE).post(
                 ClientResponse.class, datasetURLBody);
+        // TODO: test this
+        cookie = JerseyClientUtils.getCookieFromClientResponse(response,
+                TagFilerProperties.getProperty("tagfiler.cookie.name"));
+
         if (200 == response.getStatus()) {
             try {
                 fileUploadListener
@@ -241,11 +257,19 @@ public class FileUploadImplementation implements FileUpload {
                             + file.getAbsolutePath() + "'");
                     fileUploadListener.notifyLogMessage("Query: "
                             + fileUploadQuery);
-                    webResource = client.resource(fileUploadQuery);
+
+                    // TODO: get the cookie and pass it to this call
+                    webResource = JerseyClientUtils.createWebResource(client,
+                            fileUploadQuery, cookie);
 
                     response = webResource.type(
                             MediaType.APPLICATION_OCTET_STREAM).put(
                             ClientResponse.class, file);
+
+                    // TODO: test to store cookie from the response??
+                    cookie = JerseyClientUtils.getCookieFromClientResponse(
+                            response, TagFilerProperties
+                                    .getProperty("tagfiler.cookie.name"));
                     if (201 == response.getStatus()) {
                         fileUploadListener.notifyFileTransferComplete(
                                 file.getAbsolutePath(), file.length());
