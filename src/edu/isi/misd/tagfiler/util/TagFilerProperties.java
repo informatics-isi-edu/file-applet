@@ -14,13 +14,13 @@ public class TagFilerProperties {
 
     private static final Properties properties = new Properties();
 
-    private static final String PROPERTIES_FILE = "edu/isi/misd/tagfiler/applet.properties";
+    private static final String PROPERTIES_FILE = "tagfiler.properties";
 
     // reads the property file once
     static {
         try {
             final InputStream stream = TagFilerProperties.class
-                    .getClassLoader().getResourceAsStream(PROPERTIES_FILE);
+                    .getResourceAsStream(PROPERTIES_FILE);
             properties.load(stream);
         } catch (IOException e) {
             e.printStackTrace();
