@@ -143,18 +143,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                     + " must be" + " specified as a parameter to the applet.");
         }
 
-        // TODO: test this to make sure it works!
-        sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
-                TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
-        WebResource root = JerseyClientUtils.createWebResource(client,
-                tagFilerServerURL, sessionCookie);
-
-        ClientResponse response = root.get(ClientResponse.class); // will cause
-                                                                  // the JRE to
-                                                                  // authenticate
-        // TODO: test this
-        sessionCookie = JerseyClientUtils.getCookieFromClientResponse(response,
-                TagFilerProperties.getProperty("tagfiler.cookie.name"));
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
