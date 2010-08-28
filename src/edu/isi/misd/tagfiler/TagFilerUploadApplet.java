@@ -136,6 +136,9 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
         client = JerseyClientUtils.createClient();
 
+	sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
+	       TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
+
         // arguments
         tagFilerServerURL = this.getParameter(TAGFILER_SERVER_URL_PARAM);
         if (tagFilerServerURL == null || tagFilerServerURL.length() == 0) {
