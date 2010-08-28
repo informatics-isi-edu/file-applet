@@ -13,8 +13,9 @@
 	<property name="keystore.location" value="/usr/share/tomcat5/.keystore"/>
 	<property name="keystore.password" value="changeme"/>
 	<property name="doc.dir" value="javadoc"/>
+	<property name="properties.file" value="${source.dir}/edu/isi/misd/tagfiler/util/tagfiler.properties"/>
 
-	<target name="prepare">
+	<target name="prepare" depends="clean">
 	  <mkdir dir="${bin.dir}"/>
 	</target>
 	<target name="build" depends="prepare">
@@ -28,6 +29,7 @@
 			</classpath>
 			<include name="**/*.java"/>
 		</javac>
+	  <copy file="${properties.file}" tofile="${bin.dir}/edu/isi/misd/tagfiler/util/tagfiler.properties"/>
 	</target>
 	<target name="jar" depends="build">
 		<jar destfile="${lib.dir}/${jar.name}.jar"
