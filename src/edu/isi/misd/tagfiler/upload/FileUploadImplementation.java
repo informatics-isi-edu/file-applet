@@ -187,16 +187,19 @@ public class FileUploadImplementation implements FileUpload {
                 + " Body:" + datasetURLBody);
 
         // TODO: get the cookie and pass it here to the call
-        WebResource webResource = JerseyClientUtils.createWebResource(client,
-                datasetURLQuery, cookie);
-        ClientResponse response = webResource.type(
-                MediaType.APPLICATION_FORM_URLENCODED_TYPE).post(
-                ClientResponse.class, datasetURLBody);
-        // TODO: test this
-        cookie = JerseyClientUtils.getCookieFromClientResponse(response,
-                TagFilerProperties.getProperty("tagfiler.cookie.name"));
 
-        if (200 == response.getStatus()) {
+        //WebResource webResource = JerseyClientUtils.createWebResource(client,
+        //        datasetURLQuery, null);
+
+	// need to capture builder result of cookie() and invoke request on it
+	// or cookie is lost!
+        ClientResponse response = client.resource(datasetURLQuery)
+	    .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+	    .cookie(cookie)
+	    .post(ClientResponse.class, datasetURLBody);
+
+	// successful tagfiler POST issues 303 redirect to result page
+        if (200 == response.getStatus() || 303 == response.getStatus() ) {
             try {
                 fileUploadListener
                         .notifyLogMessage("Dataset URL entry created successfully.");
@@ -259,17 +262,17 @@ public class FileUploadImplementation implements FileUpload {
                             + fileUploadQuery);
 
                     // TODO: get the cookie and pass it to this call
-                    webResource = JerseyClientUtils.createWebResource(client,
-                            fileUploadQuery, cookie);
+                    // webResource = JerseyClientUtils.createWebResource(client,
+                    //        fileUploadQuery, cookie);
 
-                    response = webResource.type(
-                            MediaType.APPLICATION_OCTET_STREAM).put(
-                            ClientResponse.class, file);
+		    // must capture builder result from cookie() and do request on it!
+                    response = client.resource(fileUploadQuery)
+			.type(MediaType.APPLICATION_OCTET_STREAM)
+			.cookie(cookie)
+			.put(ClientResponse.class, file);
 
                     // TODO: test to store cookie from the response??
-                    cookie = JerseyClientUtils.getCookieFromClientResponse(
-                            response, TagFilerProperties
-                                    .getProperty("tagfiler.cookie.name"));
+
                     if (201 == response.getStatus()) {
                         fileUploadListener.notifyFileTransferComplete(
                                 file.getAbsolutePath(), file.length());
