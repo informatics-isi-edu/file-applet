@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Set;
 
+import edu.isi.misd.tagfiler.util.TagFilerProperties;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 
 /**
@@ -17,8 +18,13 @@ import edu.isi.misd.tagfiler.ui.CustomTagMap;
 public class DatasetUtils {
 
     private static final String UTF_8 = "UTF-8";
-
+    
     private static final String DATASET_PATH_SEPARATOR = "/";
+
+    private static final String readACL_PROPERTY = "tagfiler.readacl";
+    private static final String writeACL_PROPERTY = "tagfiler.writeacl";
+    private static final String readACL_tag_PROPERTY = "tagfiler.tag.readacl";
+    private static final String writeACL_tag_PROPERTY = "tagfiler.tag.writeacl";
 
     /**
      * 
@@ -88,6 +94,11 @@ public class DatasetUtils {
      */
     public static final String getDatasetURLUploadQuery(String datasetName,
             String tagFilerServer, CustomTagMap customTagMap) {
+	String readACL_value = TagFilerProperties.getProperty(readACL_PROPERTY);
+	String readACL_tag =  TagFilerProperties.getProperty(readACL_tag_PROPERTY);
+	String writeACL_value = TagFilerProperties.getProperty(writeACL_PROPERTY);
+	String writeACL_tag =  TagFilerProperties.getProperty(writeACL_tag_PROPERTY);
+
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
         assert (customTagMap != null);
@@ -105,6 +116,18 @@ public class DatasetUtils {
                     .append(DatasetUtils.urlEncode(customTagMap
                             .getValue(tagName)));
         }
+	if (readACL_tag != null && readACL_value != null) {
+	    restURL.append("&")
+		.append(DatasetUtils.urlEncode(readACL_tag))
+		.append("=")
+		.append(DatasetUtils.urlEncode(readACL_value));
+	}
+	if (writeACL_tag != null && readACL_value != null) {
+	    restURL.append("&")
+		.append(DatasetUtils.urlEncode(writeACL_tag))
+		.append("=")
+		.append(DatasetUtils.urlEncode(writeACL_value));
+	}
 
         return restURL.toString();
     }
@@ -144,6 +167,11 @@ public class DatasetUtils {
     public static final String getFileUploadQuery(String datasetName,
             String tagFilerServer, String baseDirectory, File file,
             String checksum) {
+	String readACL_value = TagFilerProperties.getProperty(readACL_PROPERTY);
+	String readACL_tag =  TagFilerProperties.getProperty(readACL_tag_PROPERTY);
+	String writeACL_value = TagFilerProperties.getProperty(writeACL_PROPERTY);
+	String writeACL_tag =  TagFilerProperties.getProperty(writeACL_tag_PROPERTY);
+
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
         assert (baseDirectory != null);
@@ -164,7 +192,20 @@ public class DatasetUtils {
                 .append(TagFilerProperties.getProperty("tagfiler.tag.checksum"))
                 .append("=").append(checksum);
 
-        return restURL.toString();
+        if (readACL_tag != null && readACL_value != null) {
+            restURL.append("&")
+                .append(DatasetUtils.urlEncode(readACL_tag))
+		.append("=")
+		.append(DatasetUtils.urlEncode(readACL_value));
+	}
+	if (writeACL_tag != null && readACL_value != null) {
+	    restURL.append("&")
+		.append(DatasetUtils.urlEncode(writeACL_tag))
+		.append("=")
+                .append(DatasetUtils.urlEncode(writeACL_value));
+	}
+
+	return restURL.toString();
     }
 
     /**
