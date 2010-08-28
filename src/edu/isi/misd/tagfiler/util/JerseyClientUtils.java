@@ -57,14 +57,11 @@ public class JerseyClientUtils {
      * @return a web resource for the string with the cookie attached
      */
     public static WebResource createWebResource(Client client, String u,
-            Cookie cookie) {
+						Cookie cookie) {
         assert (client != null);
         assert (u != null);
-        final WebResource resource = client.resource(u);
-        if (cookie != null) {
-            resource.cookie(cookie);
-        }
-        return resource;
+
+	return client.resource(u);
     }
 
     /**
@@ -83,9 +80,10 @@ public class JerseyClientUtils {
         Cookie cookieObj = null;
 
         // this will retrieve all the cookies, or possibly null if none exist
-        String cookie = (String) ((JSObject) ((JSObject) JSObject
-                .getWindow(applet)).getMember(DOCUMENT_MEMBER_NAME))
-                .getMember(COOKIE_MEMBER_NAME);
+        String cookie = ((JSObject)((JSObject)
+				    ((JSObject) JSObject.getWindow(applet))
+				    .getMember(DOCUMENT_MEMBER_NAME))
+			 .getMember(COOKIE_MEMBER_NAME)).toString();
         if (cookie != null && cookieName.length() > 0) {
             final String search = cookieName + "=";
             int offset = cookie.indexOf(search);
@@ -95,9 +93,9 @@ public class JerseyClientUtils {
                 if (end < 0) {
                     end = cookie.length();
                 }
-                cookie = cookie.substring(offset, end);
+		cookie = cookie.substring(offset, end);
                 try {
-                    cookieObj = Cookie.valueOf(cookie);
+                    cookieObj =  new Cookie(cookieName, cookie);
                 } catch (IllegalArgumentException e) {
                     // badly formatted cookie -- print error but continue so
                     // that we get a new cookie on the next auth
