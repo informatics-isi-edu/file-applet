@@ -78,12 +78,24 @@ public class JerseyClientUtils {
         assert (cookieName != null && cookieName.length() > 0);
 
         Cookie cookieObj = null;
+	String cookie = null;
 
         // this will retrieve all the cookies, or possibly null if none exist
-        String cookie = ((JSObject)((JSObject)
-				    ((JSObject) JSObject.getWindow(applet))
-				    .getMember(DOCUMENT_MEMBER_NAME))
-			 .getMember(COOKIE_MEMBER_NAME)).toString();
+	try {
+	    // this typing seems to work on Firefox on Fedora...
+	    cookie = ((JSObject)((JSObject)
+				 ((JSObject) JSObject.getWindow(applet))
+				 .getMember(DOCUMENT_MEMBER_NAME))
+		      .getMember(COOKIE_MEMBER_NAME)).toString();
+	}
+	catch (Exception e) {
+	    // this typing seems to work on IE8 on Windows XP...
+	    cookie = (String) (((JSObject)
+				((JSObject) JSObject.getWindow(applet))
+				.getMember(DOCUMENT_MEMBER_NAME))
+			       .getMember(COOKIE_MEMBER_NAME));
+	}
+
         if (cookie != null && cookieName.length() > 0) {
             final String search = cookieName + "=";
             int offset = cookie.indexOf(search);
