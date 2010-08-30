@@ -52,19 +52,37 @@
 		<delete file="${lib.dir}/${singlejar.name}.jar"/>
 		<delete dir="${doc.dir}"/>
 	</target>
-	<target name="signjar" depends="buildsinglejar">
-		<delete file="${lib.dir}/${signedjar.name}.jar"/>
-		<signjar jar="${lib.dir}/${singlejar.name}.jar"
+	<target name="signjar" depends="jar">
+		<delete file="${http.dir}/${jar.name}.jar"/>
+		<signjar 
+			destDir="${http.dir}"
 			alias="${keystore.alias}"
 			keystore="${keystore.location}"
 			storepass="${keystore.password}"
-			signedjar="${lib.dir}/${signedjar.name}.jar"
-			/>
+			>
+			<path>
+				<fileset dir="${lib.dir}" includes="${jar.name}.jar" />
+			</path>
+		</signjar>
+	</target>
+	<target name="signjars">
+		<delete file="${lib.dir}/${signedjar.name}.jar"/>
+		<delete file="${lib.dir}/${singlejar.name}.jar"/>
+		<delete file="${lib.dir}/${jar.name}.jar"/>
+		<signjar 
+			destDir="${http.dir}"
+			alias="${keystore.alias}"
+			keystore="${keystore.location}"
+			storepass="${keystore.password}"
+			>
+			<path>
+				<fileset dir="${lib.dir}" includes="*.jar" />
+			</path>
+		</signjar>
 	</target>
 	<target name="deploy" depends="signjar">
 		<echo>Deploying to webserver...</echo>
 		<mkdir dir="${http.dir}"/>
-		<copy file="${lib.dir}/${signedjar.name}.jar" todir="${http.dir}"/>
 		<copy file="${html.file}" todir="${http.dir}"/>
 		<copy file="${js.file}" todir="${http.dir}" />
 	</target>
