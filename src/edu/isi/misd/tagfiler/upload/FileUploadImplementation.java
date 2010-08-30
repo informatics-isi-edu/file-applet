@@ -221,6 +221,7 @@ public class FileUploadImplementation implements FileUpload {
             success = false;
             fileUploadListener.notifyFailure(datasetName);
         }
+	response.close();
         return success;
     }
 
@@ -286,6 +287,7 @@ public class FileUploadImplementation implements FileUpload {
                                         + response.getStatus() + ")");
                         success = false;
                     }
+		    response.close();
                 } else if (file.isDirectory()) {
                     // do nothing -- contents were expanded in the list already
                     fileUploadListener.notifyFileTransferSkip(file
