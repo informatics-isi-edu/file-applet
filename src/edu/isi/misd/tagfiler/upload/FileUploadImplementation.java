@@ -1,6 +1,7 @@
 package edu.isi.misd.tagfiler.upload;
 
 import java.io.File;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,32 @@ public class FileUploadImplementation implements FileUpload {
      */
     public boolean postFileData(List<String> files) {
         assert (files != null);
-        return postFileData(files, DatasetUtils.generateDatasetName());
+        return postFileData(files, getTransmitNumber());
+    }
+
+    /**
+     * Makes a web server access to get a control number.
+     */
+    private String getTransmitNumber() {
+    	String ret = "";
+        String query = tagFilerServerURL + "/transmitnumber";
+        ClientResponse response = client.resource(query)
+		.type(MediaType.APPLICATION_OCTET_STREAM)
+		.cookie(cookie)
+		.post(ClientResponse.class, ""); 
+        
+        if (200 == response.getStatus())
+        {
+        	ret = response.getLocation().toString();
+        }
+        else 
+        {
+            fileUploadListener
+            .notifyLogMessage("Error getting a control number (code="
+                    + response.getStatus() + ")");
+        }
+        
+        return ret;
     }
 
     /**
