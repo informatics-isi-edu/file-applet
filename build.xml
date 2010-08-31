@@ -6,12 +6,11 @@
 	<property name="jar.name" value="isi-misd-tagfiler-upload"/>
 	<property name="signedjar.name" value="signed-${jar.name}-applet"/>
 	<property name="singlejar.name" value="consolidated-${jar.name}"/>
-	<property name="http.dir" value="/var/www/html/tagfiler_client"/>
-	<property name="html.file" value="tagfiler_upload.html"/>
+	<property name="http.dir" value="/var/www/html/tagfiler/static"/>
 	<property name="js.file" value="tagfiler_functions.js"/>
-	<property name="keystore.alias" value="tomcat"/>
-	<property name="keystore.location" value="/usr/share/tomcat5/.keystore"/>
-	<property name="keystore.password" value="changeme"/>
+	<property name="keystore.alias" value=""/>
+	<property name="keystore.location" value="/root/.keystore"/>
+	<property name="keystore.password" value=""/>
 	<property name="doc.dir" value="javadoc"/>
 	<property name="properties.file" value="${source.dir}/edu/isi/misd/tagfiler/util/tagfiler.properties"/>
 
@@ -55,14 +54,11 @@
 	<target name="signjar" depends="jar">
 		<delete file="${http.dir}/${jar.name}.jar"/>
 		<signjar 
-			destDir="${http.dir}"
 			alias="${keystore.alias}"
 			keystore="${keystore.location}"
 			storepass="${keystore.password}"
 			>
-			<path>
-				<fileset dir="${lib.dir}" includes="${jar.name}.jar" />
-			</path>
+			<fileset dir="${lib.dir}" includes="*.jar" />
 		</signjar>
 	</target>
 	<target name="signjars">
@@ -70,7 +66,7 @@
 		<delete file="${lib.dir}/${singlejar.name}.jar"/>
 		<delete file="${lib.dir}/${jar.name}.jar"/>
 		<signjar 
-			destDir="${http.dir}"
+		
 			alias="${keystore.alias}"
 			keystore="${keystore.location}"
 			storepass="${keystore.password}"
@@ -83,8 +79,10 @@
 	<target name="deploy" depends="signjar">
 		<echo>Deploying to webserver...</echo>
 		<mkdir dir="${http.dir}"/>
-		<copy file="${html.file}" todir="${http.dir}"/>
 		<copy file="${js.file}" todir="${http.dir}" />
+		<copy todir="${http.dir}">
+			<fileset dir="${lib.dir}" includes="*.jar"/>
+		</copy>
 	</target>
 	<target name="javadoc" depends="build">
 		<mkdir dir="${doc.dir}"/>
