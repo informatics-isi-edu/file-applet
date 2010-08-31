@@ -121,6 +121,8 @@ public class FileUploadImplementation implements FileUpload {
                     + response.getStatus() + ")");
         }
         
+        response.close();
+        
         return ret;
     }
 
