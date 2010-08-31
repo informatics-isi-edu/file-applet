@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -27,8 +28,6 @@ import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
@@ -136,8 +135,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
         client = JerseyClientUtils.createClient();
 
-	sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
-	       TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
+        sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
+                TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
 
         // arguments
         tagFilerServerURL = this.getParameter(TAGFILER_SERVER_URL_PARAM);
@@ -155,6 +154,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             });
         } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -578,6 +579,12 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
          */
         public void notifyFileTransferSkip(String filename) {
             filesCompleted++;
+        }
+
+        public void notifyError(Throwable e) {
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.message.upload.Error", new String[] { e
+                            .getClass().getCanonicalName() }));
         }
     }
 

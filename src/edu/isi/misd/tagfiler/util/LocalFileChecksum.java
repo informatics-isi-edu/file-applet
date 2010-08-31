@@ -8,6 +8,8 @@ import javax.xml.crypto.dsig.DigestMethod;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import edu.isi.misd.tagfiler.exception.FatalException;
+
 /**
  * Utility class responsible for computing the checksum on a file.
  * 
@@ -28,8 +30,9 @@ public final class LocalFileChecksum {
      * @param messageDigest
      *            MessageDigest to use
      * @return the checksum bytes of the file
+     * @thows FatalException if the checksum cannot be constructed.
      */
-    public static String computeFileChecksum(File file) {
+    public static String computeFileChecksum(File file) throws FatalException {
         assert (file != null);
 
         String checksum = null;
@@ -48,6 +51,7 @@ public final class LocalFileChecksum {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            throw new FatalException(e);
         } finally {
             if (stream != null) {
                 try {

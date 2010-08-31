@@ -1,7 +1,6 @@
 package edu.isi.misd.tagfiler.upload;
 
 import java.io.File;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +12,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
+import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.JerseyClientUtils;
@@ -96,33 +96,40 @@ public class FileUploadImplementation implements FileUpload {
      */
     public boolean postFileData(List<String> files) {
         assert (files != null);
-        return postFileData(files, getTransmitNumber());
+        boolean result = false;
+        try {
+            result = postFileData(files, getTransmitNumber());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fileUploadListener.notifyError(e);
+            result = false;
+        }
+        return result;
     }
 
     /**
      * Makes a web server access to get a control number.
      */
-    private String getTransmitNumber() {
-    	String ret = "";
+    private String getTransmitNumber() throws FatalException {
+        String ret = "";
         String query = tagFilerServerURL + "/transmitnumber";
         ClientResponse response = client.resource(query)
-		.type(MediaType.APPLICATION_OCTET_STREAM)
-		.cookie(cookie)
-		.post(ClientResponse.class, ""); 
-        
-        if (200 == response.getStatus())
-        {
-        	ret = response.getLocation().toString();
-        }
-        else 
-        {
+                .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+                .post(ClientResponse.class, "");
+
+        if (200 == response.getStatus()) {
+            ret = response.getLocation().toString();
+        } else {
             fileUploadListener
-            .notifyLogMessage("Error getting a control number (code="
-                    + response.getStatus() + ")");
+                    .notifyLogMessage("Error getting a control number (code="
+                            + response.getStatus() + ")");
+            throw new FatalException(
+                    TagFilerProperties
+                            .getProperty("tagfiler.message.upload.ControlNumberError"));
         }
-        
+
         response.close();
-        
+
         return ret;
     }
 
@@ -132,8 +139,11 @@ public class FileUploadImplementation implements FileUpload {
      * 
      * @param files
      *            list of the files to transfer.
+     * @throws FatalException
+     *             if a fatal exception occurs when computing checksums
      */
-    private void buildTotalAndChecksum(List<String> files) {
+    private void buildTotalAndChecksum(List<String> files)
+            throws FatalException {
         assert (files != null);
 
         datasetSize = 0;
@@ -147,8 +157,11 @@ public class FileUploadImplementation implements FileUpload {
      * 
      * @param files
      *            list of the files to transfer.
+     * @throws FatalException
+     *             if a fatal error occurs when computing the checksums.
      */
-    private void buildAndTotalChecksumHelper(List<String> files) {
+    private void buildAndTotalChecksumHelper(List<String> files)
+            throws FatalException {
         assert (files != null);
 
         File file = null;
@@ -193,63 +206,76 @@ public class FileUploadImplementation implements FileUpload {
         assert (datasetName != null && datasetName.length() > 0);
 
         boolean success = true;
+        ClientResponse response = null;
 
         // retrieve the amount of total bytes, checksums for each file
         fileUploadListener
                 .notifyLogMessage("Computing size and checksum of files...");
-        buildTotalAndChecksum(files);
-        fileUploadListener.notifyLogMessage(datasetSize
-                + " total bytes will be transferred");
-        fileUploadListener.notifyStart(datasetName, datasetSize);
+        try {
+            buildTotalAndChecksum(files);
+            fileUploadListener.notifyLogMessage(datasetSize
+                    + " total bytes will be transferred");
+            fileUploadListener.notifyStart(datasetName, datasetSize);
 
-        fileUploadListener.notifyLogMessage("Beginning transfer of dataset '"
-                + datasetName + "'...");
-
-        // first create the dataset url entry
-        final String datasetURLQuery = DatasetUtils.getDatasetURLUploadQuery(
-                datasetName, tagFilerServerURL, customTagMap);
-        final String datasetURLBody = DatasetUtils.getDatasetURLUploadBody(
-                datasetName, tagFilerServerURL);
-        fileUploadListener.notifyLogMessage("Creating dataset URL entry");
-        fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
-                + " Body:" + datasetURLBody);
-
-        // TODO: get the cookie and pass it here to the call
-
-        //WebResource webResource = JerseyClientUtils.createWebResource(client,
-        //        datasetURLQuery, null);
-
-	// need to capture builder result of cookie() and invoke request on it
-	// or cookie is lost!
-        ClientResponse response = client.resource(datasetURLQuery)
-	    .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-	    .cookie(cookie)
-	    .post(ClientResponse.class, datasetURLBody);
-
-	// successful tagfiler POST issues 303 redirect to result page
-        if (200 == response.getStatus() || 303 == response.getStatus() ) {
-            try {
-                fileUploadListener
-                        .notifyLogMessage("Dataset URL entry created successfully.");
-                success = postFileDataHelper(files, datasetName);
-            } catch (Exception e) {
-                e.printStackTrace();
-                success = false;
-            } finally {
-                if (success) {
-                    fileUploadListener.notifySuccess(datasetName);
-                } else {
-                    fileUploadListener.notifyFailure(datasetName);
-                }
-            }
-        } else {
             fileUploadListener
-                    .notifyLogMessage("Error creating the dataset URL entry (code="
-                            + response.getStatus() + ")");
-            success = false;
-            fileUploadListener.notifyFailure(datasetName);
+                    .notifyLogMessage("Beginning transfer of dataset '"
+                            + datasetName + "'...");
+
+            // first create the dataset url entry
+            final String datasetURLQuery = DatasetUtils
+                    .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
+                            customTagMap);
+            final String datasetURLBody = DatasetUtils.getDatasetURLUploadBody(
+                    datasetName, tagFilerServerURL);
+            fileUploadListener.notifyLogMessage("Creating dataset URL entry");
+            fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
+                    + " Body:" + datasetURLBody);
+
+            // TODO: get the cookie and pass it here to the call
+
+            // WebResource webResource =
+            // JerseyClientUtils.createWebResource(client,
+            // datasetURLQuery, null);
+
+            // need to capture builder result of cookie() and invoke request on
+            // it
+            // or cookie is lost!
+            response = client.resource(datasetURLQuery)
+                    .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+                    .cookie(cookie).post(ClientResponse.class, datasetURLBody);
+
+            // successful tagfiler POST issues 303 redirect to result page
+            if (200 == response.getStatus() || 303 == response.getStatus()) {
+                try {
+                    fileUploadListener
+                            .notifyLogMessage("Dataset URL entry created successfully.");
+                    success = postFileDataHelper(files, datasetName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    success = false;
+                } finally {
+                    if (success) {
+                        fileUploadListener.notifySuccess(datasetName);
+                    } else {
+                        fileUploadListener.notifyFailure(datasetName);
+                    }
+                }
+            } else {
+                fileUploadListener
+                        .notifyLogMessage("Error creating the dataset URL entry (code="
+                                + response.getStatus() + ")");
+                success = false;
+                fileUploadListener.notifyFailure(datasetName);
+            }
+        } catch (Exception e) {
+            // notify the UI of any uncaught errors
+            e.printStackTrace();
+            fileUploadListener.notifyError(e);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
-	response.close();
         return success;
     }
 
@@ -261,11 +287,11 @@ public class FileUploadImplementation implements FileUpload {
      * @param datasetName
      *            name of the dataset
      * @return true if the file tranfer was a success
-     * @throws Exception
+     * @throws FatalException
      *             if an error occurred in one of the file transfers
      */
     private boolean postFileDataHelper(List<String> files, String datasetName)
-            throws Exception {
+            throws FatalException {
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
@@ -292,13 +318,13 @@ public class FileUploadImplementation implements FileUpload {
 
                     // TODO: get the cookie and pass it to this call
                     // webResource = JerseyClientUtils.createWebResource(client,
-                    //        fileUploadQuery, cookie);
+                    // fileUploadQuery, cookie);
 
-		    // must capture builder result from cookie() and do request on it!
+                    // must capture builder result from cookie() and do request
+                    // on it!
                     response = client.resource(fileUploadQuery)
-			.type(MediaType.APPLICATION_OCTET_STREAM)
-			.cookie(cookie)
-			.put(ClientResponse.class, file);
+                            .type(MediaType.APPLICATION_OCTET_STREAM)
+                            .cookie(cookie).put(ClientResponse.class, file);
 
                     // TODO: test to store cookie from the response??
 
@@ -315,7 +341,7 @@ public class FileUploadImplementation implements FileUpload {
                                         + response.getStatus() + ")");
                         success = false;
                     }
-		    response.close();
+                    response.close();
                 } else if (file.isDirectory()) {
                     // do nothing -- contents were expanded in the list already
                     fileUploadListener.notifyFileTransferSkip(file

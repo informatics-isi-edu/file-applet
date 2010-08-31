@@ -70,4 +70,9 @@ public interface FileUploadListener {
      *            name of the file that was skipped.
      */
     public void notifyFileTransferSkip(String filename);
+
+    /**
+     * Called when a fatal error occurs that should be reported to the UI
+     */
+    public void notifyError(Throwable t);
 }

@@ -57,11 +57,11 @@ public class JerseyClientUtils {
      * @return a web resource for the string with the cookie attached
      */
     public static WebResource createWebResource(Client client, String u,
-						Cookie cookie) {
+            Cookie cookie) {
         assert (client != null);
         assert (u != null);
 
-	return client.resource(u);
+        return client.resource(u);
     }
 
     /**
@@ -78,23 +78,18 @@ public class JerseyClientUtils {
         assert (cookieName != null && cookieName.length() > 0);
 
         Cookie cookieObj = null;
-	String cookie = null;
+        String cookie = null;
 
         // this will retrieve all the cookies, or possibly null if none exist
-	try {
-	    // this typing seems to work on Firefox on Fedora...
-	    cookie = ((JSObject)((JSObject)
-				 ((JSObject) JSObject.getWindow(applet))
-				 .getMember(DOCUMENT_MEMBER_NAME))
-		      .getMember(COOKIE_MEMBER_NAME)).toString();
-	}
-	catch (Exception e) {
-	    // this typing seems to work on IE8 on Windows XP...
-	    cookie = (String) (((JSObject)
-				((JSObject) JSObject.getWindow(applet))
-				.getMember(DOCUMENT_MEMBER_NAME))
-			       .getMember(COOKIE_MEMBER_NAME));
-	}
+        Object jsObject = ((JSObject) ((JSObject) JSObject.getWindow(applet))
+                .getMember(DOCUMENT_MEMBER_NAME)).getMember(COOKIE_MEMBER_NAME);
+        if (jsObject instanceof JSObject) {
+            // this typing seems to work on Firefox on Fedora...
+            cookie = ((JSObject) jsObject).toString();
+        } else {
+            // this typing seems to work on Firefox on Fedora...
+            cookie = (String) jsObject;
+        }
 
         if (cookie != null && cookieName.length() > 0) {
             final String search = cookieName + "=";
@@ -105,9 +100,9 @@ public class JerseyClientUtils {
                 if (end < 0) {
                     end = cookie.length();
                 }
-		cookie = cookie.substring(offset, end);
+                cookie = cookie.substring(offset, end);
                 try {
-                    cookieObj =  new Cookie(cookieName, cookie);
+                    cookieObj = new Cookie(cookieName, cookie);
                 } catch (IllegalArgumentException e) {
                     // badly formatted cookie -- print error but continue so
                     // that we get a new cookie on the next auth
