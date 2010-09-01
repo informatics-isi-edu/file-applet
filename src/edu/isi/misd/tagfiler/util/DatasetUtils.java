@@ -2,6 +2,7 @@ package edu.isi.misd.tagfiler.util;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Set;
 
@@ -66,6 +67,20 @@ public class DatasetUtils {
         }
         datasetPath.append(fileName);
         return datasetPath.toString();
+    }
+
+    /**
+     * 
+     * @param url
+     *            the string to decode
+     * @return the decoded url
+     */
+    public static String urlDecode(String url)
+            throws UnsupportedEncodingException {
+        assert (url != null && url.length() > 0);
+        url = URLDecoder.decode(url, UTF_8);
+
+        return url;
     }
 
     /**
