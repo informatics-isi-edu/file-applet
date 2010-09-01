@@ -133,8 +133,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      */
     public void init() {
 
-        client = JerseyClientUtils.createClient();
-
         sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
                 TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
 
@@ -201,6 +199,13 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                         .getProperty("tagfiler.progressbar.MaxHeight")));
         progressBar.setMaximumSize(progressBarDimension);
 
+        controlNumberLabel = createLabel(TagFilerProperties
+                .getProperty("tagfiler.label.DefaultControlNumber"));
+        controlNumberLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        controlNumberLabel.setFont(new Font(controlNumberLabel.getFont()
+                .getFontName(), controlNumberLabel.getFont().getStyle(),
+                controlNumberLabel.getFont().getSize() + 2));
+
         JLabel lbl = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDirectoryToUpload"));
 
@@ -210,6 +215,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         top.setAlignmentY(Component.TOP_ALIGNMENT);
         lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
         addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        top.add(controlNumberLabel);
         top.add(lbl, Component.CENTER_ALIGNMENT);
         top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
@@ -298,20 +305,12 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         bottomTop.setAlignmentX(Component.LEFT_ALIGNMENT);
         bottomTop.setPreferredSize(new Dimension(Integer.MAX_VALUE, 50));
 
-        controlNumberLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.DefaultControlNumber"));
-        controlNumberLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        controlNumberLabel.setFont(new Font(controlNumberLabel.getFont()
-                .getFontName(), controlNumberLabel.getFont().getStyle(),
-                controlNumberLabel.getFont().getSize() + 2));
-
         statusLabel = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultUploadStatus"));
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         statusLabel.setFont(new Font(statusLabel.getFont().getFontName(),
                 Font.PLAIN, statusLabel.getFont().getSize()));
 
-        bottomTop.add(controlNumberLabel);
         bottomTop.add(statusLabel);
         bottomTop.add(progressBar);
 
