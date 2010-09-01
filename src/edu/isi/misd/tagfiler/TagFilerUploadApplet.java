@@ -20,15 +20,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.ws.rs.core.Cookie;
 
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
-
-import com.sun.jersey.api.client.Client;
-
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
@@ -81,9 +79,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
     private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
 
-    // REST client used to connect to the tagfiler server
-    private Client client;
-
     // buttons used by the applet UI
     private JButton uploadBtn = null;
 
@@ -97,7 +92,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
     private JLabel statusLabel = null;
 
-    private JLabel controlNumberLabel = null;
+    private JTextField controlNumberField = null;
 
     private DefaultListModel filesToUpload = null;
 
@@ -199,14 +194,20 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                         .getProperty("tagfiler.progressbar.MaxHeight")));
         progressBar.setMaximumSize(progressBarDimension);
 
-        controlNumberLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.DefaultControlNumber"));
-        controlNumberLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        controlNumberLabel.setFont(new Font(controlNumberLabel.getFont()
-                .getFontName(), controlNumberLabel.getFont().getStyle(),
-                controlNumberLabel.getFont().getSize() + 2));
+        controlNumberField = new JTextField(
+                TagFilerProperties
+                        .getProperty("tagfiler.label.DefaultControlNumber"));
+        controlNumberField.setBackground(Color.white);
 
-        JLabel lbl = createLabel(TagFilerProperties
+        controlNumberField.setFont(new Font(font.getFontName(),
+                font.getStyle(), font.getSize() + 2));
+        controlNumberField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        controlNumberField.setForeground(fontColor);
+        controlNumberField.setHorizontalAlignment(SwingConstants.CENTER);
+        controlNumberField.setEditable(false);
+        controlNumberField.setBorder(BorderFactory.createEmptyBorder());
+
+        final JLabel lbl = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDirectoryToUpload"));
 
         final JPanel top = createPanel();
@@ -216,7 +217,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
         addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        top.add(controlNumberLabel);
+        // top.add(controlNumberLabel);
+        top.add(controlNumberField);
         top.add(lbl, Component.CENTER_ALIGNMENT);
         top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
@@ -528,7 +530,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
         public void notifyStart(String datasetName, long totalSize) {
 
-            controlNumberLabel.setText(TagFilerProperties.getProperty(
+            controlNumberField.setText(TagFilerProperties.getProperty(
                     "tagfiler.label.ControlNumberLabel",
                     new String[] { datasetName }));
 
