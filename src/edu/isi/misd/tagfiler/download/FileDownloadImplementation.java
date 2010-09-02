@@ -17,16 +17,17 @@ import javax.ws.rs.core.MediaType;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 
+import edu.isi.misd.tagfiler.exception.FatalException;
+import edu.isi.misd.tagfiler.ui.CustomTagMap;
+import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.JerseyClientUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
-import edu.isi.misd.tagfiler.ui.CustomTagMap;
-import edu.isi.misd.tagfiler.upload.FileUploadListener;
 
 /**
- * Default implementation of the {@link edu.isi.misd.tagfiler.download.FileDownload}
- * interface.
+ * Default implementation of the
+ * {@link edu.isi.misd.tagfiler.download.FileDownload} interface.
  * 
  * @author Serban Voinea
  * 
@@ -61,7 +62,7 @@ public class FileDownloadImplementation implements FileDownload {
     private String baseDirectory = "";
 
     // the dataset control number
-    private final String controlNumber;
+    private String controlNumber;
 
     // the session cookie
     private Cookie cookie = null;
@@ -76,37 +77,23 @@ public class FileDownloadImplementation implements FileDownload {
      *            tagfiler server url
      * @param l
      *            listener for file upload progress
-     * @param dataset
-     *            control number of the dataset
      * @param c
      *            session cookie
      * @param tagMap
      *            map of the custom tags
      */
     public FileDownloadImplementation(String url, FileUploadListener l,
-            String dataset, Cookie c, CustomTagMap tagMap) {
+            Cookie c, CustomTagMap tagMap) throws FatalException {
         assert (url != null && url.length() > 0);
         assert (l != null);
-        assert (dataset != null);
         assert (c != null);
         assert (tagMap != null);
 
         tagFilerServerURL = url;
         fileUploadListener = l;
-        controlNumber = dataset;
         client = JerseyClientUtils.createClient();
         cookie = c;
         customTagMap = tagMap;
-        try
-        {
-            setCustomTags();
-            getDataSet();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fileUploadListener.notifyError(e);
-        }
     }
 
     /**
@@ -118,53 +105,60 @@ public class FileDownloadImplementation implements FileDownload {
 
     /**
      * Returns the list of the file names to be downloaded.
+     * 
+     * @param dataset
+     *            the dataset of the files
      */
-    public List<String> getFiles() {
+    public List<String> getFiles(String dataset) {
+        assert (dataset != null && dataset.length() > 0);
+        controlNumber = dataset;
+
+        try {
+            setCustomTags();
+            getDataSet();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fileUploadListener.notifyError(e);
+        }
         return fileNames;
     }
 
     /**
-     * Sets the base directory of the download.
-     * 
-     * @param baseDir
-     *            base directory
-     */
-    public void setBaseDirectory(String baseDir) {
-        assert (baseDir != null);
-        baseDirectory = baseDir;
-    }
-
-    /**
      * Performs the dataset download.
+     * 
+     * @param destDir
+     *            destination directory for the download
      */
-    public boolean downloadFiles() {
-    	Set <String> files = encodeMap.keySet();
+    public boolean downloadFiles(String destDir) {
+        assert (destDir != null && destDir.length() > 0);
+        baseDirectory = destDir;
+
+        Set<String> files = encodeMap.keySet();
         boolean result = false;
         try {
-        	for (String file : files)
-        	{
-        		downloadFile(file);
-        	}
-        	result = true;
+            for (String file : files) {
+                downloadFile(file);
+            }
+            result = true;
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
             result = false;
         }
-        
+
         return result;
     }
 
     /**
      * Sets the values for the custom tags of the dataset to be downloaded.
-     * @throws UnsupportedEncodingException 
+     * 
+     * @throws UnsupportedEncodingException
      */
     private void setCustomTags() throws UnsupportedEncodingException {
         Set<String> tags = customTagMap.getTagNames();
-        for (String tag : tags)
-        {
-        	String value = getTagValue("", tag);
-        	customTagMap.setValue(tag, value);
+        for (String tag : tags) {
+            String value = getTagValue("", tag);
+            customTagMap.setValue(tag, value);
         }
     }
 
@@ -173,47 +167,45 @@ public class FileDownloadImplementation implements FileDownload {
      */
     private boolean getDataSet() {
         boolean result = false;
-        
-        try
-        {
+
+        try {
             // get the files list
-        	String url = DatasetUtils.getDatasetQueryUrl(controlNumber, tagFilerServerURL);
-            String prefix = DatasetUtils.getDatasetUrl(controlNumber, tagFilerServerURL);
+            String url = DatasetUtils.getDatasetQueryUrl(controlNumber,
+                    tagFilerServerURL);
+            String prefix = DatasetUtils.getDatasetUrl(controlNumber,
+                    tagFilerServerURL);
 
             ClientResponse response = client.resource(url)
-    	        .accept("text/uri-list")
-    			.type(MediaType.APPLICATION_OCTET_STREAM)
-    			.cookie(cookie)
-    			.get(ClientResponse.class);  
+                    .accept("text/uri-list")
+                    .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+                    .get(ClientResponse.class);
 
             String textEntity = response.getEntity(String.class);
             textEntity = textEntity.replace(prefix, "");
             response.close();
-            
+
             // get the files maps
             StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
-            while (tokenizer.hasMoreTokens())
-            {
-            	// get the file name
-            	String	file = tokenizer.nextToken();
-            	String	name = DatasetUtils.urlDecode(file).substring(1);
-            	fileNames.add(name);
-            	encodeMap.put(name, file);
-            	
-            	// get the bytes
-            	long bytes = Long.parseLong(getTagValue(file, "bytes"));
-            	datasetSize +=bytes;
-            	bytesMap.put(name, bytes);
-            	
-            	// get the checksum
-            	String checksum = getTagValue(file, TagFilerProperties.getProperty("tagfiler.tag.checksum"));
-            	checksumMap.put(name, checksum);
+            while (tokenizer.hasMoreTokens()) {
+                // get the file name
+                String file = tokenizer.nextToken();
+                String name = DatasetUtils.urlDecode(file).substring(1);
+                fileNames.add(name);
+                encodeMap.put(name, file);
+
+                // get the bytes
+                long bytes = Long.parseLong(getTagValue(file, "bytes"));
+                datasetSize += bytes;
+                bytesMap.put(name, bytes);
+
+                // get the checksum
+                String checksum = getTagValue(file,
+                        TagFilerProperties.getProperty("tagfiler.tag.checksum"));
+                checksumMap.put(name, checksum);
             }
-            
+
             result = true;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
             result = false;
@@ -229,21 +221,21 @@ public class FileDownloadImplementation implements FileDownload {
      *            the file name as received from the FileList.
      * @param tag
      *            the tag name.
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException
      */
-	private String getTagValue(String file, String tag) throws UnsupportedEncodingException
-	{
-        String query = DatasetUtils.getFileTag(controlNumber, tagFilerServerURL, file, tag);
+    private String getTagValue(String file, String tag)
+            throws UnsupportedEncodingException {
+        String query = DatasetUtils.getFileTag(controlNumber,
+                tagFilerServerURL, file, tag);
         ClientResponse response = client.resource(query)
-			.type(MediaType.APPLICATION_OCTET_STREAM)
-			.cookie(cookie)
-			.get(ClientResponse.class);  
+                .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+                .get(ClientResponse.class);
         String value = response.getEntity(String.class);
-        value = value.substring(value.indexOf('=')+1);
+        value = value.substring(value.indexOf('=') + 1);
         response.close();
 
-		return value;
-	}
+        return value;
+    }
 
     /**
      * Performs the file download.
@@ -255,60 +247,57 @@ public class FileDownloadImplementation implements FileDownload {
         assert (file != null && encodeMap.get(file) != null);
         boolean result = false;
         try {
-        	// get the file content
-        	String encodeName = encodeMap.get(file);
-        	String url = DatasetUtils.getFileUrl(controlNumber, tagFilerServerURL, encodeName);
-            InputStream in  = client.resource(url)
-	    		.type(MediaType.APPLICATION_OCTET_STREAM)
-	    		.cookie(cookie)
-	    		.get(InputStream.class);  
+            // get the file content
+            String encodeName = encodeMap.get(file);
+            String url = DatasetUtils.getFileUrl(controlNumber,
+                    tagFilerServerURL, encodeName);
+            InputStream in = client.resource(url)
+                    .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+                    .get(InputStream.class);
 
-        	// write the file into the destination
+            // write the file into the destination
             File dir = new File(baseDirectory);
-        	int index = file.lastIndexOf(File.separatorChar);
-        	if (index != 1)
-        	{
-        		dir = new File(baseDirectory+"/"+file.substring(0, index));
-        	}
+            int index = file.lastIndexOf(File.separatorChar);
+            if (index != 1) {
+                dir = new File(baseDirectory + "/" + file.substring(0, index));
+            }
 
-        	if (dir.isDirectory() || dir.mkdirs())
-        	{
-                fileUploadListener.notifyFileTransferStart(baseDirectory+"/"+file);
-            	FileOutputStream fos = new FileOutputStream(baseDirectory+"/"+file);
-                while (true)
-                {
-                	int count = in.available();
-                	if (count == 0)
-                	{
-                		count = 1;
-                	}
-                	byte ret[] = new byte[count];
-                    int res = in .read(ret);
-                    if (res == -1)
-                    {
-                    	break;
+            if (dir.isDirectory() || dir.mkdirs()) {
+                fileUploadListener.notifyFileTransferStart(baseDirectory + "/"
+                        + file);
+                FileOutputStream fos = new FileOutputStream(baseDirectory + "/"
+                        + file);
+                while (true) {
+                    int count = in.available();
+                    if (count == 0) {
+                        count = 1;
+                    }
+                    byte ret[] = new byte[count];
+                    int res = in.read(ret);
+                    if (res == -1) {
+                        break;
                     }
                     fos.write(ret);
                 }
                 in.close();
                 fos.close();
-                
+
                 // verify checksum
-    			File downloadFile = new File(baseDirectory+"/"+file);
-    			String checksum = LocalFileChecksum.computeFileChecksum(downloadFile);
-    			if (!checksum.equals(checksumMap.get(file)))
-    			{
-    				throw new Exception("Checksum failed for downloading the file: " + file);
-    			}
-                fileUploadListener.notifyFileTransferComplete(baseDirectory+"/"+file, bytesMap.get(file));
-        	}
-        	else
-        	{
+                File downloadFile = new File(baseDirectory + "/" + file);
+                String checksum = LocalFileChecksum
+                        .computeFileChecksum(downloadFile);
+                if (!checksum.equals(checksumMap.get(file))) {
+                    throw new Exception(
+                            "Checksum failed for downloading the file: " + file);
+                }
+                fileUploadListener.notifyFileTransferComplete(baseDirectory
+                        + "/" + file, bytesMap.get(file));
+            } else {
                 in.close();
-        		throw new Exception("Can not make directory: " + dir.getAbsolutePath());
-        	}
-        	
-            
+                throw new Exception("Can not make directory: "
+                        + dir.getAbsolutePath());
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);

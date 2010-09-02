@@ -14,24 +14,22 @@ public interface FileDownload {
      * Returns the total number of bytes to be downloaded.
      */
     public long getSize();
-    
-    /**
-     * Sets the base directory for the file upload.
-     * 
-     * @param baseDir
-     *            base directory
-     */
-    public void setBaseDirectory(String baseDir);
 
     /**
      * Returns the list of the file names to be downloaded.
+     * 
+     * @param dataset
+     *            the dataset name of the files to retrieve
      */
-    public List<String> getFiles();
+    public List<String> getFiles(String dataset);
 
     /**
      * Performs the dataset download.
+     * 
+     * @param destinationDir
+     *            directory to save the files
      * @return true if all files were downloaded successfully
      */
-    public boolean downloadFiles();
+    public boolean downloadFiles(String destinationDir);
 
 }
