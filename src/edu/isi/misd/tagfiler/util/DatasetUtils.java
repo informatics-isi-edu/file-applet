@@ -266,4 +266,95 @@ public class DatasetUtils {
                 .append(datasetName);
         return restURL.toString();
     }
+    
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @return URL for querying for all the files in a dataset
+     */
+    public static final String getDatasetQueryUrl(String datasetName,
+            String tagFilerServer) throws UnsupportedEncodingException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.queryuri"))
+                .append(DatasetUtils.urlEncode(TagFilerProperties
+                        .getProperty("tagfiler.tag.containment"))).append("=")
+                .append(DatasetUtils.urlEncode(datasetName));
+        return restURL.toString();
+    }
+    
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @return the encoded URL for dataset
+     * @throws UnsupportedEncodingException 
+     */
+    public static final String getDatasetUrl(String datasetName,
+            String tagFilerServer) throws UnsupportedEncodingException{
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
+                .append(DatasetUtils.urlEncode(datasetName));
+        return restURL.toString();
+    }
+    
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @param file
+     *            the URL encoded file name
+     * @return the encoded URL for file
+     * @throws UnsupportedEncodingException 
+     */
+    public static final String getFileUrl(String datasetName,
+            String tagFilerServer, String file) throws UnsupportedEncodingException{
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
+                .append(DatasetUtils.urlEncode(datasetName))
+                .append(file);
+        return restURL.toString();
+    }
+    
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @param file
+     *            the URL encoded file name
+     * @param tag
+     *            the tag name
+     * @return the encoded URL for file tag
+     * @throws UnsupportedEncodingException 
+     */
+    public static final String getFileTag(String datasetName,
+            String tagFilerServer, String file, String tag) throws UnsupportedEncodingException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
+                .append(datasetName)
+                .append(file)
+                .append("/")
+                .append(DatasetUtils.urlEncode(tag));
+        return restURL.toString();
+    }
 }
