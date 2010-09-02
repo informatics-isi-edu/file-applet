@@ -57,11 +57,9 @@ public class FileUploadUploadListener extends FileUploadActionListener {
         // make sure the fields are valid
         if (fileUploadUI.validateFields() && filesToUpload.size() > 0) {
             fileUploadUI.clearLog();
-            fileUploadUI.disableUpload();
-            fileUploadUI.disableAdd();
-            fileUploadUI.disableRemove();
 
             fileUploadUI.enableLog();
+            fileUploadUI.deactivate();
             // run in a separate thread so that the UI returns
             threadExecutor.execute(new RunUploadTask());
         } else {
@@ -85,19 +83,7 @@ public class FileUploadUploadListener extends FileUploadActionListener {
                 files.add((String) filesToUpload.get(i));
             }
             fileUpload.postFileData(files);
-            filesToUpload.clear();
-            fileUploadUI.clearFields();
-            fileUploadUI.enableAdd();
             fileUploadUI.getComponent().requestFocusInWindow();
-        }
-    }
-
-    /**
-     * In case we shutdown, kill the file upload thread.
-     */
-    protected void finalize() {
-        if (threadExecutor != null) {
-            threadExecutor.shutdown();
         }
     }
 }

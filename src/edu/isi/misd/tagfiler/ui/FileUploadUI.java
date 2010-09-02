@@ -18,20 +18,10 @@ public interface FileUploadUI {
     public void enableUpload();
 
     /**
-     * Allow the user to click the "Remove" button
-     */
-    public void enableRemove();
-
-    /**
      * Don't allow the user to click the "Upload" button
      * 
      */
     public void disableUpload();
-
-    /**
-     * Don't allow the user to click the "Remove" button.
-     */
-    public void disableRemove();
 
     /**
      * Allow the user to click the "Add" button.
@@ -82,4 +72,14 @@ public interface FileUploadUI {
      * Clear the log.
      */
     public void clearLog();
+
+    /**
+     * Puts the UI in a state where it cannot be modified
+     */
+    public void deactivate();
+
+    /**
+     * Reloads the UI
+     */
+    public void reload();
 }

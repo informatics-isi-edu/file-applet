@@ -32,7 +32,7 @@ import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
 import edu.isi.misd.tagfiler.ui.FileUploadLogListener;
-import edu.isi.misd.tagfiler.ui.FileUploadRemoveListener;
+import edu.isi.misd.tagfiler.ui.FileUploadStartOverListener;
 import edu.isi.misd.tagfiler.ui.FileUploadUI;
 import edu.isi.misd.tagfiler.ui.FileUploadUploadListener;
 import edu.isi.misd.tagfiler.upload.FileUpload;
@@ -85,7 +85,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
     private JButton addBtn = null;
 
-    private JButton removeBtn = null;
+    private JButton startOverBtn = null;
 
     private JButton logBtn = null;
 
@@ -172,10 +172,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         addBtn = new JButton(
                 TagFilerProperties.getProperty("tagfiler.button.Browse"));
 
-        removeBtn = new JButton(
-                TagFilerProperties
-                        .getProperty("tagfiler.button.RemoveSelected"));
-        removeBtn.setEnabled(false);
+        startOverBtn = new JButton(
+                TagFilerProperties.getProperty("tagfiler.button.StartOver"));
 
         logBtn = new JButton(
                 TagFilerProperties.getProperty("tagfiler.button.ViewLog"));
@@ -293,7 +291,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         rightButtonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightButtonPanel.add(uploadBtn);
         rightButtonPanel.add(Box.createHorizontalGlue());
-        rightButtonPanel.add(removeBtn);
+        rightButtonPanel.add(startOverBtn);
 
         rightHalf.add(rightTop);
         rightHalf.add(rightButtonPanel);
@@ -350,8 +348,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         addBtn.addActionListener(new FileUploadAddListener(this, fileUpload,
                 fileChooser, getContentPane(), filesToUpload));
 
-        removeBtn.addActionListener(new FileUploadRemoveListener(this,
-                filesToUpload, list));
+        startOverBtn.addActionListener(new FileUploadStartOverListener(this));
 
         logBtn.addActionListener(new FileUploadLogListener(this,
                 getContentPane()));
@@ -426,20 +423,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      */
     public void disableAdd() {
         addBtn.setEnabled(false);
-    }
-
-    /**
-     * Allows the removal of a file to be invoked.
-     */
-    public void enableRemove() {
-        removeBtn.setEnabled(true);
-    }
-
-    /**
-     * Disallows the removal of a file to be invoked.
-     */
-    public void disableRemove() {
-        removeBtn.setEnabled(false);
     }
 
     /**
@@ -660,5 +643,46 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      */
     public void clearFields() {
         customTagMap.clearValues();
+    }
+
+    /**
+     * Puts the UI in a state where it is no longer active
+     */
+    public void deactivate() {
+        addBtn.setEnabled(false);
+        uploadBtn.setEnabled(false);
+        Set<String> customTagNames = customTagMap.getTagNames();
+        for (String customTagName : customTagNames) {
+            customTagMap.getComponent(customTagName).setEnabled(false);
+        }
+    }
+
+    /**
+     * Reloads the UI
+     */
+    public void reload() {
+        this.stop();
+        this.destroy();
+
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+                    TagFilerUploadApplet.this).getMember("location");
+
+            window.call("reload", new Boolean[] { true });
+
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+            deactivate();
+            JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+
+        }
+    }
+
+    /**
+     * Destroys the applet
+     */
+    public void destroy() {
+        super.destroy();
     }
 }
