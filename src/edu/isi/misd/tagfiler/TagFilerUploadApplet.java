@@ -27,6 +27,7 @@ import javax.ws.rs.core.Cookie;
 
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
+import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
@@ -127,6 +128,9 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      * applet UI.
      */
     public void init() {
+
+        // load any security settings
+        TagFilerSecurity.loadSecuritySettings();
 
         sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
                 TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));

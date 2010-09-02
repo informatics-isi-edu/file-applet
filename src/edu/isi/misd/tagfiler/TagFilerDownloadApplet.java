@@ -27,6 +27,7 @@ import javax.ws.rs.core.Cookie;
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.exception.FatalException;
+import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileDownloadDownloadListener;
@@ -127,6 +128,9 @@ public final class TagFilerDownloadApplet extends JApplet implements
      * applet UI.
      */
     public void init() {
+
+        // load security settings
+        TagFilerSecurity.loadSecuritySettings();
 
         sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
                 TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
