@@ -53,27 +53,6 @@ public interface FileUploadUI {
     public void clearFields();
 
     /**
-     * 
-     * @return the log contents
-     */
-    public String getLog();
-
-    /**
-     * Allow the user to click the "View Log" button.
-     */
-    public void enableLog();
-
-    /**
-     * Don't allow the user to click the "View Log" button
-     */
-    public void disableLog();
-
-    /**
-     * Clear the log.
-     */
-    public void clearLog();
-
-    /**
      * Puts the UI in a state where it cannot be modified
      */
     public void deactivate();
@@ -82,4 +61,12 @@ public interface FileUploadUI {
      * Reloads the UI
      */
     public void reload();
+
+    /**
+     * Redirects the UI to an URL
+     * 
+     * @param url
+     *            the URL to redirect to
+     */
+    public void redirect(String url);
 }

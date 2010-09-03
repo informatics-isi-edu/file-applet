@@ -31,7 +31,6 @@ import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileDownloadDownloadListener;
-import edu.isi.misd.tagfiler.ui.FileDownloadLogListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadSelectDestinationDirectoryListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.ui.FileDownloadUpdateListener;
@@ -82,8 +81,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
     private JButton selectDirBtn = null;
 
     private JButton updateBtn = null;
-
-    private JButton logBtn = null;
 
     private JTextField controlNumberField = null;
 
@@ -179,9 +176,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
 
         updateBtn = new JButton(
                 TagFilerProperties.getProperty("tagfiler.button.Update"));
-        logBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.ViewLog"));
-        logBtn.setEnabled(false);
 
         filesToDownload = new DefaultListModel();
 
@@ -342,13 +336,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         bottomTop.add(statusLabel);
         bottomTop.add(progressBar);
 
-        logBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bottomTop.add(logBtn);
-        final JPanel bottomMiddle = createPanel();
-        bottomMiddle.add(logBtn, Component.CENTER_ALIGNMENT);
-
         bottom.add(bottomTop);
-        bottom.add(bottomMiddle);
         leftHalf.add(bottom);
 
         // end bottom panel -----------------------
@@ -383,8 +371,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
 
         downloadBtn.addActionListener(new FileDownloadDownloadListener(this,
                 fileDownload, controlNumberField));
-
-        logBtn.addActionListener(new FileDownloadLogListener(this));
 
         // begin main panel -----------------------
         final JPanel main = createPanel();
@@ -459,20 +445,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
     }
 
     /**
-     * Allows the log view action to be invoked.
-     */
-    public void enableLog() {
-        logBtn.setEnabled(true);
-    }
-
-    /**
-     * Disallows the log view action to be invoked.
-     */
-    public void disableLog() {
-        logBtn.setEnabled(false);
-    }
-
-    /**
      * Disables the update button
      */
     public void disableUpdate() {
@@ -509,7 +481,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
          * Called when a dataset is complete.
          */
         public void notifySuccess(String datasetName) {
-            addLogMessage(TagFilerProperties.getProperty(
+            System.out.println(TagFilerProperties.getProperty(
                     "tagfiler.message.download.DatasetSuccess",
                     new String[] { datasetName }));
 
@@ -520,7 +492,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         }
 
         public void notifyFailure(String datasetName) {
-            addLogMessage(TagFilerProperties.getProperty(
+            System.out.println(TagFilerProperties.getProperty(
                     "tagfiler.message.download.DatasetFailure",
                     new String[] { datasetName }));
 
@@ -530,7 +502,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
         }
 
         public void notifyLogMessage(String message) {
-            addLogMessage(message);
             System.out.println(message);
         }
 
@@ -559,7 +530,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
                     "tagfiler.message.download.FileTransferStatus",
                     new String[] { Integer.toString(filesCompleted + 1),
                             Integer.toString(totalFiles) }));
-            addLogMessage("Transferring " + filename + "...");
+            System.out.println("Transferring " + filename + "...");
         }
 
         /**
@@ -598,34 +569,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
      */
     private void updateStatus(String status) {
         statusLabel.setText(status);
-    }
-
-    /**
-     * Convenience method for adding a message to the log
-     * 
-     * @param message
-     */
-    private void addLogMessage(String message) {
-
-        if (logBuffer.length() > 0) {
-            logBuffer.append('\n');
-        }
-        logBuffer.append(message);
-    }
-
-    /**
-     * @return a string representation of the log that occurred for a file
-     *         transfer session
-     */
-    public String getLog() {
-        return logBuffer.toString();
-    }
-
-    /**
-     * Clears the log
-     */
-    public void clearLog() {
-        logBuffer = new StringBuffer();
     }
 
     /**

@@ -51,27 +51,6 @@ public interface FileDownloadUI {
     public void clearFields();
 
     /**
-     * 
-     * @return the log contents
-     */
-    public String getLog();
-
-    /**
-     * Allow the user to click the "View Log" button.
-     */
-    public void enableLog();
-
-    /**
-     * Don't allow the user to click the "View Log" button
-     */
-    public void disableLog();
-
-    /**
-     * Clear the log.
-     */
-    public void clearLog();
-
-    /**
      * Enables the update operation
      */
     public void enableUpdate();

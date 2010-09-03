@@ -56,9 +56,6 @@ public class FileUploadUploadListener extends FileUploadActionListener {
 
         // make sure the fields are valid
         if (fileUploadUI.validateFields() && filesToUpload.size() > 0) {
-            fileUploadUI.clearLog();
-
-            fileUploadUI.enableLog();
             fileUploadUI.deactivate();
             // run in a separate thread so that the UI returns
             threadExecutor.execute(new RunUploadTask());
@@ -83,7 +80,6 @@ public class FileUploadUploadListener extends FileUploadActionListener {
                 files.add((String) filesToUpload.get(i));
             }
             fileUpload.postFileData(files);
-            fileUploadUI.getComponent().requestFocusInWindow();
         }
     }
 }

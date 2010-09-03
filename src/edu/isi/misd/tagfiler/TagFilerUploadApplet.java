@@ -5,6 +5,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -20,7 +23,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.ws.rs.core.Cookie;
@@ -31,8 +33,6 @@ import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
-import edu.isi.misd.tagfiler.ui.FileUploadLogListener;
-import edu.isi.misd.tagfiler.ui.FileUploadStartOverListener;
 import edu.isi.misd.tagfiler.ui.FileUploadUI;
 import edu.isi.misd.tagfiler.ui.FileUploadUploadListener;
 import edu.isi.misd.tagfiler.upload.FileUpload;
@@ -85,15 +85,9 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
     private JButton addBtn = null;
 
-    private JButton startOverBtn = null;
-
-    private JButton logBtn = null;
-
     private JList list = null;
 
     private JLabel statusLabel = null;
-
-    private JTextField controlNumberField = null;
 
     private DefaultListModel filesToUpload = null;
 
@@ -115,9 +109,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
     // tagfiler server URL specified from the parameter of the applet
     private String tagFilerServerURL = null;
-
-    // contains the logging information for an upload session
-    private StringBuffer logBuffer = new StringBuffer();
 
     // cookie maintainined in the session
     private Cookie sessionCookie = null;
@@ -172,12 +163,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         addBtn = new JButton(
                 TagFilerProperties.getProperty("tagfiler.button.Browse"));
 
-        startOverBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.StartOver"));
-
-        logBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.ViewLog"));
-        logBtn.setEnabled(false);
         filesToUpload = new DefaultListModel();
 
         list = new JList(filesToUpload);
@@ -196,19 +181,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                         .getProperty("tagfiler.progressbar.MaxHeight")));
         progressBar.setMaximumSize(progressBarDimension);
 
-        controlNumberField = new JTextField(
-                TagFilerProperties
-                        .getProperty("tagfiler.label.DefaultControlNumber"));
-        controlNumberField.setBackground(Color.white);
-
-        controlNumberField.setFont(new Font(font.getFontName(),
-                font.getStyle(), font.getSize() + 2));
-        controlNumberField.setAlignmentX(Component.CENTER_ALIGNMENT);
-        controlNumberField.setForeground(fontColor);
-        controlNumberField.setHorizontalAlignment(SwingConstants.CENTER);
-        controlNumberField.setEditable(false);
-        controlNumberField.setBorder(BorderFactory.createEmptyBorder());
-
         final JLabel lbl = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDirectoryToUpload"));
 
@@ -220,7 +192,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // top.add(controlNumberLabel);
-        top.add(controlNumberField);
         top.add(lbl, Component.CENTER_ALIGNMENT);
         top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
@@ -291,7 +262,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         rightButtonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         rightButtonPanel.add(uploadBtn);
         rightButtonPanel.add(Box.createHorizontalGlue());
-        rightButtonPanel.add(startOverBtn);
 
         rightHalf.add(rightTop);
         rightHalf.add(rightButtonPanel);
@@ -318,13 +288,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         bottomTop.add(statusLabel);
         bottomTop.add(progressBar);
 
-        logBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bottomTop.add(logBtn);
-        final JPanel bottomMiddle = createPanel();
-        bottomMiddle.add(logBtn, Component.CENTER_ALIGNMENT);
-
         bottom.add(bottomTop);
-        bottom.add(bottomMiddle);
         leftHalf.add(bottom);
 
         // end bottom panel -----------------------
@@ -347,11 +311,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                 fileUpload, filesToUpload));
         addBtn.addActionListener(new FileUploadAddListener(this, fileUpload,
                 fileChooser, getContentPane(), filesToUpload));
-
-        startOverBtn.addActionListener(new FileUploadStartOverListener(this));
-
-        logBtn.addActionListener(new FileUploadLogListener(this,
-                getContentPane()));
 
         // begin main panel -----------------------
         final JPanel main = createPanel();
@@ -426,20 +385,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     }
 
     /**
-     * Allows the log view action to be invoked.
-     */
-    public void enableLog() {
-        logBtn.setEnabled(true);
-    }
-
-    /**
-     * Disallows the log view action to be invoked.
-     */
-    public void disableLog() {
-        logBtn.setEnabled(false);
-    }
-
-    /**
      * Private class that listens for progress from the file upload process and
      * takes action on the applet UI based on this progress.
      * 
@@ -462,64 +407,43 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
          * Called when a dataset is complete.
          */
         public void notifySuccess(String datasetName) {
-            addLogMessage(TagFilerProperties
+            assert (datasetName != null && datasetName.length() > 0);
+            System.out.println(TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetSuccess"));
 
             progressBar.setValue((int) totalBytes / unit);
-            try {
-                JSObject window = JSObject.getWindow(TagFilerUploadApplet.this);
-                window.call(
-                        "setDatasetLink",
-                        new String[] {
-                                TagFilerProperties
-                                        .getProperty("tagfiler.div.link.id"),
-                                DatasetUtils.getDatasetQuery(datasetName,
-                                        tagFilerServerURL) });
 
-            } catch (JSException e) {
-                // don't throw
-                addLogMessage("Missing div tag for "
-                        + TagFilerProperties
-                                .getProperty("tagfiler.div.link.id")
-                        + " in html body, cannot display link.");
-            }
-            updateStatus(TagFilerProperties
-                    .getProperty("tagfiler.message.upload.DatasetSuccess"));
+            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.UploadSuccess",
+                            new String[] { datasetName }));
+            redirect(buff.toString());
         }
 
         public void notifyFailure(String datasetName) {
-            addLogMessage(TagFilerProperties
-                    .getProperty("tagfiler.message.upload.DatasetFailure"));
+            assert (datasetName != null && datasetName.length() > 0);
+            String message = TagFilerProperties
+                    .getProperty("tagfiler.message.upload.DatasetFailure");
             try {
-                JSObject window = JSObject.getWindow(TagFilerUploadApplet.this);
-                window.call(
-                        "setDatasetLink",
-                        new String[] {
-                                TagFilerProperties
-                                        .getProperty("tagfiler.div.link.id"),
-                                DatasetUtils.getDatasetQuery(datasetName,
-                                        tagFilerServerURL) });
-            } catch (JSException e) {
-                // don't throw
-                addLogMessage("Missing div tag for "
-                        + TagFilerProperties
-                                .getProperty("tagfiler.div.link.id")
-                        + " in html body, cannot display link.");
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException e) {
+                // just pass the unencoded message
             }
-            updateStatus(TagFilerProperties
-                    .getProperty("tagfiler.message.upload.DatasetFailure"), Color.red);
+            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.UploadFailure", new String[] {
+                                    datasetName, message }));
+            redirect(buff.toString());
+
         }
 
         public void notifyLogMessage(String message) {
-            addLogMessage(message);
+            assert (message != null);
             System.out.println(message);
         }
 
         public void notifyStart(String datasetName, long totalSize) {
-
-            controlNumberField.setText(TagFilerProperties.getProperty(
-                    "tagfiler.label.ControlNumberLabel",
-                    new String[] { datasetName }));
+            assert (datasetName != null && datasetName.length() > 0);
 
             totalFiles = filesToUpload.size();
             totalBytes = totalSize;
@@ -544,7 +468,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                     "tagfiler.message.upload.FileTransferStatus",
                     new String[] { Integer.toString(filesCompleted + 1),
                             Integer.toString(totalFiles) }));
-            addLogMessage("Transferring " + filename + "...");
+            System.out.println("Transferring " + filename + "...");
         }
 
         /**
@@ -570,9 +494,22 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         }
 
         public void notifyError(Throwable e) {
-            updateStatus(TagFilerProperties.getProperty(
+            String message = TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e
-                            .getClass().getCanonicalName() }), Color.red);
+                            .getClass().getCanonicalName() });
+            try {
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException f) {
+                // just use the unencoded message
+            }
+
+            StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.GenericFailure",
+                            new String[] { message }));
+
+            redirect(buff.toString());
+
         }
     }
 
@@ -582,7 +519,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      * @param status
      */
     private void updateStatus(String status) {
-    	updateStatus(status, fontColor);
+        updateStatus(status, fontColor);
     }
 
     /**
@@ -590,39 +527,11 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      * 
      * @param status
      * @param c
-     * 		the font color
+     *            the font color
      */
     private void updateStatus(String status, Color c) {
         statusLabel.setForeground(c);
         statusLabel.setText(status);
-    }
-
-    /**
-     * Convenience method for adding a message to the log
-     * 
-     * @param message
-     */
-    private void addLogMessage(String message) {
-
-        if (logBuffer.length() > 0) {
-            logBuffer.append('\n');
-        }
-        logBuffer.append(message);
-    }
-
-    /**
-     * @return a string representation of the log that occurred for a file
-     *         transfer session
-     */
-    public String getLog() {
-        return logBuffer.toString();
-    }
-
-    /**
-     * Clears the log
-     */
-    public void clearLog() {
-        logBuffer = new StringBuffer();
     }
 
     /**
@@ -696,5 +605,18 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      */
     public void destroy() {
         super.destroy();
+    }
+
+    /**
+     * Redirects to an url
+     */
+    public void redirect(String urlStr) {
+        assert (urlStr != null);
+        try {
+            final URL url = new URL(urlStr);
+            getAppletContext().showDocument(url, "_self");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 }

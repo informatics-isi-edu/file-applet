@@ -56,11 +56,9 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
     public void actionPerformed(ActionEvent e) {
         assert (e != null);
         if (fileDownloadUI.validateFields()) {
-            fileDownloadUI.clearLog();
             fileDownloadUI.disableDownload();
             fileDownloadUI.disableSelectDirectory();
             fileDownloadUI.disableUpdate();
-            fileDownloadUI.enableLog();
 
             threadExecutor.execute(new RunDownloadTask());
         } else {
