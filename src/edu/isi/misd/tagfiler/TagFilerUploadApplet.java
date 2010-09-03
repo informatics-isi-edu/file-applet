@@ -583,7 +583,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      */
     private void updateStatus(String status) {
     	updateStatus(status, fontColor);
-        statusLabel.setText(status);
     }
 
     /**
