@@ -507,7 +507,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                         + " in html body, cannot display link.");
             }
             updateStatus(TagFilerProperties
-                    .getProperty("tagfiler.message.upload.DatasetFailure"));
+                    .getProperty("tagfiler.message.upload.DatasetFailure"), Color.red);
         }
 
         public void notifyLogMessage(String message) {
@@ -572,7 +572,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         public void notifyError(Throwable e) {
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e
-                            .getClass().getCanonicalName() }));
+                            .getClass().getCanonicalName() }), Color.red);
         }
     }
 
@@ -582,6 +582,19 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      * @param status
      */
     private void updateStatus(String status) {
+    	updateStatus(status, fontColor);
+        statusLabel.setText(status);
+    }
+
+    /**
+     * Convenience method for updating the status label with a font color
+     * 
+     * @param status
+     * @param c
+     * 		the font color
+     */
+    private void updateStatus(String status, Color c) {
+        statusLabel.setForeground(c);
         statusLabel.setText(status);
     }
 
