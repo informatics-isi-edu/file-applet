@@ -259,7 +259,7 @@ public class FileDownloadImplementation implements FileDownload {
             // write the file into the destination
             File dir = new File(baseDirectory);
             int index = file.lastIndexOf(File.separatorChar);
-            if (index != 1) {
+            if (index != -1) {
                 dir = new File(baseDirectory + "/" + file.substring(0, index));
             }
 
