@@ -62,7 +62,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
     // parameter name for the tagserver URL
     private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
 
-    private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.control.number";
+    private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.server.controlnum";
 
     // parameters referenced from the applet.properties file
     private static final String FONT_NAME_PROPERTY = "tagfiler.font.name";
