@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -383,6 +384,19 @@ public final class TagFilerDownloadApplet extends JApplet implements
         getContentPane().setBackground(Color.white);
         getContentPane().add(main);
         // end main panel ---------------------------
+        if (defaultControlNumber.length() > 0) {
+        	List<String> fileList = fileDownload.getFiles(defaultControlNumber);
+        	disableUpdate();
+            if (fileList != null) {
+                for (String file : fileList) {
+                    filesToDownload.add(filesToDownload.size(), file);
+                }
+            }
+            if (filesToDownload.size() > 0) {
+                enableDownload();
+            }
+        }
+        	
     }
 
     /**
