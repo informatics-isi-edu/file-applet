@@ -45,16 +45,16 @@ public class FileDownloadImplementation implements FileDownload {
     private final Client client;
 
     // list containing the files names to be downloaded.
-    private final List<String> fileNames = new ArrayList<String>();
+    private List<String> fileNames = new ArrayList<String>();
 
     // map containing the checksums of all files to be downloaded.
-    private final Map<String, String> checksumMap = new HashMap<String, String>();
+    private Map<String, String> checksumMap = new HashMap<String, String>();
 
     // map containing the encoded files names to be downloaded.
-    private final Map<String, String> encodeMap = new HashMap<String, String>();
+    private Map<String, String> encodeMap = new HashMap<String, String>();
 
     // map containing the bytes of all files to be downloaded.
-    private final Map<String, Long> bytesMap = new HashMap<String, Long>();
+    private Map<String, Long> bytesMap = new HashMap<String, Long>();
 
     // total amount of bytes to be downloaded
     private long datasetSize = 0;
@@ -119,6 +119,11 @@ public class FileDownloadImplementation implements FileDownload {
         controlNumber = dataset;
 
         try {
+            fileNames = new ArrayList<String>();
+            checksumMap = new HashMap<String, String>();
+            encodeMap = new HashMap<String, String>();
+            bytesMap = new HashMap<String, Long>();
+
             setCustomTags();
             getDataSet();
         } catch (Exception e) {
