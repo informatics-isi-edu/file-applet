@@ -1,11 +1,14 @@
 package edu.isi.misd.tagfiler.upload;
 
+import java.applet.Applet;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
 
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.Client;
@@ -52,6 +55,9 @@ public class FileUploadImplementation implements FileUpload {
     // the session cookie
     private Cookie cookie = null;
 
+    // the applet
+    private Applet applet = null;
+
     /**
      * Constructs a new file upload
      * 
@@ -65,7 +71,7 @@ public class FileUploadImplementation implements FileUpload {
      *            session cookie
      */
     public FileUploadImplementation(String url, FileUploadListener l,
-            CustomTagMap tagMap, Cookie c) {
+				    CustomTagMap tagMap, Cookie c, Applet a) {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (tagMap != null);
@@ -75,6 +81,7 @@ public class FileUploadImplementation implements FileUpload {
         client = JerseyClientUtils.createClient();
         customTagMap = tagMap;
         cookie = c;
+	applet = a;
     }
 
     /**
@@ -116,6 +123,17 @@ public class FileUploadImplementation implements FileUpload {
         ClientResponse response = client.resource(query)
                 .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                 .post(ClientResponse.class, "");
+
+	Iterator cookies = response.getCookies().iterator();
+	while (cookies.hasNext()) {
+	    javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
+	    if (candidate.getName() == "webauthn") {
+		// this is a new session cookie, so save it for further REST calls
+		cookie = candidate;
+		JerseyClientUtils.setCookieInBrowser(applet, cookie);
+		break;
+	    }
+	}
 
         if (200 == response.getStatus()) {
             ret = response.getLocation().toString();
@@ -244,6 +262,17 @@ public class FileUploadImplementation implements FileUpload {
                     .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
                     .cookie(cookie).post(ClientResponse.class, datasetURLBody);
 
+	    Iterator cookies = response.getCookies().iterator();
+	    while (cookies.hasNext()) {
+		javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
+		if (candidate.getName() == "webauthn") {
+		    // this is a new session cookie, so save it for further REST calls
+		    cookie = candidate;
+		    JerseyClientUtils.setCookieInBrowser(applet, cookie);
+		    break;
+		}
+	    }
+
             // successful tagfiler POST issues 303 redirect to result page
             if (200 == response.getStatus() || 303 == response.getStatus()) {
                 try {
@@ -327,6 +356,16 @@ public class FileUploadImplementation implements FileUpload {
                             .cookie(cookie).put(ClientResponse.class, file);
 
                     // TODO: test to store cookie from the response??
+		    Iterator cookies = response.getCookies().iterator();
+		    while (cookies.hasNext()) {
+			javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
+			if (candidate.getName() == "webauthn") {
+			    // this is a new session cookie, so save it for further REST calls
+			    cookie = candidate;
+			    JerseyClientUtils.setCookieInBrowser(applet, cookie);
+			    break;
+			}
+		    }
 
                     if (201 == response.getStatus()) {
                         fileUploadListener.notifyFileTransferComplete(

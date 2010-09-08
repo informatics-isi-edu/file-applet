@@ -304,7 +304,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         // remains intact when
         // they are replaced
         fileUpload = new FileUploadImplementation(tagFilerServerURL,
-                new TagFilerAppletUploadListener(), customTagMap, sessionCookie);
+			  new TagFilerAppletUploadListener(), customTagMap, sessionCookie, this);
 
         // listeners
         uploadBtn.addActionListener(new FileUploadUploadListener(this,
