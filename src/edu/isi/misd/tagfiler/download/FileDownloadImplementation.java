@@ -247,7 +247,7 @@ public class FileDownloadImplementation implements FileDownload {
 	cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
         String value = response.getEntity(String.class);
-        value = value.substring(value.indexOf('=') + 1);
+        value = DatasetUtils.urlDecode(value.substring(value.indexOf('=') + 1));
         response.close();
 
         return value;
