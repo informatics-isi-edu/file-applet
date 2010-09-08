@@ -370,7 +370,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
                         this, destinationDirectoryField, fileChooser));
 
         downloadBtn.addActionListener(new FileDownloadDownloadListener(this,
-                fileDownload, controlNumberField));
+                fileDownload, destinationDirectoryField));
 
         // begin main panel -----------------------
         final JPanel main = createPanel();
