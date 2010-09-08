@@ -59,6 +59,8 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         assert (e != null);
         final String controlNumber = controlNumberField.getText().trim();
         if (controlNumber.length() > 0) {
+        	filesToDownload.clear();
+        	filesToDownload.setSize(0);
             final List<String> fileList = fileDownload.getFiles(controlNumber);
             if (fileList != null) {
                 for (String file : fileList) {

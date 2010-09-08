@@ -511,7 +511,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
 
         public void notifyStart(String datasetName, long totalSize) {
 
-            // totalFiles = filesToUpload.size();
+            totalFiles = filesToDownload.size();
             totalBytes = totalSize;
             filesCompleted = 0;
 

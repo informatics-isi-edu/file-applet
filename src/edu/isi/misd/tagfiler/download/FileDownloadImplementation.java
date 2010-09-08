@@ -135,6 +135,7 @@ public class FileDownloadImplementation implements FileDownload {
 
         Set<String> files = encodeMap.keySet();
         boolean result = false;
+        fileUploadListener.notifyStart(controlNumber, datasetSize);
         try {
             for (String file : files) {
                 downloadFile(file);
