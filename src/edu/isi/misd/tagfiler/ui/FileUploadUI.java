@@ -38,7 +38,7 @@ public interface FileUploadUI {
      * 
      * @return true if the fields are valid.
      */
-    public boolean validateFields();
+    public boolean validateFields() throws Exception;
 
     /**
      * 

@@ -55,14 +55,17 @@ public class FileUploadUploadListener extends FileUploadActionListener {
         assert (e != null);
 
         // make sure the fields are valid
-        if (fileUploadUI.validateFields() && filesToUpload.size() > 0) {
-            fileUploadUI.deactivate();
-            // run in a separate thread so that the UI returns
-            threadExecutor.execute(new RunUploadTask());
-        } else {
+        try {
+        	fileUploadUI.validateFields();
+            if (filesToUpload.size() > 0) {
+                fileUploadUI.deactivate();
+                // run in a separate thread so that the UI returns
+                threadExecutor.execute(new RunUploadTask());
+            }
+        }
+        catch (Exception ex) {
             JOptionPane.showMessageDialog(fileUploadUI.getComponent(),
-                    TagFilerProperties
-                            .getProperty("tagfiler.dialog.FieldsNotFilled"));
+                    ex.getMessage());
             fileUploadUI.getComponent().requestFocusInWindow();
         }
     }

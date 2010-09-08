@@ -1,7 +1,10 @@
 package edu.isi.misd.tagfiler.ui;
 
 import java.awt.Component;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,21 +22,61 @@ public class CustomTagMapImplementation implements CustomTagMap {
 
     private final Map<String, JTextField> tagMap = new LinkedHashMap<String, JTextField>();
 
+    private final Map<String, String> tagTypeMap = new LinkedHashMap<String, String>();
+
+    private final List<String> requiredTags;
+
     /**
      * Default constructor.
      */
     public CustomTagMapImplementation() {
         final String customVariableStr = TagFilerProperties
                 .getProperty("tagfiler.tag.userdefined");
+        final String customVariableTypesStr = TagFilerProperties
+        		.getProperty("tagfiler.tag.typestr");
+        final String customRequiredStr = TagFilerProperties
+        		.getProperty("tagfiler.tag.required");
         final String[] customVariables = customVariableStr.split(",");
+        final String[] customTypes = customVariableTypesStr.split(",");
+        final String[] customRequired = customRequiredStr.split(",");
+        requiredTags = Arrays.asList(customRequired);
 
         synchronized (tagMap) {
 
             for (int i = 0; i < customVariables.length; i++) {
                 tagMap.put(customVariables[i], new JTextField());
+                tagTypeMap.put(customVariables[i], customTypes[i]);
             }
         }
     }
+    
+    /**
+     * Validates a tag/value pair.
+     * Throw an exception if values are not defined for required tags or if a date is not in the MM-dd-yyyy format
+     * @param name
+     *            the tag name.
+     * @param value
+     *            the tag value.
+     */
+    public boolean validate(String name, String value) throws Exception {
+    	assert(value != null && name != null && tagMap.get(name) != null);
+    	
+    	if (requiredTags.contains(name) && value.length() == 0) {
+    		throw new Exception("Tag \"" + name + "\" is required.");
+    	}
+    	
+    	if (value.length() > 0 && tagTypeMap.get(name).equals("date")) {
+    		try {
+    			(new SimpleDateFormat("MM-dd-yyyy")).parse(value);
+    		}
+    		catch (Throwable e) {
+    			throw new Exception("Bad value for tag \"" + name + "\".");
+    		}
+    	}
+    	
+    	return true;
+    }
+    
 
     /**
      * sets the value of the tag

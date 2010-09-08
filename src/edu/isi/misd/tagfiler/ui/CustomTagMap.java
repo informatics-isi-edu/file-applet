@@ -24,6 +24,16 @@ public interface CustomTagMap {
     public void setValue(String key, String value);
 
     /**
+     * Validates a tag/value pair.
+     * Throw an exception if values are not defined for required tags or if a date is not in the MM-dd-yyyy format
+     * @param name
+     *            the tag name.
+     * @param value
+     *            the tag value.
+     */
+    public boolean validate(String name, String value) throws Exception;
+    
+    /**
      * 
      * @param key
      *            name of the tag

@@ -26,11 +26,20 @@ public interface FileUploadListener {
     public void notifyFailure(String datasetName);
 
     /**
+     * Called when a dataset fails to transfer completely.
+     * 
+     * @param datasetName
+     *            name of the dataset
+     */
+    public void notifyFailure(String datasetName, int code);
+
+    /**
      * Called when the FileUpload logs a message that could be displayed in a
      * log or UI
      * 
      * @param message
      *            the message to display.
+     *            the response status.
      */
     public void notifyLogMessage(String message);
 

@@ -420,10 +420,13 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             redirect(buff.toString());
         }
 
-        public void notifyFailure(String datasetName) {
+        public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
             String message = TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetFailure");
+            if (code != -1) {
+            	message += " (Status Code: " + code + ")";
+            }
             try {
                 message = DatasetUtils.urlEncode(message);
             } catch (UnsupportedEncodingException e) {
@@ -434,6 +437,11 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
                             "tagfiler.url.UploadFailure", new String[] {
                                     datasetName, message }));
             redirect(buff.toString());
+
+        }
+
+        public void notifyFailure(String datasetName) {
+        	notifyFailure(datasetName, -1);
 
         }
 
@@ -538,16 +546,14 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
      * @return true if the custom fields that are editable by the user are all
      *         valid.
      */
-    public boolean validateFields() {
+    public boolean validateFields() throws Exception {
         boolean valid = true;
 
         // make sure the custom tags all have values
         Set<String> customTagNames = customTagMap.getTagNames();
         for (String customTagName : customTagNames) {
             final String value = customTagMap.getValue(customTagName);
-            if (value.length() == 0) {
-                valid = false;
-            }
+            customTagMap.validate(customTagName, value);
         }
         return valid;
     }

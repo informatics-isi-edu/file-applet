@@ -294,7 +294,7 @@ public class FileUploadImplementation implements FileUpload {
                         .notifyLogMessage("Error creating the dataset URL entry (code="
                                 + response.getStatus() + ")");
                 success = false;
-                fileUploadListener.notifyFailure(datasetName);
+                fileUploadListener.notifyFailure(datasetName, response.getStatus());
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors
