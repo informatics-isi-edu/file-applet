@@ -124,16 +124,7 @@ public class FileUploadImplementation implements FileUpload {
                 .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                 .post(ClientResponse.class, "");
 
-	Iterator cookies = response.getCookies().iterator();
-	while (cookies.hasNext()) {
-	    javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
-	    if (candidate.getName() == "webauthn") {
-		// this is a new session cookie, so save it for further REST calls
-		cookie = candidate;
-		JerseyClientUtils.setCookieInBrowser(applet, cookie);
-		break;
-	    }
-	}
+	cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
         if (200 == response.getStatus()) {
             ret = response.getLocation().toString();
@@ -297,16 +288,7 @@ public class FileUploadImplementation implements FileUpload {
                     .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
                     .cookie(cookie).post(ClientResponse.class, datasetURLBody);
 
-	    Iterator cookies = response.getCookies().iterator();
-	    while (cookies.hasNext()) {
-		javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
-		if (candidate.getName() == "webauthn") {
-		    // this is a new session cookie, so save it for further REST calls
-		    cookie = candidate;
-		    JerseyClientUtils.setCookieInBrowser(applet, cookie);
-		    break;
-		}
-	    }
+	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
             // successful tagfiler POST issues 303 redirect to result page
             if (200 == response.getStatus() || 303 == response.getStatus()) {
@@ -390,17 +372,7 @@ public class FileUploadImplementation implements FileUpload {
                             .type(MediaType.APPLICATION_OCTET_STREAM)
                             .cookie(cookie).put(ClientResponse.class, file);
 
-                    // TODO: test to store cookie from the response??
-		    Iterator cookies = response.getCookies().iterator();
-		    while (cookies.hasNext()) {
-			javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
-			if (candidate.getName() == "webauthn") {
-			    // this is a new session cookie, so save it for further REST calls
-			    cookie = candidate;
-			    JerseyClientUtils.setCookieInBrowser(applet, cookie);
-			    break;
-			}
-		    }
+		    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
                     if (201 == response.getStatus()) {
                         fileUploadListener.notifyFileTransferComplete(

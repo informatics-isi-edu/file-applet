@@ -64,6 +64,31 @@ public class JerseyClientUtils {
         return client.resource(u);
     }
 
+     /**
+     * Checks for and saves updated session cookie
+     * 
+     * @param response
+     *            the Jersey response
+     * @param applet
+     *            the applet
+     * @param cookie
+     *            the current cookie
+     * @return the curernt cookie or a new replacement
+     */
+    public static javax.ws.rs.core.Cookie updateSessionCookie(ClientResponse response, Applet applet,
+            Cookie cookie) {
+	Iterator cookies = response.getCookies().iterator();
+	while (cookies.hasNext()) {
+	    javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
+	    if (candidate.getName() == "webauthn") {
+		// this is a new session cookie, so save it for further REST calls
+		JerseyClientUtils.setCookieInBrowser(applet, cookie);
+		return candidate;
+	    }
+	}
+	return cookie;
+    }
+
     /**
      * Retrieves a cookie from the client browser
      * 

@@ -1,5 +1,6 @@
 package edu.isi.misd.tagfiler.download;
 
+import java.applet.Applet;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -70,6 +71,9 @@ public class FileDownloadImplementation implements FileDownload {
     // custom tags that are used
     private final CustomTagMap customTagMap;
 
+    // the applet
+    private Applet applet = null;
+
     /**
      * Constructs a new file download
      * 
@@ -83,7 +87,7 @@ public class FileDownloadImplementation implements FileDownload {
      *            map of the custom tags
      */
     public FileDownloadImplementation(String url, FileUploadListener l,
-            Cookie c, CustomTagMap tagMap) throws FatalException {
+				      Cookie c, CustomTagMap tagMap, Applet a) throws FatalException {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (c != null);
@@ -94,6 +98,7 @@ public class FileDownloadImplementation implements FileDownload {
         client = JerseyClientUtils.createClient();
         cookie = c;
         customTagMap = tagMap;
+	applet = a;
     }
 
     /**
@@ -181,6 +186,8 @@ public class FileDownloadImplementation implements FileDownload {
                     .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                     .get(ClientResponse.class);
 
+	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+
             String textEntity = response.getEntity(String.class);
             textEntity = textEntity.replace(prefix, "");
             response.close();
@@ -231,6 +238,9 @@ public class FileDownloadImplementation implements FileDownload {
         ClientResponse response = client.resource(query)
                 .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                 .get(ClientResponse.class);
+
+	cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+
         String value = response.getEntity(String.class);
         value = value.substring(value.indexOf('=') + 1);
         response.close();
@@ -252,9 +262,14 @@ public class FileDownloadImplementation implements FileDownload {
             String encodeName = encodeMap.get(file);
             String url = DatasetUtils.getFileUrl(controlNumber,
                     tagFilerServerURL, encodeName);
-            InputStream in = client.resource(url)
+
+	    ClientResponse response = client.resource(url)
                     .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-                    .get(InputStream.class);
+                    .get(ClientResponse.class);
+
+            InputStream in = response.GetEntityInputStream();
+
+	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
             // write the file into the destination
             File dir = new File(baseDirectory);
