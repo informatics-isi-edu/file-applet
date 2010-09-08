@@ -354,7 +354,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         try {
             fileDownload = new FileDownloadImplementation(tagFilerServerURL,
                     new TagFilerAppletUploadListener(), sessionCookie,
-                    customTagMap);
+							  customTagMap, this);
         } catch (FatalException e) {
             e.printStackTrace();
             updateStatus(TagFilerProperties.getProperty(

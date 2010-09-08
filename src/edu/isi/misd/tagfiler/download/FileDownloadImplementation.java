@@ -267,7 +267,7 @@ public class FileDownloadImplementation implements FileDownload {
                     .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                     .get(ClientResponse.class);
 
-            InputStream in = response.GetEntityInputStream();
+            InputStream in = response.getEntityInputStream();
 
 	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 

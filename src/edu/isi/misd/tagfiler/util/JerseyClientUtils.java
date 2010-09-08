@@ -2,6 +2,7 @@ package edu.isi.misd.tagfiler.util;
 
 import java.applet.Applet;
 import java.util.List;
+import java.util.Iterator;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
