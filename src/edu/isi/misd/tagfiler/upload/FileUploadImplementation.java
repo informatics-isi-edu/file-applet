@@ -160,11 +160,46 @@ public class FileUploadImplementation implements FileUpload {
      * @throws FatalException
      *             if a fatal exception occurs when computing checksums
      */
+    private void buildTotalSize(List<String> files)
+            throws FatalException {
+        assert (files != null);
+
+        File file = null;
+        long fileSize = 0;
+        datasetSize = 0;
+        for (String filename : files) {
+            file = new File(filename);
+            if (file.exists() && file.canRead()) {
+
+                if (file.isFile()) {
+                    fileSize = file.length();
+                    datasetSize += fileSize;
+                } else if (file.isDirectory()) {
+                    // do nothing
+                } else {
+                    fileUploadListener.notifyLogMessage("File '" + filename
+                            + "' is not a regular file -- skipping.");
+                }
+            } else {
+                fileUploadListener.notifyLogMessage("File '" + filename
+                        + "' is not readible or does not exist.");
+            }
+        }
+    }
+
+    /**
+     * Convenience method for computing checksums and totaling the file transfer
+     * size.
+     * 
+     * @param files
+     *            list of the files to transfer.
+     * @throws FatalException
+     *             if a fatal exception occurs when computing checksums
+     */
     private void buildTotalAndChecksum(List<String> files)
             throws FatalException {
         assert (files != null);
 
-        datasetSize = 0;
         checksumMap.clear();
         buildAndTotalChecksumHelper(files);
     }
@@ -192,7 +227,6 @@ public class FileUploadImplementation implements FileUpload {
 
                 if (file.isFile()) {
                     fileSize = file.length();
-                    datasetSize += fileSize;
                     checksum = LocalFileChecksum.computeFileChecksum(file);
                     checksumMap.put(filename, checksum);
                     fileUploadListener.notifyLogMessage("File=" + filename
@@ -230,10 +264,11 @@ public class FileUploadImplementation implements FileUpload {
         fileUploadListener
                 .notifyLogMessage("Computing size and checksum of files...");
         try {
-            buildTotalAndChecksum(files);
+        	buildTotalSize(files);
+            fileUploadListener.notifyStart(datasetName, datasetSize);
+        	buildTotalAndChecksum(files);
             fileUploadListener.notifyLogMessage(datasetSize
                     + " total bytes will be transferred");
-            fileUploadListener.notifyStart(datasetName, datasetSize);
 
             fileUploadListener
                     .notifyLogMessage("Beginning transfer of dataset '"

@@ -465,7 +465,10 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             }
             progressBar.setValue(0);
             progressBar.setMaximum((int) totalBytes / unit);
-
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.message.upload.FileTransferStatus",
+                    new String[] { Integer.toString(0),
+                            Integer.toString(totalFiles) }));
         }
 
         /**
