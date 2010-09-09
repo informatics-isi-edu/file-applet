@@ -141,23 +141,31 @@ public class FileDownloadImplementation implements FileDownload {
      */
     public boolean downloadFiles(String destDir) {
         assert (destDir != null && destDir.length() > 0);
+        String errMsg = null;
         baseDirectory = destDir;
 
         Set<String> files = encodeMap.keySet();
-        boolean result = false;
+        boolean success = true;
         fileUploadListener.notifyStart(controlNumber, datasetSize);
         try {
             for (String file : files) {
-                downloadFile(file);
+            	downloadFile(file);
             }
-            result = true;
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
-            result = false;
+            errMsg = e.getMessage();
+            success = false;
+        }
+        finally {
+        	if (success) {
+        		fileUploadListener.notifySuccess(controlNumber);
+        	} else {
+        		fileUploadListener.notifyFailure(controlNumber, errMsg);
+        	}
         }
 
-        return result;
+        return success;
     }
 
     /**
@@ -259,7 +267,7 @@ public class FileDownloadImplementation implements FileDownload {
      * @param file
      *            the file name.
      */
-    private boolean downloadFile(String file) {
+    private boolean downloadFile(String file) throws Exception{
         assert (file != null && encodeMap.get(file) != null);
         boolean result = false;
         try {
@@ -272,7 +280,10 @@ public class FileDownloadImplementation implements FileDownload {
                     .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                     .get(ClientResponse.class);
 
-            InputStream in = response.getEntityInputStream();
+        if (response.getStatus() != 200) {
+        	throw new Exception("Status Code: " + response.getStatus());
+        }
+	    InputStream in = response.getEntityInputStream();
 
 	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
@@ -322,7 +333,7 @@ public class FileDownloadImplementation implements FileDownload {
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
-            result = false;
+            throw e;
         }
         return result;
     }

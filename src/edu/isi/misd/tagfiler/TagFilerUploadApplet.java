@@ -445,6 +445,11 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
         }
 
+        public void notifyFailure(String datasetName, String err) {
+        	notifyFailure(datasetName, -1);
+
+        }
+
         public void notifyLogMessage(String message) {
             assert (message != null);
             System.out.println(message);

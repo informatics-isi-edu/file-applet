@@ -5,6 +5,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +39,7 @@ import edu.isi.misd.tagfiler.ui.FileDownloadSelectDestinationDirectoryListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.ui.FileDownloadUpdateListener;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
+import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.JerseyClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
@@ -500,19 +504,50 @@ public final class TagFilerDownloadApplet extends JApplet implements
                     new String[] { datasetName }));
 
             progressBar.setValue((int) totalBytes / unit);
-            updateStatus(TagFilerProperties.getProperty(
-                    "tagfiler.message.download.DatasetSuccess",
+
+            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+            	.append(TagFilerProperties.getProperty(
+                    "tagfiler.url.DownloadSuccess",
                     new String[] { datasetName }));
+            redirect(buff.toString());
+        }
+
+        public void notifyFailure(String datasetName, String err) {
+            String message = TagFilerProperties
+            	.getProperty("tagfiler.message.download.DatasetFailure");
+		    if (err != null) {
+		    	message += " " + err;
+		    }
+		    try {
+		        message = DatasetUtils.urlEncode(message);
+		    } catch (UnsupportedEncodingException e) {
+		        // just pass the unencoded message
+		    }
+		    final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+		            .append(TagFilerProperties.getProperty(
+		                    "tagfiler.url.DownloadFailure", new String[] {
+		                            datasetName, message }));
+		    redirect(buff.toString());
         }
 
         public void notifyFailure(String datasetName, int code) {
-            System.out.println(TagFilerProperties.getProperty(
-                    "tagfiler.message.download.DatasetFailure",
-                    new String[] { datasetName }));
+            assert (datasetName != null && datasetName.length() > 0);
+            String message = TagFilerProperties
+                    .getProperty("tagfiler.message.download.DatasetFailure");
+            if (code != -1) {
+            	message += " (Status Code: " + code + ")";
+            }
+            try {
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException e) {
+                // just pass the unencoded message
+            }
+            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.DownloadFailure", new String[] {
+                                    datasetName, message }));
+            redirect(buff.toString());
 
-            updateStatus(TagFilerProperties.getProperty(
-                    "tagfiler.message.download.DatasetFailure",
-                    new String[] { datasetName }));
         }
 
         public void notifyFailure(String datasetName) {
@@ -618,5 +653,18 @@ public final class TagFilerDownloadApplet extends JApplet implements
         customTagMap.clearValues();
         destinationDirectoryField.setText("");
         controlNumberField.setText("");
+    }
+    
+    /**
+     * Redirects to an url
+     */
+    public void redirect(String urlStr) {
+        assert (urlStr != null);
+        try {
+            final URL url = new URL(urlStr);
+            getAppletContext().showDocument(url, "_self");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 }
