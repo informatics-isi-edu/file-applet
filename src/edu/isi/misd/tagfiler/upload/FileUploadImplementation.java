@@ -368,6 +368,9 @@ public class FileUploadImplementation implements FileUpload {
 
                     // must capture builder result from cookie() and do request
                     // on it!
+		    
+		    client.setChunkedEncodingSize(16 * 1024 * 1024);
+
                     response = client.resource(fileUploadQuery)
                             .type(MediaType.APPLICATION_OCTET_STREAM)
                             .cookie(cookie).put(ClientResponse.class, file);
