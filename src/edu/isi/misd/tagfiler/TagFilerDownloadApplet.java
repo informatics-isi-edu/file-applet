@@ -248,6 +248,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         final JLabel selectDestinationLabel = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDestinationDir"));
         destinationDirectoryField = new JTextField("", 30);
+        destinationDirectoryField.setMaximumSize(new Dimension(1000, 25));
         destinationDirectoryField.setBackground(Color.white);
         final JPanel destDirPanel = createPanel();
         destDirPanel.setLayout(new BoxLayout(destDirPanel, BoxLayout.X_AXIS));
