@@ -425,7 +425,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             String message = TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetFailure");
             if (code != -1) {
-            	message += " (Status Code: " + code + ")";
+            	message += " (Status Code: " + code + ").";
             }
             try {
                 message = DatasetUtils.urlEncode(message);

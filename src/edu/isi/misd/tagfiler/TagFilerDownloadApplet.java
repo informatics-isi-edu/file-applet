@@ -517,7 +517,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
             	.getProperty("tagfiler.message.download.DatasetFailure", new String[] {
                         datasetName });
 		    if (err != null) {
-		    	message += " " + err;
+		    	message += " " + err + ".";
 		    }
 		    try {
 		        message = DatasetUtils.urlEncode(message);
@@ -537,7 +537,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
                     .getProperty("tagfiler.message.download.DatasetFailure", new String[] {
                             datasetName });
             if (code != -1) {
-            	message += " (Status Code: " + code + ")";
+            	message += " (Status Code: " + code + ").";
             }
             try {
                 message = DatasetUtils.urlEncode(message);
