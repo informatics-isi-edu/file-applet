@@ -248,7 +248,7 @@ public class FileUploadImplementation implements FileUpload {
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
-        boolean success = true;
+        boolean success = false;
         ClientResponse response = null;
 
         // retrieve the amount of total bytes, checksums for each file
@@ -341,7 +341,6 @@ public class FileUploadImplementation implements FileUpload {
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
-        boolean success = true;
         WebResource webResource = null;
         ClientResponse response = null;
         File file = null;
@@ -388,7 +387,7 @@ public class FileUploadImplementation implements FileUpload {
                                 .notifyLogMessage("Error transferring file '"
                                         + file.getAbsolutePath() + "' (code="
                                         + response.getStatus() + ")");
-                        success = false;
+                        return false;
                     }
                     response.close();
                 } else if (file.isDirectory()) {
@@ -407,9 +406,9 @@ public class FileUploadImplementation implements FileUpload {
                 fileUploadListener.notifyLogMessage("File "
                         + file.getAbsolutePath()
                         + " is not readible or does not exist.");
-                success = false;
+                return false;
             }
         }
-        return success;
+        return true;
     }
 }
