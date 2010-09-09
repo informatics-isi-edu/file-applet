@@ -280,25 +280,28 @@ public class FileDownloadImplementation implements FileDownload {
                     .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                     .get(ClientResponse.class);
 
-        if (response.getStatus() != 200) {
+	    if (response.getStatus() != 200) {
         	throw new Exception("Status Code: " + response.getStatus());
-        }
+	    }
 	    InputStream in = response.getEntityInputStream();
 
 	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
-            // write the file into the destination
+	    // write the file into the destination
             File dir = new File(baseDirectory);
-            int index = file.lastIndexOf(File.separatorChar);
+
+	    String localFile = file.replace('/', File.separatorChar);
+
+            int index = localFile.lastIndexOf(File.separatorChar);
             if (index != -1) {
-                dir = new File(baseDirectory + "/" + file.substring(0, index));
+                dir = new File(baseDirectory + "/" + localFile.substring(0, index));
             }
 
             if (dir.isDirectory() || dir.mkdirs()) {
-                fileUploadListener.notifyFileTransferStart(baseDirectory + "/"
-                        + file);
-                FileOutputStream fos = new FileOutputStream(baseDirectory + "/"
-                        + file);
+                fileUploadListener.notifyFileTransferStart(baseDirectory + File.separatorChar
+                        + localFile);
+                FileOutputStream fos = new FileOutputStream(baseDirectory + File.separatorChar
+                        + localFile);
                 while (true) {
                     int count = in.available();
                     if (count == 0) {
@@ -315,7 +318,7 @@ public class FileDownloadImplementation implements FileDownload {
                 fos.close();
 
                 // verify checksum
-                File downloadFile = new File(baseDirectory + "/" + file);
+                File downloadFile = new File(baseDirectory + File.separatorChar + localFile);
                 String checksum = LocalFileChecksum
                         .computeFileChecksum(downloadFile);
                 if (!checksum.equals(checksumMap.get(file))) {
@@ -323,7 +326,7 @@ public class FileDownloadImplementation implements FileDownload {
                             "Checksum failed for downloading the file: " + file);
                 }
                 fileUploadListener.notifyFileTransferComplete(baseDirectory
-                        + "/" + file, bytesMap.get(file));
+                        + File.separatorChar + localFile, bytesMap.get(file));
             } else {
                 in.close();
                 throw new Exception("Can not make directory: "
