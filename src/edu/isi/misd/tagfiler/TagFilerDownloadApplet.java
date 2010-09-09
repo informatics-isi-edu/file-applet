@@ -10,6 +10,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -123,7 +125,31 @@ public final class TagFilerDownloadApplet extends JApplet implements
 
     // cookie maintainined in the session
     private Cookie sessionCookie = null;
+    
+    private Timer filesTimer;
 
+    private class EventTimerTask extends TimerTask {
+    	
+    	public void run() {
+        	List<String> fileList = fileDownload.getFiles(defaultControlNumber);
+            if (fileList != null) {
+                for (String file : fileList) {
+                    filesToDownload.add(filesToDownload.size(), file);
+                    try {
+                        Thread.sleep(100);
+                    } 
+                    catch (Exception e) {
+                    	
+                    }
+                }
+            }
+            
+            if (filesToDownload.size() > 0) {
+                enableDownload();
+            }
+    	}
+    }
+    
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -162,6 +188,16 @@ public final class TagFilerDownloadApplet extends JApplet implements
         }
     }
 
+	public void start() {
+    	
+        	if (defaultControlNumber.length() > 0)
+        	{
+            	disableUpdate();
+            	controlNumberField.setEnabled(false);
+            	filesTimer = new Timer(true);
+            	filesTimer.schedule(new EventTimerTask(), 1000);
+        	}
+    }
     /**
      * Create the applet UI.
      */
@@ -389,19 +425,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
         getContentPane().setBackground(Color.white);
         getContentPane().add(main);
         // end main panel ---------------------------
-        if (defaultControlNumber.length() > 0) {
-        	List<String> fileList = fileDownload.getFiles(defaultControlNumber);
-        	disableUpdate();
-            if (fileList != null) {
-                for (String file : fileList) {
-                    filesToDownload.add(filesToDownload.size(), file);
-                }
-            }
-            if (filesToDownload.size() > 0) {
-                enableDownload();
-            }
-        }
-        	
     }
 
     /**
