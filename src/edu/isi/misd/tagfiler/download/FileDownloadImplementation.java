@@ -294,7 +294,7 @@ public class FileDownloadImplementation implements FileDownload {
 
             int index = localFile.lastIndexOf(File.separatorChar);
             if (index != -1) {
-                dir = new File(baseDirectory + "/" + localFile.substring(0, index));
+                dir = new File(baseDirectory + File.separatorChar + localFile.substring(0, index));
             }
 
             if (dir.isDirectory() || dir.mkdirs()) {
