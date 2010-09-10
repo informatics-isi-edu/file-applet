@@ -67,7 +67,9 @@ public class CustomTagMapImplementation implements CustomTagMap {
     	
     	if (value.length() > 0 && tagTypeMap.get(name).equals("date")) {
     		try {
-    			(new SimpleDateFormat("MM-dd-yyyy")).parse(value);
+    			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    			sdf.setLenient(false);
+    			sdf.parse(value);
     		}
     		catch (Throwable e) {
     			throw new Exception("Bad value for tag \"" + name + "\".");
