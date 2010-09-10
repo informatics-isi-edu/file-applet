@@ -5,15 +5,12 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.MediaType;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -192,7 +189,6 @@ public class FileUploadImplementation implements FileUpload {
         assert (files != null);
 
         checksumMap.clear();
-        buildAndTotalChecksumHelper(files);
     }
 
     /**
@@ -204,34 +200,32 @@ public class FileUploadImplementation implements FileUpload {
      * @throws FatalException
      *             if a fatal error occurs when computing the checksums.
      */
-    private void buildAndTotalChecksumHelper(List<String> files)
+    private void buildChecksumHelper(String filename)
             throws FatalException {
-        assert (files != null);
+        assert (filename != null);
 
         File file = null;
         String checksum = null;
         long fileSize = 0;
 
-        for (String filename : files) {
-            file = new File(filename);
-            if (file.exists() && file.canRead()) {
+        file = new File(filename);
+        if (file.exists() && file.canRead()) {
 
-                if (file.isFile()) {
-                    fileSize = file.length();
-                    checksum = LocalFileChecksum.computeFileChecksum(file);
-                    checksumMap.put(filename, checksum);
-                    fileUploadListener.notifyLogMessage("File=" + filename
-                            + ", size=" + fileSize + ", checksum=" + checksum);
-                } else if (file.isDirectory()) {
-                    // do nothing
-                } else {
-                    fileUploadListener.notifyLogMessage("File '" + filename
-                            + "' is not a regular file -- skipping.");
-                }
+            if (file.isFile()) {
+                fileSize = file.length();
+                checksum = LocalFileChecksum.computeFileChecksum(file);
+                checksumMap.put(filename, checksum);
+                fileUploadListener.notifyLogMessage("File=" + filename
+                        + ", size=" + fileSize + ", checksum=" + checksum);
+            } else if (file.isDirectory()) {
+                // do nothing
             } else {
                 fileUploadListener.notifyLogMessage("File '" + filename
-                        + "' is not readible or does not exist.");
+                        + "' is not a regular file -- skipping.");
             }
+        } else {
+            fileUploadListener.notifyLogMessage("File '" + filename
+                    + "' is not readible or does not exist.");
         }
     }
 
@@ -341,10 +335,10 @@ public class FileUploadImplementation implements FileUpload {
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
-        WebResource webResource = null;
         ClientResponse response = null;
         File file = null;
         for (String fileName : files) {
+        	buildChecksumHelper(fileName);
             file = new File(fileName);
 
             // make sure file exists
