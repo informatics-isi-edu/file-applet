@@ -12,6 +12,16 @@ import java.awt.Component;
 public interface FileDownloadUI {
 
     /**
+     * Enables the destination directory
+     */
+    public void enableDestinationDirectory();
+
+    /**
+     * Disables the destination directory
+     */
+    public void disableDestinationDirectory();
+
+    /**
      * Enables the download operation
      */
     public void enableDownload();

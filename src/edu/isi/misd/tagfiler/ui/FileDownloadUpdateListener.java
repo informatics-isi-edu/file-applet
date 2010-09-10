@@ -68,6 +68,8 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
             }
             if (filesToDownload.size() > 0) {
                 fileDownloadUI.enableDownload();
+                fileDownloadUI.enableSelectDirectory();
+                fileDownloadUI.enableDestinationDirectory();
             }
         } else {
             JOptionPane

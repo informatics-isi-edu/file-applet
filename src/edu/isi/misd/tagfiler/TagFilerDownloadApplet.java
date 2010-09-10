@@ -193,6 +193,8 @@ public final class TagFilerDownloadApplet extends JApplet implements
         	if (defaultControlNumber.length() > 0)
         	{
             	disableUpdate();
+            	enableSelectDirectory();
+            	destinationDirectoryField.setEnabled(true);
             	controlNumberField.setEnabled(false);
             	filesTimer = new Timer(true);
             	filesTimer.schedule(new EventTimerTask(), 1000);
@@ -215,6 +217,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
                 TagFilerProperties
                         .getProperty("tagfiler.button.SelectDirectory"));
 
+        disableSelectDirectory();
         updateBtn = new JButton(
                 TagFilerProperties.getProperty("tagfiler.button.Update"));
 
@@ -286,6 +289,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         destinationDirectoryField = new JTextField("", 30);
         destinationDirectoryField.setMaximumSize(new Dimension(1000, 25));
         destinationDirectoryField.setBackground(Color.white);
+        destinationDirectoryField.setEnabled(false);
         final JPanel destDirPanel = createPanel();
         destDirPanel.setLayout(new BoxLayout(destDirPanel, BoxLayout.X_AXIS));
         destDirPanel.setAlignmentX(CENTER_ALIGNMENT);
@@ -456,6 +460,20 @@ public final class TagFilerDownloadApplet extends JApplet implements
         panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         // panel.setBorder(BorderFactory.createLineBorder(Color.blue, 2));
         return panel;
+    }
+
+    /**
+     * Enables the destination directory
+     */
+    public void enableDestinationDirectory() {
+    	destinationDirectoryField.setEnabled(true);
+    }
+
+    /**
+     * Disables the destination directory
+     */
+    public void disableDestinationDirectory() {
+    	destinationDirectoryField.setEnabled(false);
     }
 
     /**
