@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.swing.JOptionPane;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
@@ -125,27 +124,6 @@ public class FileDownloadImplementation implements FileDownload {
             encodeMap = new HashMap<String, String>();
             bytesMap = new HashMap<String, Long>();
             datasetSize = 0;
-
-            String url = DatasetUtils.getDatasetUrl(controlNumber,
-                    tagFilerServerURL);
-            ClientResponse response = client.resource(url)
-            .accept("text/uri-list")
-            .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-            .head();
-
-            cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
-            int code = response.getStatus();
-            response.close();
-            
-            if (code != 200 && code != 303)
-            {
-                JOptionPane
-                .showMessageDialog(
-                        null,
-                        "Bad Control number",
-                        "Error: " + code, JOptionPane.ERROR_MESSAGE);
-            	return fileNames;
-            }
 
             setCustomTags();
             getDataSet();
@@ -368,6 +346,55 @@ public class FileDownloadImplementation implements FileDownload {
             throw e;
         }
         return result;
+    }
+
+    /**
+     * Makes sure a dataset with the specified control number already exists
+     * 
+     * @param control
+     *            number the control number
+     */
+    public boolean verifyValidControlNumber(String controlNumber) {
+        assert (controlNumber != null && controlNumber.length() != 0);
+        boolean valid = false;
+        ClientResponse response = null;
+        try {
+            response = client
+                    .resource(
+                            DatasetUtils.getDatasetUrl(controlNumber,
+                                    tagFilerServerURL)).accept("text/uri-list")
+                    .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+                    .head();
+            int status = response.getStatus();
+            if ((status == 200 || status == 303)
+                    && JerseyClientUtils
+                            .checkResponseHeaderPattern(
+                                    response,
+                    JerseyClientUtils.LOCATION_HEADER_NAME, 
+                    tagFilerServerURL
+                            + TagFilerProperties
+                                    .getProperty("tagfiler.url.queryuri")
+                            + TagFilerProperties
+                                    .getProperty("tagfiler.tag.containment")
+                            + "=" + controlNumber)) {
+                valid = true;
+            }
+            else {
+                System.out.println("control number verification failed, code="
+                        + response.getStatus());
+            }
+            cookie = JerseyClientUtils.updateSessionCookie(response, applet,
+                    cookie);
+        } catch (UnsupportedEncodingException e) {
+            valid = false;
+            e.printStackTrace();
+            fileUploadListener.notifyError(e);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+        return valid;
     }
 
 }

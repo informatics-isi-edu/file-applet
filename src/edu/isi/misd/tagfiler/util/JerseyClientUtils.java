@@ -1,10 +1,11 @@
 package edu.isi.misd.tagfiler.util;
 
 import java.applet.Applet;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 
 import netscape.javascript.JSObject;
@@ -27,6 +28,8 @@ public class JerseyClientUtils {
     private static final String DOCUMENT_MEMBER_NAME = "document";
 
     private static final String COOKIE_MEMBER_NAME = "cookie";
+
+    public static final String LOCATION_HEADER_NAME = "Location";
 
     /**
      * Creates a {@link com.sun.jersey.api.client.Client} instance with the
@@ -65,7 +68,7 @@ public class JerseyClientUtils {
         return client.resource(u);
     }
 
-     /**
+    /**
      * Checks for and saves updated session cookie
      * 
      * @param response
@@ -76,18 +79,20 @@ public class JerseyClientUtils {
      *            the current cookie
      * @return the curernt cookie or a new replacement
      */
-    public static javax.ws.rs.core.Cookie updateSessionCookie(ClientResponse response, Applet applet,
-            Cookie cookie) {
-	Iterator cookies = response.getCookies().iterator();
-	while (cookies.hasNext()) {
-	    javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next()).toCookie();
-	    if (candidate.getName() == "webauthn") {
-		// this is a new session cookie, so save it for further REST calls
-		JerseyClientUtils.setCookieInBrowser(applet, cookie);
-		return candidate;
-	    }
-	}
-	return cookie;
+    public static javax.ws.rs.core.Cookie updateSessionCookie(
+            ClientResponse response, Applet applet, Cookie cookie) {
+        Iterator cookies = response.getCookies().iterator();
+        while (cookies.hasNext()) {
+            javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next())
+                    .toCookie();
+            if (candidate.getName() == "webauthn") {
+                // this is a new session cookie, so save it for further REST
+                // calls
+                JerseyClientUtils.setCookieInBrowser(applet, cookie);
+                return candidate;
+            }
+        }
+        return cookie;
     }
 
     /**
@@ -175,5 +180,36 @@ public class JerseyClientUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * checks a particular header in the response to see if it matches an
+     * expected regular expression pattern
+     * 
+     * @param response
+     *            the client response
+     * @param headerName
+     *            name of the header to check
+     * @param expectedPattern
+     *            regular expression pattern to check
+     * @return true if the header exists and matches the regular expression
+     */
+    public static boolean checkResponseHeaderPattern(ClientResponse response,
+            String headerName, String expectedPattern) {
+        assert (response != null);
+        assert (headerName != null && headerName.length() != 0);
+        assert (expectedPattern != null);
+
+        boolean matches = false;
+
+        MultivaluedMap<String, String> map = response.getHeaders();
+        String headerValue = map.getFirst(headerName);
+        System.out.println("checkResponseHeaderPattern: headerName="
+                + headerName + ", headerValue=" + headerValue
+                + ", expectedPattern=" + expectedPattern);
+        if (headerValue != null && headerValue.matches(expectedPattern)) {
+            matches = true;
+        }
+        return matches;
     }
 }

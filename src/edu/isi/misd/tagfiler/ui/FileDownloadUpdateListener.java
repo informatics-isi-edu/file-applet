@@ -59,17 +59,30 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         assert (e != null);
         final String controlNumber = controlNumberField.getText().trim();
         if (controlNumber.length() > 0) {
-        	filesToDownload.clear();
-            final List<String> fileList = fileDownload.getFiles(controlNumber);
-            if (fileList != null) {
-                for (String file : fileList) {
-                    filesToDownload.add(filesToDownload.size(), file);
+
+            // make sure the control number exists
+            if (fileDownload.verifyValidControlNumber(controlNumber)) {
+                filesToDownload.clear();
+                final List<String> fileList = fileDownload
+                        .getFiles(controlNumber);
+                if (fileList != null) {
+                    for (String file : fileList) {
+                        filesToDownload.add(filesToDownload.size(), file);
+                    }
                 }
-            }
-            if (filesToDownload.size() > 0) {
-                fileDownloadUI.enableDownload();
-                fileDownloadUI.enableSelectDirectory();
-                fileDownloadUI.enableDestinationDirectory();
+                if (filesToDownload.size() > 0) {
+                    fileDownloadUI.enableDownload();
+                    fileDownloadUI.enableSelectDirectory();
+                    fileDownloadUI.enableDestinationDirectory();
+                }
+            } else {
+                JOptionPane
+                        .showMessageDialog(
+                                fileDownloadUI.getComponent(),
+                        TagFilerProperties.getProperty(
+                                "tagfiler.dialog.InvalidControlNumber",
+                                new String[] { controlNumber }),
+                                "", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane
