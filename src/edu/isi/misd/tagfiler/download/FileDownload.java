@@ -32,4 +32,15 @@ public interface FileDownload {
      */
     public boolean downloadFiles(String destinationDir);
 
+    /**
+     * Checks with the tagfiler server to verify that a dataset by the control
+     * number already exists
+     * 
+     * @param controlNumber
+     *            the control number to check
+     * @return true if a dataset with the particular control number exists,
+     *         false otherwise
+     */
+    public boolean verifyValidControlNumber(String controlNumber);
+
 }
