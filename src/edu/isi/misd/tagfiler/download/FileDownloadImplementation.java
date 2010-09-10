@@ -123,6 +123,7 @@ public class FileDownloadImplementation implements FileDownload {
             checksumMap = new HashMap<String, String>();
             encodeMap = new HashMap<String, String>();
             bytesMap = new HashMap<String, Long>();
+            datasetSize = 0;
 
             setCustomTags();
             getDataSet();
