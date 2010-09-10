@@ -255,7 +255,13 @@ public class FileDownloadImplementation implements FileDownload {
 
 	cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
-        String value = response.getEntity(String.class);
+        if (response.getStatus() != 200)
+        {
+        	response.close();
+        	fileUploadListener.notifyFailure(controlNumber, response.getStatus());
+        	return "";
+        }
+		String value = response.getEntity(String.class);
         value = DatasetUtils.urlDecode(value.substring(value.indexOf('=') + 1));
         response.close();
 
