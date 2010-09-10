@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.swing.JOptionPane;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 
@@ -124,6 +125,27 @@ public class FileDownloadImplementation implements FileDownload {
             encodeMap = new HashMap<String, String>();
             bytesMap = new HashMap<String, Long>();
             datasetSize = 0;
+
+            String url = DatasetUtils.getDatasetUrl(controlNumber,
+                    tagFilerServerURL);
+            ClientResponse response = client.resource(url)
+            .accept("text/uri-list")
+            .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+            .head();
+
+            cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+            int code = response.getStatus();
+            response.close();
+            
+            if (code != 200 && code != 303)
+            {
+                JOptionPane
+                .showMessageDialog(
+                        null,
+                        "Bad Control number",
+                        "Error: " + code, JOptionPane.ERROR_MESSAGE);
+            	return fileNames;
+            }
 
             setCustomTags();
             getDataSet();
