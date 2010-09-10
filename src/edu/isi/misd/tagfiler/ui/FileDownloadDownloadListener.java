@@ -55,13 +55,14 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
      */
     public void actionPerformed(ActionEvent e) {
         assert (e != null);
-        if (fileDownloadUI.validateFields()) {
+        int valid = fileDownloadUI.validateFields();
+        if (valid == 1) {
             fileDownloadUI.disableDownload();
             fileDownloadUI.disableSelectDirectory();
             fileDownloadUI.disableUpdate();
 
             threadExecutor.execute(new RunDownloadTask());
-        } else {
+        } else if (valid == -1) {
             JOptionPane.showMessageDialog(fileDownloadUI.getComponent(),
                     TagFilerProperties
                             .getProperty("tagfiler.dialog.FieldsNotFilled"));

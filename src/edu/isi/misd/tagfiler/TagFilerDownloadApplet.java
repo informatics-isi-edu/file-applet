@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -669,15 +670,28 @@ public final class TagFilerDownloadApplet extends JApplet implements
     }
 
     /**
-     * @return true if the custom fields that are editable by the user are all
-     *         valid.
+     * @return 1 if the custom fields that are editable by the user are all valid
+     *         0 if the destination directory is not empty and the user has canceled the download.
+     *        -1 if some fields are not filled.
      */
-    public boolean validateFields() {
-        boolean valid = true;
+    public int validateFields() {
+        int valid = 1;
 
         if (destinationDirectoryField.getText().trim().length() == 0
                 || fileDownload.getSize() == 0) {
-            valid = false;
+            valid = -1;
+        }
+        else {
+        	// check the directory is empty to prevent overwriting
+        	File dir = new File(destinationDirectoryField.getText().trim());
+        	if (dir.list().length > 0) {
+        		int res = JOptionPane.showConfirmDialog(getComponent(),
+        			    "The destination directory is not empty.\n"
+        			    + "It might overwrite some files.\n"
+        			    + "Do you want to continue?",
+        	            "Warning", JOptionPane.YES_NO_OPTION);
+        		valid = (res == JOptionPane.YES_OPTION) ? 1 : 0;
+        	}
         }
         return valid;
     }

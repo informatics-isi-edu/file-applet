@@ -44,9 +44,11 @@ public interface FileDownloadUI {
     /**
      * Validate all user-defined fields.
      * 
-     * @return true if the fields are valid.
+     * @return 1 if the custom fields that are editable by the user are all valid
+     *         0 if the destination directory is not empty and the user has canceled the download.
+     *        -1 if some fields are not filled.
      */
-    public boolean validateFields();
+    public int validateFields();
 
     /**
      * 
