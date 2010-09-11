@@ -606,6 +606,26 @@ public final class TagFilerDownloadApplet extends JApplet implements
         }
 
         /**
+         * Called when a control number update starts
+         */
+        public void notifyUpdateStart(String filename) {
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.label.UpdateDownloadStatus",
+                    new String[] { }));
+            System.out.println("Updating control number " + filename + "...");
+        }
+
+        /**
+         * Called when a control number update completes
+         */
+        public void notifyUpdateComplete(String filename) {
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.label.DefaultDownloadStatus",
+                    new String[] { }));
+            System.out.println("Completed updating control number " + filename + "...");
+        }
+
+        /**
          * Called when a file transfer starts
          */
         public void notifyFileTransferStart(String filename) {

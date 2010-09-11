@@ -94,4 +94,18 @@ public interface FileUploadListener {
      * Called when a fatal error occurs that should be reported to the UI
      */
     public void notifyError(Throwable t);
+    
+    /**
+     * Called when a control number update starts
+     * @param filename
+     *            name of the dataset being transferred.
+     */
+    public void notifyUpdateStart(String filename);
+
+    /**
+     * Called when a control number update completes
+     * @param filename
+     *            name of the dataset being transferred.
+     */
+    public void notifyUpdateComplete(String filename);
 }

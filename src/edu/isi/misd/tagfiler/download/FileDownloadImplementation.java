@@ -170,6 +170,20 @@ public class FileDownloadImplementation implements FileDownload {
     }
 
     /**
+     * Called when a control number update starts
+     */
+    public void notifyUpdateStart(String filename) {
+    	fileUploadListener.notifyUpdateStart(filename);
+    }
+
+    /**
+     * Called when a control number update completes
+     */
+    public void notifyUpdateComplete(String filename) {
+    	fileUploadListener.notifyUpdateComplete(filename);
+    }
+
+    /**
      * Sets the values for the custom tags of the dataset to be downloaded.
      * 
      * @throws UnsupportedEncodingException

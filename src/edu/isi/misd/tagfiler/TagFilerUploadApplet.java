@@ -509,6 +509,18 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             filesCompleted++;
         }
 
+        /**
+         * Called when a control number update starts
+         */
+        public void notifyUpdateStart(String filename) {
+        }
+
+        /**
+         * Called when a control number update completes
+         */
+        public void notifyUpdateComplete(String filename) {
+        }
+
         public void notifyError(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e

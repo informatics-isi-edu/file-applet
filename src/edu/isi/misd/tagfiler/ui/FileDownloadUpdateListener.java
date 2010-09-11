@@ -29,6 +29,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
     	EventTimerTask(JButton b) {
     		button = b;
     	}
+
     	public void run() {
     		button.doClick();
     	}
@@ -86,6 +87,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
 
             // make sure the control number exists
             if (fileDownload.verifyValidControlNumber(controlNumber)) {
+    			fileDownload.notifyUpdateStart(controlNumber);
                 final List<String> fileList = fileDownload
                         .getFiles(controlNumber);
                 if (fileList != null) {
@@ -93,6 +95,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
                         filesToDownload.add(filesToDownload.size(), file);
                     }
                 }
+                fileDownload.notifyUpdateComplete(controlNumber);
                 if (filesToDownload.size() > 0) {
                     fileDownloadUI.enableDownload();
                     fileDownloadUI.enableSelectDirectory();
