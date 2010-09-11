@@ -2,8 +2,11 @@ package edu.isi.misd.tagfiler.ui;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -18,6 +21,20 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * 
  */
 public class FileDownloadUpdateListener extends FileDownloadActionListener {
+
+    private class EventTimerTask extends TimerTask {
+    	
+    	JButton button; 
+    	
+    	EventTimerTask(JButton b) {
+    		button = b;
+    	}
+    	public void run() {
+    		button.doClick();
+    	}
+    }
+    
+    private Timer eventTimer;
 
     private final FileDownload fileDownload;
 
@@ -49,6 +66,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         fileDownload = fd;
         controlNumberField = field;
         filesToDownload = model;
+        eventTimer = new Timer(true);
     }
 
     /**
@@ -59,10 +77,15 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         assert (e != null);
         final String controlNumber = controlNumberField.getText().trim();
         if (controlNumber.length() > 0) {
+        	if (filesToDownload.size() > 0) {
+            	fileDownloadUI.clearFields();
+            	controlNumberField.setText(controlNumber);
+            	eventTimer.schedule(new EventTimerTask((JButton)e.getSource()), 1000);
+            	return;
+        	}
 
             // make sure the control number exists
             if (fileDownload.verifyValidControlNumber(controlNumber)) {
-                filesToDownload.clear();
                 final List<String> fileList = fileDownload
                         .getFiles(controlNumber);
                 if (fileList != null) {
