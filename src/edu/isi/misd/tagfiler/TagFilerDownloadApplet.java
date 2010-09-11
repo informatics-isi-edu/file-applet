@@ -132,22 +132,8 @@ public final class TagFilerDownloadApplet extends JApplet implements
     private class EventTimerTask extends TimerTask {
     	
     	public void run() {
-        	List<String> fileList = fileDownload.getFiles(defaultControlNumber);
-            if (fileList != null) {
-                for (String file : fileList) {
-                    filesToDownload.add(filesToDownload.size(), file);
-                    try {
-                        Thread.sleep(100);
-                    } 
-                    catch (Exception e) {
-                    	
-                    }
-                }
-            }
-            
-            if (filesToDownload.size() > 0) {
-                enableDownload();
-            }
+    		updateBtn.doClick();
+    		disableUpdate();
     	}
     }
     
@@ -193,7 +179,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
     	
         	if (defaultControlNumber.length() > 0)
         	{
-            	disableUpdate();
             	enableSelectDirectory();
             	destinationDirectoryField.setEnabled(true);
             	controlNumberField.setEnabled(false);
