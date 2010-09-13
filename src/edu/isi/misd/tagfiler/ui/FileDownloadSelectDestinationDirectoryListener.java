@@ -51,6 +51,9 @@ public class FileDownloadSelectDestinationDirectoryListener extends
             File selectedDirectory = fileChooser.getSelectedFile();
             destinationDirectoryField.setText(selectedDirectory
                     .getAbsolutePath());
+            if (destinationDirectoryField.getText().trim().length() > 0) {
+            	fileDownloadUI.enableDownload();
+            }
             fileDownloadUI.getComponent().requestFocusInWindow();
         }
         // clear out the selected files, regardless

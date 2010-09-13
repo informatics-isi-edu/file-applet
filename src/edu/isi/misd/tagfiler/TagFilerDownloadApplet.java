@@ -5,6 +5,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -272,6 +276,18 @@ public final class TagFilerDownloadApplet extends JApplet implements
         destinationDirectoryField.setMaximumSize(new Dimension(1000, 25));
         destinationDirectoryField.setBackground(Color.white);
         destinationDirectoryField.setEnabled(false);
+        destinationDirectoryField.addKeyListener(new KeyAdapter() {
+        	        public void keyReleased(KeyEvent e) {
+        	            if (destinationDirectoryField.getText().trim().length() > 0) {
+        	            	enableDownload();
+        	            }
+        	            else {
+        	            	disableDownload();        	            	
+        	            }
+        	        }
+        	    }
+        	);
+        
         final JPanel destDirPanel = createPanel();
         destDirPanel.setLayout(new BoxLayout(destDirPanel, BoxLayout.X_AXIS));
         destDirPanel.setAlignmentX(CENTER_ALIGNMENT);
@@ -356,7 +372,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         bottomTop.setPreferredSize(new Dimension(Integer.MAX_VALUE, 50));
 
         statusLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.DefaultDownloadStatus"));
+                .getProperty("tagfiler.label.DefaultUpdateStatus"));
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         statusLabel.setFont(new Font(statusLabel.getFont().getFontName(),
                 Font.PLAIN, statusLabel.getFont().getSize()));
@@ -463,6 +479,8 @@ public final class TagFilerDownloadApplet extends JApplet implements
      */
     public void enableDownload() {
         downloadBtn.setEnabled(true);
+        updateStatus(TagFilerProperties
+                .getProperty("tagfiler.label.DefaultDownloadStatus"));
     }
 
     /**
@@ -470,6 +488,8 @@ public final class TagFilerDownloadApplet extends JApplet implements
      */
     public void disableDownload() {
         downloadBtn.setEnabled(false);
+        updateStatus(TagFilerProperties
+                .getProperty("tagfiler.label.DefaultDestinationStatus"));
     }
 
     /**
@@ -616,7 +636,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
          */
         public void notifyUpdateComplete(String filename) {
             updateStatus(TagFilerProperties.getProperty(
-                    "tagfiler.label.DefaultDownloadStatus",
+                    "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));
             System.out.println("Completed updating control number " + filename + "...");
         }
