@@ -67,9 +67,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     // the dataset control number
     private String controlNumber;
 
-    // the session cookie
-    private Cookie cookie = null;
-
     // custom tags that are used
     private final CustomTagMap customTagMap;
 
