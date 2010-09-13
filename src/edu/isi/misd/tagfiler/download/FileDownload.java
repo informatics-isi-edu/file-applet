@@ -2,13 +2,15 @@ package edu.isi.misd.tagfiler.download;
 
 import java.util.List;
 
+import edu.isi.misd.tagfiler.FileTransfer;
+
 /**
  * Interface for a file download process to the tag server.
  * 
  * @author Serban Voinea
  * 
  */
-public interface FileDownload {
+public interface FileDownload extends FileTransfer {
 
     /**
      * Returns the total number of bytes to be downloaded.

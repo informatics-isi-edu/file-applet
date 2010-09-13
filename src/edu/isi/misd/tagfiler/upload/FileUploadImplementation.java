@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 
+import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
@@ -26,7 +27,8 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author David Smith
  * 
  */
-public class FileUploadImplementation implements FileUpload {
+public class FileUploadImplementation extends AbstractFileTransferSession
+        implements FileUpload {
 
     // tagfiler server URL
     private final String tagFilerServerURL;
@@ -121,7 +123,10 @@ public class FileUploadImplementation implements FileUpload {
                 .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                 .post(ClientResponse.class, "");
 
-	cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+        synchronized (this) {
+            cookie = JerseyClientUtils.updateSessionCookie(response, applet,
+                    cookie);
+        }
 
         if (200 == response.getStatus()) {
             ret = response.getLocation().toString();
@@ -281,8 +286,10 @@ public class FileUploadImplementation implements FileUpload {
             response = client.resource(datasetURLQuery)
                     .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
                     .cookie(cookie).post(ClientResponse.class, datasetURLBody);
-
-	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+            synchronized (this) {
+                cookie = JerseyClientUtils.updateSessionCookie(response,
+                        applet, cookie);
+            }
 
             // successful tagfiler POST issues 303 redirect to result page
             if (200 == response.getStatus() || 303 == response.getStatus()) {
@@ -367,8 +374,10 @@ public class FileUploadImplementation implements FileUpload {
                     response = client.resource(fileUploadQuery)
                             .type(MediaType.APPLICATION_OCTET_STREAM)
                             .cookie(cookie).put(ClientResponse.class, file);
-
-		    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+                    synchronized (this) {
+                        cookie = JerseyClientUtils.updateSessionCookie(
+                                response, applet, cookie);
+                    }
 
                     if (201 == response.getStatus()) {
                         fileUploadListener.notifyFileTransferComplete(

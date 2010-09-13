@@ -6,15 +6,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
-import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -25,11 +22,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.ws.rs.core.Cookie;
 
-import netscape.javascript.JSException;
-import netscape.javascript.JSObject;
-import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
@@ -39,7 +32,6 @@ import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
-import edu.isi.misd.tagfiler.util.JerseyClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
 
@@ -62,12 +54,10 @@ import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
  * @author David Smith
  * 
  */
-public final class TagFilerUploadApplet extends JApplet implements FileUploadUI {
+public final class TagFilerUploadApplet extends AbstractTagFilerApplet
+        implements FileUploadUI {
 
     private static final long serialVersionUID = 2134123;
-
-    // parameter name for the tagserver URL
-    private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
 
     // parameters referenced from the applet.properties file
     private static final String FONT_NAME_PROPERTY = "tagfiler.font.name";
@@ -77,8 +67,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     private static final String FONT_SIZE_PROPERTY = "tagfiler.font.size";
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
-
-    private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
 
     // buttons used by the applet UI
     private JButton uploadBtn = null;
@@ -107,32 +95,21 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     // progress bar used for uploading files
     private JProgressBar progressBar = null;
 
-    // tagfiler server URL specified from the parameter of the applet
-    private String tagFilerServerURL = null;
-
-    // cookie maintainined in the session
-    private Cookie sessionCookie = null;
-
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
      * applet UI.
      */
     public void init() {
+        super.init();
 
-        // load any security settings
-        TagFilerSecurity.loadSecuritySettings();
-
-        sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
-                TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
-
-        // arguments
-        tagFilerServerURL = this.getParameter(TAGFILER_SERVER_URL_PARAM);
-        if (tagFilerServerURL == null || tagFilerServerURL.length() == 0) {
-            throw new IllegalArgumentException(TAGFILER_SERVER_URL_PARAM
-                    + " must be" + " specified as a parameter to the applet.");
-        }
-
+        /*
+         * tagFilerWebauthURL = this.getParameter(TAGFILER_WEBAUTH_URL_PARAM);
+         * if (tagFilerWebauthURL == null || tagFilerWebauthURL.length() == 0) {
+         * throw new IllegalArgumentException(TAGFILER_WEBAUTH_URL_PARAM +
+         * " must be specified as a parameter to the applet"); }
+         */
+        
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
@@ -304,7 +281,8 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         // remains intact when
         // they are replaced
         fileUpload = new FileUploadImplementation(tagFilerServerURL,
-			  new TagFilerAppletUploadListener(), customTagMap, sessionCookie, this);
+                new TagFilerAppletUploadListener(), customTagMap,
+                sessionCookie, this);
 
         // listeners
         uploadBtn.addActionListener(new FileUploadUploadListener(this,
@@ -425,7 +403,7 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             String message = TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetFailure");
             if (code != -1) {
-            	message += " (Status Code: " + code + ").";
+                message += " (Status Code: " + code + ").";
             }
             try {
                 message = DatasetUtils.urlEncode(message);
@@ -441,12 +419,12 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
         }
 
         public void notifyFailure(String datasetName) {
-        	notifyFailure(datasetName, -1);
+            notifyFailure(datasetName, -1);
 
         }
 
         public void notifyFailure(String datasetName, String err) {
-        	notifyFailure(datasetName, -1);
+            notifyFailure(datasetName, -1);
 
         }
 
@@ -457,7 +435,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
 
         public void notifyStart(String datasetName, long totalSize) {
             assert (datasetName != null && datasetName.length() > 0);
-
             totalFiles = filesToUpload.size();
             totalBytes = totalSize;
             filesCompleted = 0;
@@ -470,10 +447,11 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
             }
             progressBar.setValue(0);
             progressBar.setMaximum((int) totalBytes / unit);
-            updateStatus(TagFilerProperties.getProperty(
-                    "tagfiler.message.upload.FileTransferStatus",
-                    new String[] { Integer.toString(0),
-                            Integer.toString(totalFiles) }));
+            updateStatus(TagFilerProperties
+                    .getProperty(
+                            "tagfiler.message.upload.FileTransferStatus",
+                            new String[] { Integer.toString(0),
+                                    Integer.toString(totalFiles) }));
         }
 
         /**
@@ -605,28 +583,6 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     }
 
     /**
-     * Reloads the UI
-     */
-    public void reload() {
-        this.stop();
-        this.destroy();
-
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-                    TagFilerUploadApplet.this).getMember("location");
-
-            window.call("reload", new Boolean[] { true });
-
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-            deactivate();
-            JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-
-        }
-    }
-
-    /**
      * Destroys the applet
      */
     public void destroy() {
@@ -634,15 +590,9 @@ public final class TagFilerUploadApplet extends JApplet implements FileUploadUI 
     }
 
     /**
-     * Redirects to an url
+     * @return the FileUpload object
      */
-    public void redirect(String urlStr) {
-        assert (urlStr != null);
-        try {
-            final URL url = new URL(urlStr);
-            getAppletContext().showDocument(url, "_self");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+    public FileTransfer getFileTransfer() {
+        return fileUpload;
     }
 }

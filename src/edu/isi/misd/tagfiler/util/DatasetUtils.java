@@ -266,7 +266,7 @@ public class DatasetUtils {
                 .append(datasetName);
         return restURL.toString();
     }
-    
+
     /**
      * 
      * @param datasetName
@@ -287,7 +287,7 @@ public class DatasetUtils {
                 .append(DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
-    
+
     /**
      * 
      * @param datasetName
@@ -295,19 +295,19 @@ public class DatasetUtils {
      * @param tagFilerServer
      *            tagfiler server URL
      * @return the encoded URL for dataset
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException
      */
     public static final String getDatasetUrl(String datasetName,
-            String tagFilerServer) throws UnsupportedEncodingException{
+            String tagFilerServer) throws UnsupportedEncodingException {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
-        final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
-                .append(DatasetUtils.urlEncode(datasetName));
+        final StringBuffer restURL = new StringBuffer(tagFilerServer).append(
+                TagFilerProperties.getProperty("tagfiler.url.fileuri")).append(
+                DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
-    
+
     /**
      * 
      * @param datasetName
@@ -317,20 +317,20 @@ public class DatasetUtils {
      * @param file
      *            the URL encoded file name
      * @return the encoded URL for file
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException
      */
     public static final String getFileUrl(String datasetName,
-            String tagFilerServer, String file) throws UnsupportedEncodingException{
+            String tagFilerServer, String file)
+            throws UnsupportedEncodingException {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
-                .append(DatasetUtils.urlEncode(datasetName))
-                .append(file);
+                .append(DatasetUtils.urlEncode(datasetName)).append(file);
         return restURL.toString();
     }
-    
+
     /**
      * 
      * @param datasetName
@@ -342,19 +342,77 @@ public class DatasetUtils {
      * @param tag
      *            the tag name
      * @return the encoded URL for file tag
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException
      */
     public static final String getFileTag(String datasetName,
-            String tagFilerServer, String file, String tag) throws UnsupportedEncodingException {
+            String tagFilerServer, String file, String tag)
+            throws UnsupportedEncodingException {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
-                .append(datasetName)
-                .append(file)
-                .append("/")
+                .append(datasetName).append(file).append("/")
                 .append(DatasetUtils.urlEncode(tag));
         return restURL.toString();
     }
+
+    /**
+     * Retrieves the URL to poll a tagfiler server to keep the session alive
+     * 
+     * @param tagFilerServer
+     *            the tagfiler server URL to poll
+     * @return the full url
+     */
+    public static final String getSessionPollURL(String tagFilerServer) {
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        return new StringBuffer(tagFilerServer).append(
+                TagFilerProperties.getProperty("tagfiler.url.SessionPoll"))
+                .toString();
+
+    }
+
+    /**
+     * Retrieves the URL to logout a user from the tagfiler server
+     * 
+     * @param webauthServer
+     *            the URL of the webauth server
+     * @return the full url
+     */
+    public static final String getLogoutURL(String webauthServer) {
+        assert (webauthServer != null && webauthServer.length() > 0);
+        final String logout = new StringBuffer(webauthServer).append(
+                TagFilerProperties.getProperty("tagfiler.url.Logout"))
+                .toString();
+        return logout;
+    }
+
+    /**
+     * Retrieves the URL to login to a tagfiler server
+     * 
+     * @param webauthServer
+     *            the webauth server URL
+     * @return the full URL
+     */
+    public static final String getLoginURL(String webauthServer) {
+        assert (webauthServer != null && webauthServer.length() > 0);
+        return new StringBuffer(webauthServer).append(
+                TagFilerProperties.getProperty("tagfiler.url.Login"))
+                .toString();
+    }
+
+    /**
+     * Retrieves the URL of the status page
+     * 
+     * @param webauthServer
+     *            the URL of the webauth server
+     * @return the full URL
+     */
+    public static final String getStatusPageURL(String webauthServer) {
+        assert (webauthServer != null && webauthServer.length() > 0);
+        return new StringBuffer(webauthServer).append(
+                TagFilerProperties.getProperty("tagfiler.url.Status"))
+                .toString();
+    }
+
 }

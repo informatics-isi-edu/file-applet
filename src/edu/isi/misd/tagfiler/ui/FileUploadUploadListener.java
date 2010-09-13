@@ -10,7 +10,6 @@ import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 
 import edu.isi.misd.tagfiler.upload.FileUpload;
-import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
  * Action listener that is fired when the upload action is invoked.
@@ -56,14 +55,14 @@ public class FileUploadUploadListener extends FileUploadActionListener {
 
         // make sure the fields are valid
         try {
-        	fileUploadUI.validateFields();
+            fileUploadUI.validateFields();
             if (filesToUpload.size() > 0) {
+                fileUploadUI.suspendSession();
                 fileUploadUI.deactivate();
                 // run in a separate thread so that the UI returns
                 threadExecutor.execute(new RunUploadTask());
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(fileUploadUI.getComponent(),
                     ex.getMessage());
             fileUploadUI.getComponent().requestFocusInWindow();

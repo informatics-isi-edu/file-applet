@@ -85,6 +85,8 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
             	return;
         	}
 
+            fileDownloadUI.suspendSession();
+
             // make sure the control number exists
             if (fileDownload.verifyValidControlNumber(controlNumber)) {
                 final List<String> fileList = fileDownload
@@ -98,7 +100,15 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
                     fileDownloadUI.enableSelectDirectory();
                     fileDownloadUI.enableDestinationDirectory();
                 }
+
+                // start the session in the applet again after the files have
+                // loaded
+                fileDownloadUI.refreshSession(false);
             } else {
+                // start the session in the applet without waiting for a
+                // response
+                // from the prompt window
+                fileDownloadUI.refreshSession(false);
                 JOptionPane
                         .showMessageDialog(
                                 fileDownloadUI.getComponent(),
@@ -107,6 +117,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
                                 new String[] { controlNumber }),
                                 "", JOptionPane.ERROR_MESSAGE);
             }
+
         } else {
             JOptionPane
                     .showMessageDialog(

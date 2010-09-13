@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 
+import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
@@ -33,7 +34,8 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author Serban Voinea
  * 
  */
-public class FileDownloadImplementation implements FileDownload {
+public class FileDownloadImplementation extends AbstractFileTransferSession
+        implements FileDownload {
 
     // tagfiler server URL
     private final String tagFilerServerURL;
@@ -399,5 +401,4 @@ public class FileDownloadImplementation implements FileDownload {
         }
         return valid;
     }
-
 }

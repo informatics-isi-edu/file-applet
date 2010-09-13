@@ -2,13 +2,15 @@ package edu.isi.misd.tagfiler.upload;
 
 import java.util.List;
 
+import edu.isi.misd.tagfiler.FileTransfer;
+
 /**
  * Interface for a file upload process to the tag server.
  * 
  * @author David Smith
  * 
  */
-public interface FileUpload {
+public interface FileUpload extends FileTransfer {
 
     /**
      * Sets the base directory for the file upload.
@@ -39,5 +41,6 @@ public interface FileUpload {
      * @return true if all files were uploaded successfully
      */
     public boolean postFileData(List<String> files, String datasetName);
+
 
 }

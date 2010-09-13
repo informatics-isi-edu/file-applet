@@ -1,6 +1,5 @@
 package edu.isi.misd.tagfiler.ui;
 
-import java.awt.Component;
 
 /**
  * Interface for the file download UI that is used to communicate between the UI
@@ -9,7 +8,7 @@ import java.awt.Component;
  * @author David Smith
  * 
  */
-public interface FileDownloadUI {
+public interface FileDownloadUI extends FileUI {
 
     /**
      * Enables the destination directory
@@ -44,23 +43,11 @@ public interface FileDownloadUI {
     /**
      * Validate all user-defined fields.
      * 
-     * @return 1 if the custom fields that are editable by the user are all valid
-     *         0 if the destination directory is not empty and the user has canceled the download.
-     *        -1 if some fields are not filled.
+     * @return 1 if the custom fields that are editable by the user are all
+     *         valid 0 if the destination directory is not empty and the user
+     *         has canceled the download. -1 if some fields are not filled.
      */
     public int validateFields();
-
-    /**
-     * 
-     * @return the parent component that should be used for additional
-     *         components that are generated.
-     */
-    public Component getComponent();
-
-    /**
-     * Clear all the user-defined fields
-     */
-    public void clearFields();
 
     /**
      * Enables the update operation

@@ -5,14 +5,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,7 +16,6 @@ import java.util.TimerTask;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
-import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -32,12 +27,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.ws.rs.core.Cookie;
 
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.exception.FatalException;
-import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileDownloadDownloadListener;
@@ -46,7 +39,6 @@ import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.ui.FileDownloadUpdateListener;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
-import edu.isi.misd.tagfiler.util.JerseyClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
 
@@ -65,13 +57,11 @@ import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
  * @author David Smith
  * 
  */
-public final class TagFilerDownloadApplet extends JApplet implements
+public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
+        implements
         FileDownloadUI {
 
     private static final long serialVersionUID = 2134123;
-
-    // parameter name for the tagserver URL
-    private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
 
     private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.server.controlnum";
 
@@ -83,8 +73,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
     private static final String FONT_SIZE_PROPERTY = "tagfiler.font.size";
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
-
-    private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
 
     // buttons used by the applet UI
     private JButton downloadBtn = null;
@@ -121,22 +109,18 @@ public final class TagFilerDownloadApplet extends JApplet implements
     // progress bar used for uploading files
     private JProgressBar progressBar = null;
 
-    // tagfiler server URL specified from the parameter of the applet
-    private String tagFilerServerURL = null;
 
-    // cookie maintainined in the session
-    private Cookie sessionCookie = null;
-    
     private Timer filesTimer;
 
     private class EventTimerTask extends TimerTask {
+
     	
     	public void run() {
     		updateBtn.doClick();
     		disableUpdate();
-    	}
+        }
     }
-    
+
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -144,18 +128,8 @@ public final class TagFilerDownloadApplet extends JApplet implements
      */
     public void init() {
 
-        // load security settings
-        TagFilerSecurity.loadSecuritySettings();
+        super.init();
 
-        sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
-                TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
-
-        // arguments
-        tagFilerServerURL = this.getParameter(TAGFILER_SERVER_URL_PARAM);
-        if (tagFilerServerURL == null || tagFilerServerURL.length() == 0) {
-            throw new IllegalArgumentException(TAGFILER_SERVER_URL_PARAM
-                    + " must be" + " specified as a parameter to the applet.");
-        }
         defaultControlNumber = this.getParameter(TAGFILER_CONTROL_NUM_PARAM);
         if (defaultControlNumber == null) {
             defaultControlNumber = "";
@@ -176,7 +150,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
     }
 
 	public void start() {
-    	
+        super.start();
         	if (defaultControlNumber.length() > 0)
         	{
             	enableSelectDirectory();
@@ -186,6 +160,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
             	filesTimer.schedule(new EventTimerTask(), 1000);
         	}
     }
+
     /**
      * Create the applet UI.
      */
@@ -398,7 +373,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         try {
             fileDownload = new FileDownloadImplementation(tagFilerServerURL,
                     new TagFilerAppletUploadListener(), sessionCookie,
-							  customTagMap, this);
+                    customTagMap, this);
         } catch (FatalException e) {
             e.printStackTrace();
             updateStatus(TagFilerProperties.getProperty(
@@ -550,38 +525,38 @@ public final class TagFilerDownloadApplet extends JApplet implements
             progressBar.setValue((int) totalBytes / unit);
 
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
-            	.append(TagFilerProperties.getProperty(
-                    "tagfiler.url.DownloadSuccess",
-                    new String[] { datasetName }));
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.DownloadSuccess",
+                            new String[] { datasetName }));
             redirect(buff.toString());
         }
 
         public void notifyFailure(String datasetName, String err) {
-            String message = TagFilerProperties
-            	.getProperty("tagfiler.message.download.DatasetFailure", new String[] {
-                        datasetName });
-		    if (err != null) {
-		    	message += " " + err + ".";
-		    }
-		    try {
-		        message = DatasetUtils.urlEncode(message);
-		    } catch (UnsupportedEncodingException e) {
-		        // just pass the unencoded message
-		    }
-		    final StringBuffer buff = new StringBuffer(tagFilerServerURL)
-		            .append(TagFilerProperties.getProperty(
-		                    "tagfiler.url.DownloadFailure", new String[] {
-		                            datasetName, message }));
-		    redirect(buff.toString());
+            String message = TagFilerProperties.getProperty(
+                    "tagfiler.message.download.DatasetFailure",
+                    new String[] { datasetName });
+            if (err != null) {
+                message += " " + err + ".";
+            }
+            try {
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException e) {
+                // just pass the unencoded message
+            }
+            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.DownloadFailure", new String[] {
+                                    datasetName, message }));
+            redirect(buff.toString());
         }
 
         public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
-            String message = TagFilerProperties
-                    .getProperty("tagfiler.message.download.DatasetFailure", new String[] {
-                            datasetName });
+            String message = TagFilerProperties.getProperty(
+                    "tagfiler.message.download.DatasetFailure",
+                    new String[] { datasetName });
             if (code != -1) {
-            	message += " (Status Code: " + code + ").";
+                message += " (Status Code: " + code + ").";
             }
             try {
                 message = DatasetUtils.urlEncode(message);
@@ -597,7 +572,7 @@ public final class TagFilerDownloadApplet extends JApplet implements
         }
 
         public void notifyFailure(String datasetName) {
-        	notifyFailure(datasetName, -1);
+            notifyFailure(datasetName, -1);
         }
 
         public void notifyLogMessage(String message) {
@@ -734,17 +709,22 @@ public final class TagFilerDownloadApplet extends JApplet implements
         destinationDirectoryField.setText("");
         controlNumberField.setText("");
     }
-    
+
     /**
-     * Redirects to an url
+     * Deactivates the applet controls
      */
-    public void redirect(String urlStr) {
-        assert (urlStr != null);
-        try {
-            final URL url = new URL(urlStr);
-            getAppletContext().showDocument(url, "_self");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+    public void deactivate() {
+        destinationDirectoryField.setEnabled(false);
+        controlNumberField.setEnabled(false);
+        updateBtn.setEnabled(false);
+        selectDirBtn.setEnabled(false);
+        downloadBtn.setEnabled(false);
+    }
+
+    /**
+     * @return the FileDownload object
+     */
+    public FileTransfer getFileTransfer() {
+        return fileDownload;
     }
 }

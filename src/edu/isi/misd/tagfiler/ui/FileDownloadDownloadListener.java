@@ -57,6 +57,7 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
         assert (e != null);
         int valid = fileDownloadUI.validateFields();
         if (valid == 1) {
+            fileDownloadUI.suspendSession();
             fileDownloadUI.disableDownload();
             fileDownloadUI.disableSelectDirectory();
             fileDownloadUI.disableUpdate();
