@@ -667,7 +667,8 @@ public final class TagFilerDownloadApplet extends JApplet implements
      * @param status
      */
     private void updateStatus(String status) {
-        statusLabel.setText(status);
+    	statusLabel.setText(status);
+    	statusLabel.paintImmediately(statusLabel.getVisibleRect());
     }
 
     /**
