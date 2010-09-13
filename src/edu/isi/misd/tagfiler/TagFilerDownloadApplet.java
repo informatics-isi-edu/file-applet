@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -120,9 +119,6 @@ public final class TagFilerDownloadApplet extends JApplet implements
 
     // tagfiler server URL specified from the parameter of the applet
     private String tagFilerServerURL = null;
-
-    // contains the logging information for an upload session
-    private StringBuffer logBuffer = new StringBuffer();
 
     // cookie maintainined in the session
     private Cookie sessionCookie = null;
