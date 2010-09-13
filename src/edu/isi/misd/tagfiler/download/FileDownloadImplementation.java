@@ -117,6 +117,7 @@ public class FileDownloadImplementation implements FileDownload {
     public List<String> getFiles(String dataset) {
         assert (dataset != null && dataset.length() > 0);
         controlNumber = dataset;
+    	fileUploadListener.notifyUpdateStart(controlNumber);
 
         try {
             fileNames = new ArrayList<String>();
@@ -131,6 +132,8 @@ public class FileDownloadImplementation implements FileDownload {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
         }
+    	fileUploadListener.notifyUpdateComplete(controlNumber);
+    	
         return fileNames;
     }
 
@@ -167,20 +170,6 @@ public class FileDownloadImplementation implements FileDownload {
         }
 
         return success;
-    }
-
-    /**
-     * Called when a control number update starts
-     */
-    public void notifyUpdateStart(String filename) {
-    	fileUploadListener.notifyUpdateStart(filename);
-    }
-
-    /**
-     * Called when a control number update completes
-     */
-    public void notifyUpdateComplete(String filename) {
-    	fileUploadListener.notifyUpdateComplete(filename);
     }
 
     /**
