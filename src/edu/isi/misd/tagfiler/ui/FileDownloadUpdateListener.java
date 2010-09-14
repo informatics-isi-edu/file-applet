@@ -103,12 +103,12 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
 
                 // start the session in the applet again after the files have
                 // loaded
-                fileDownloadUI.refreshSession(false);
+                //fileDownloadUI.refreshSession(false);
             } else {
                 // start the session in the applet without waiting for a
                 // response
                 // from the prompt window
-                fileDownloadUI.refreshSession(false);
+                //fileDownloadUI.refreshSession(false);
                 JOptionPane
                         .showMessageDialog(
                                 fileDownloadUI.getComponent(),

@@ -3,6 +3,7 @@ package edu.isi.misd.tagfiler;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import java.util.StringTokenizer;
 import java.util.Timer;
 
 import javax.swing.JApplet;
@@ -69,38 +70,28 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     private String tagFilerWebauthURL;
 
-    private Date validUntil;
-
     /**
      * Schedules the timers
      */
-    private void scheduleSessionTimers(long untilTime) {
-		long currentTime = (new Date()).getTime();
-		
-		if (currentTime >= untilTime) {
-			endSession();
-	        System.out.println("session has expired");
-		}
-		else {
-    		validUntil = new Date(untilTime);
-    		long abortPeriod =  untilTime - currentTime;
-	        long warnPeriod = abortPeriod - (warnIdleSeconds * 1000);
-	        
-	        if (warnPeriod < 0) {
-	        	warnPeriod = 0;
-	        }
+    public void scheduleSessionTimers(long abortPeriod) {
+    	suspendSession();
+    	
+        long warnPeriod = abortPeriod - (warnIdleSeconds * 1000);
+        
+        if (warnPeriod < 0) {
+        	warnPeriod = 0;
+        }
 
-	        abortTimer = new Timer();
-	        abortTimer.schedule(new SessionExpireTimerTask(this), abortPeriod);
+        abortTimer = new Timer();
+        abortTimer.schedule(new SessionExpireTimerTask(this), abortPeriod);
 
-	        if (warnPeriod > 0) {
-		        warnIdleTimer = new Timer();
-		        warnIdleTimer.schedule(new WarnIdleTimerTask(this), warnPeriod);
-	        }
+        if (warnPeriod > 0) {
+	        warnIdleTimer = new Timer();
+	        warnIdleTimer.schedule(new WarnIdleTimerTask(this), warnPeriod);
+        }
 
-	        System.out.println("session timers set (abort=" + abortPeriod
-	                + ", warn=" + warnPeriod + ")");
-		}
+        System.out.println("session timers set (abort=" + abortPeriod
+                + ", warn=" + warnPeriod + ")");
     }
 
     /**
@@ -163,7 +154,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public void start() {
         client = JerseyClientUtils.createClient();
-        refreshSession(true);
+        refreshSession(false);
     }
 
     /**
@@ -173,31 +164,70 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      *            if true then send a poll to the server as well
      */
     public void refreshSession(boolean pollServer) {
+        long untilTime = pollServerSession(pollServer);
+    	
+        if (untilTime > 0) {
+            scheduleSessionTimers(untilTime);
+        }
+        else {
+        	endSession();
+        }
+    }
+
+    /**
+     * Polls the server to keep the session alive and resets its internal timers
+     * 
+     * @param extend
+     *            if true then send an extend session request
+     * @return the remaining time till the session expired
+     */
+    public long pollServerSession(boolean extend) {
         long untilTime = 0;
         ClientResponse response;
         String textEntity = null;
     	try {
-        	if (pollServer) {
-                response = client
-                .resource(DatasetUtils.getExtendSessionPollURL(tagFilerWebauthURL))
-                .accept("text/uri-list")
-                .cookie(sessionCookie).get(ClientResponse.class);
+    		String url;
+        	if (extend) {
+                url = DatasetUtils.getExtendSessionPollURL(tagFilerWebauthURL);
         	}
         	else {
-                response = client
-                .resource(DatasetUtils.getSessionPollURL(tagFilerWebauthURL))
-                .accept("text/uri-list")
-                .cookie(sessionCookie).get(ClientResponse.class);
+                url = DatasetUtils.getSessionPollURL(tagFilerWebauthURL);
         	}
+        	
+            response = client
+            .resource(url)
+            .accept("text/uri-list")
+            .cookie(sessionCookie).get(ClientResponse.class);
         	
             if (response.getStatus() == 200) {
                 textEntity = response.getEntity(String.class);
-                int index = textEntity.indexOf('=');
-                textEntity = DatasetUtils.urlDecode(textEntity.substring(index+1));
-                Date until = DatasetUtils.getDate(textEntity);
-                untilTime = until.getTime();
+                StringTokenizer tokenizer = new StringTokenizer(textEntity, "&");
+                while (tokenizer.hasMoreTokens()) {
+                	String token = tokenizer.nextToken().trim();
+                	if (token.startsWith("secsremain=")) {
+                		token = token.substring("secsremain=".length());
+                		untilTime = Long.parseLong(token) * 1000;
+                		break;
+                	}
+                }
+                
+                if (untilTime == 0) {
+                	tokenizer = new StringTokenizer(textEntity, "&");
+                    while (tokenizer.hasMoreTokens()) {
+                    	String token = tokenizer.nextToken().trim();
+                    	if (token.startsWith("until=")) {
+                    		token = token.substring("until=".length());
+                    		token = DatasetUtils.urlDecode(token);
+                    		Date until = DatasetUtils.getDate(token);
+                    		long currentTime = (new Date()).getTime();
+                    		untilTime = until.getTime() - currentTime;
+                    		break;
+                    	}
+                    }
+                }
+                
                 System.out.println("Refreshed the session, cookie="
-                        + sessionCookie);
+                        + sessionCookie + " (" + textEntity + ")");
                 sessionCookie = JerseyClientUtils.updateSessionCookie(response,
                         this, sessionCookie);
                 getFileTransfer().updateSessionCookie(sessionCookie);
@@ -212,11 +242,12 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     	catch (Throwable e)
     	{
             System.out
-            .println("Could not decode URI \""
-                    + textEntity + "\"");
+            .println("Error polling the server");
+            e.printStackTrace();
     	}
-        suspendSession();
-        scheduleSessionTimers(untilTime);
+    	
+    	return untilTime;
+    	
     }
 
     /**
@@ -238,6 +269,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * Ends the session, redirecting to the login page
      */
     public void endSession() {
+    	suspendSession();
         String logoutURL = DatasetUtils.getLogoutURL(tagFilerWebauthURL);
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
         formData.add("referer", DatasetUtils.getLoginURL(tagFilerWebauthURL));
@@ -294,4 +326,11 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * @return the FileTransfer object
      */
     abstract protected FileTransfer getFileTransfer();
+    
+    /**
+     * @return the warning period in ms
+     */
+    public long getWarnIdle() {
+    	return warnIdleSeconds * 1000;
+    }
 }

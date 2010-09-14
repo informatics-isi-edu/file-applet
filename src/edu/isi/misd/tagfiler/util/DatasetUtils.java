@@ -441,11 +441,10 @@ public class DatasetUtils {
      *            the string representation of the data
      * @return the Date
      */
-    public static Date getDate(String value) throws ParseException {
-    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public synchronized static Date getDate(String value) throws ParseException {
+    	SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
     	sdf.setLenient(false);
-    	int index = value.lastIndexOf(".");
-    	Date d = sdf.parse(value.substring(0, index));
+    	Date d = sdf.parse(value);
     	
     	return d;
     }
