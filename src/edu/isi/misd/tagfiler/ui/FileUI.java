@@ -15,10 +15,8 @@ public interface FileUI {
      * 
      * @param url
      *            the URL to redirect to
-     * @param home
-     *            if true then the login will redirect to the home page
      */
-    public void redirect(String url, boolean home);
+    public void redirect(String url);
 
     /**
      * 
@@ -48,12 +46,9 @@ public interface FileUI {
     public void suspendSession();
 
     /**
-     * Ends the session, redirecting to the login page
-     * 
-     * @param home
-     *            if true then the login will redirect to the home page
+     * Tells the UI to end its current session.
      */
-    public void endSession(boolean home);
+    public void endSession();
 
     /**
      * Tells the UI to clear all of its user-editable fields.

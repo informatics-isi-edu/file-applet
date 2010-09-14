@@ -528,7 +528,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.DownloadSuccess",
                             new String[] { datasetName }));
-            redirect(buff.toString(), false);
+            redirect(buff.toString());
         }
 
         public void notifyFailure(String datasetName, String err) {
@@ -547,7 +547,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.DownloadFailure", new String[] {
                                     datasetName, message }));
-            redirect(buff.toString(), false);
+            redirect(buff.toString());
         }
 
         public void notifyFailure(String datasetName, int code) {
@@ -567,7 +567,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.DownloadFailure", new String[] {
                                     datasetName, message }));
-            redirect(buff.toString(), false);
+            redirect(buff.toString());
 
         }
 

@@ -38,7 +38,7 @@ public class WarnIdleTimerTask extends TimerTask {
         long untilTime = fileUI.pollServerSession(false);
         
         if (untilTime <= 0) {
-        	fileUI.endSession(false);
+        	fileUI.endSession();
         }
         else if (untilTime <= fileUI.getWarnIdle()) {
             int result = JOptionPane
@@ -60,11 +60,9 @@ public class WarnIdleTimerTask extends TimerTask {
 		        // will handle it on the normal timeout, but it seems to conflict
 		        // with the browser if trying to force it.
 		    	// just ignore
-	        	fileUI.endSession(true);
 		    }
         }
         else {
-        	// refresh idle time
         	fileUI.scheduleSessionTimers(untilTime);
         }
     }

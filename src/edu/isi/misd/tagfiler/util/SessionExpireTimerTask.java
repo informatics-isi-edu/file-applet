@@ -30,7 +30,7 @@ public class SessionExpireTimerTask extends TimerTask {
      */
     @Override
     public void run() {
-        fileUI.endSession(false);
+        fileUI.endSession();
     }
 
 }
