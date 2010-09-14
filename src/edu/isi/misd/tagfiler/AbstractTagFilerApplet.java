@@ -1,5 +1,6 @@
 package edu.isi.misd.tagfiler;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -170,7 +171,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
             scheduleSessionTimers(untilTime);
         }
         else {
-        	endSession();
+        	endSession(false);
         }
     }
 
@@ -267,8 +268,11 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     /**
      * Ends the session, redirecting to the login page
+     * 
+     * @param home
+     *            if true then the login will redirect to the home page
      */
-    public void endSession() {
+    public void endSession(boolean home) {
     	suspendSession();
         String logoutURL = DatasetUtils.getLogoutURL(tagFilerWebauthURL);
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
@@ -281,21 +285,31 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
         System.out.println("logged out, response=" + response.getStatus());
         response.close();
 
-        redirect(DatasetUtils.getLoginURL(tagFilerWebauthURL));
+        redirect(DatasetUtils.getLoginURL(tagFilerWebauthURL), home);
     }
 
     /**
      * Redirects to an url
+     * @param home
+     *            if true then the login will redirect to the home page
      */
-    public void redirect(String urlStr) {
+    public void redirect(String urlStr, boolean home) {
         assert (urlStr != null);
-        System.out.println("redirect: " + urlStr);
+        System.out.println("redirect: " + urlStr + (home ? "?referer=" + tagFilerServerURL : ""));
         try {
-            final URL url = new URL(urlStr);
+        	URL url;
+        	if (home) {
+        		url = new URL(urlStr + "?referer="+DatasetUtils.urlEncode(tagFilerServerURL));
+        	} else {
+        		url = new URL(urlStr);
+        	}
             getAppletContext().showDocument(url, "_self");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+	    catch (UnsupportedEncodingException e) {
+	        e.printStackTrace();
+	    }
     }
 
     /**

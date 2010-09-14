@@ -395,7 +395,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.UploadSuccess",
                             new String[] { datasetName }));
-            redirect(buff.toString());
+            redirect(buff.toString(), false);
         }
 
         public void notifyFailure(String datasetName, int code) {
@@ -414,7 +414,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.UploadFailure", new String[] {
                                     datasetName, message }));
-            redirect(buff.toString());
+            redirect(buff.toString(), false);
 
         }
 
@@ -514,7 +514,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
                             "tagfiler.url.GenericFailure",
                             new String[] { message }));
 
-            redirect(buff.toString());
+            redirect(buff.toString(), false);
 
         }
     }
