@@ -2,6 +2,7 @@ package edu.isi.misd.tagfiler;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 import java.util.Timer;
 
 import javax.swing.JApplet;
@@ -56,6 +57,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     // parameter name for the tagserver URL
     private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
 
+    // parameter name for the tagserver URL
+    private static final String TAGFILER_AUTHN_URL_PARAM = "tagfiler.authn.url";
+
     private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
     // tagfiler server URL specified from the parameter of the applet
     protected String tagFilerServerURL = null;
@@ -65,21 +69,38 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     private String tagFilerWebauthURL;
 
+    private Date validUntil;
+
     /**
      * Schedules the timers
      */
-    private void scheduleSessionTimers() {
-        long abortPeriod = tagFilerIdleMins * 60 * 1000;
-        long warnPeriod = abortPeriod - (warnIdleSeconds * 1000);
+    private void scheduleSessionTimers(long untilTime) {
+		long currentTime = (new Date()).getTime();
+		
+		if (currentTime >= untilTime) {
+			endSession();
+	        System.out.println("session has expired");
+		}
+		else {
+    		validUntil = new Date(untilTime);
+    		long abortPeriod =  untilTime - currentTime;
+	        long warnPeriod = abortPeriod - (warnIdleSeconds * 1000);
+	        
+	        if (warnPeriod < 0) {
+	        	warnPeriod = 0;
+	        }
 
-        abortTimer = new Timer();
-        abortTimer.schedule(new SessionExpireTimerTask(this), abortPeriod);
+	        abortTimer = new Timer();
+	        abortTimer.schedule(new SessionExpireTimerTask(this), abortPeriod);
 
-        warnIdleTimer = new Timer();
-        warnIdleTimer.schedule(new WarnIdleTimerTask(this), warnPeriod);
+	        if (warnPeriod > 0) {
+		        warnIdleTimer = new Timer();
+		        warnIdleTimer.schedule(new WarnIdleTimerTask(this), warnPeriod);
+	        }
 
-        System.out.println("session timers set (abort=" + abortPeriod
-                + ", warn=" + warnPeriod + ")");
+	        System.out.println("session timers set (abort=" + abortPeriod
+	                + ", warn=" + warnPeriod + ")");
+		}
     }
 
     /**
@@ -87,7 +108,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public void init() {
 
-        // load any security settings
+    	// load any security settings
         TagFilerSecurity.loadSecuritySettings();
 
         sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
@@ -142,7 +163,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public void start() {
         client = JerseyClientUtils.createClient();
-        scheduleSessionTimers();
+        refreshSession(true);
     }
 
     /**
@@ -152,11 +173,29 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      *            if true then send a poll to the server as well
      */
     public void refreshSession(boolean pollServer) {
-        if (pollServer) {
-            ClientResponse response = client
-                    .resource(DatasetUtils.getSessionPollURL(tagFilerServerURL))
-                    .cookie(sessionCookie).get(ClientResponse.class);
+        long untilTime = 0;
+        ClientResponse response;
+        String textEntity = null;
+    	try {
+        	if (pollServer) {
+                response = client
+                .resource(DatasetUtils.getExtendSessionPollURL(tagFilerWebauthURL))
+                .accept("text/uri-list")
+                .cookie(sessionCookie).get(ClientResponse.class);
+        	}
+        	else {
+                response = client
+                .resource(DatasetUtils.getSessionPollURL(tagFilerWebauthURL))
+                .accept("text/uri-list")
+                .cookie(sessionCookie).get(ClientResponse.class);
+        	}
+        	
             if (response.getStatus() == 200) {
+                textEntity = response.getEntity(String.class);
+                int index = textEntity.indexOf('=');
+                textEntity = DatasetUtils.urlDecode(textEntity.substring(index+1));
+                Date until = DatasetUtils.getDate(textEntity);
+                untilTime = until.getTime();
                 System.out.println("Refreshed the session, cookie="
                         + sessionCookie);
                 sessionCookie = JerseyClientUtils.updateSessionCookie(response,
@@ -167,10 +206,17 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
                         .println("Could not refresh the session in the server, code="
                                 + response.getStatus());
             }
+            
             response.close();
-        }
+    	}
+    	catch (Throwable e)
+    	{
+            System.out
+            .println("Could not decode URI \""
+                    + textEntity + "\"");
+    	}
         suspendSession();
-        scheduleSessionTimers();
+        scheduleSessionTimers(untilTime);
     }
 
     /**

@@ -51,7 +51,7 @@ import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
  *            URL of the tagfiler server and path to connect to (i.e.
  *            https://tagfiler.isi.edu:443/tagfiler)
  * @param tagfiler
- *            .control.number (optional) control number used to retrieve the
+ *            .control.number (optional) transmission number used to retrieve the
  *            files
  * 
  * @author David Smith
@@ -63,7 +63,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     private static final long serialVersionUID = 2134123;
 
-    private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.server.controlnum";
+    private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.server.transmissionnum";
 
     // parameters referenced from the applet.properties file
     private static final String FONT_NAME_PROPERTY = "tagfiler.font.name";
@@ -597,23 +597,23 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
 
         /**
-         * Called when a control number update starts
+         * Called when a transmission number update starts
          */
         public void notifyUpdateStart(String filename) {
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.UpdateDownloadStatus",
                     new String[] { }));
-            System.out.println("Updating control number " + filename + "...");
+            System.out.println("Updating transmission number " + filename + "...");
         }
 
         /**
-         * Called when a control number update completes
+         * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));
-            System.out.println("Completed updating control number " + filename + "...");
+            System.out.println("Completed updating transmission number " + filename + "...");
         }
 
         /**

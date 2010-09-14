@@ -64,7 +64,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     // base directory to use
     private String baseDirectory = "";
 
-    // the dataset control number
+    // the dataset transmission number
     private String controlNumber;
 
     // custom tags that are used
@@ -351,10 +351,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     }
 
     /**
-     * Makes sure a dataset with the specified control number already exists
+     * Makes sure a dataset with the specified transmission number already exists
      * 
      * @param control
-     *            number the control number
+     *            number the transmission number
      */
     public boolean verifyValidControlNumber(String controlNumber) {
         assert (controlNumber != null && controlNumber.length() != 0);
@@ -382,7 +382,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                 valid = true;
             }
             else {
-                System.out.println("control number verification failed, code="
+                System.out.println("transmission number verification failed, code="
                         + response.getStatus());
             }
             cookie = JerseyClientUtils.updateSessionCookie(response, applet,

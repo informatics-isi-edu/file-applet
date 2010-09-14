@@ -114,7 +114,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     }
 
     /**
-     * Makes a web server access to get a control number.
+     * Makes a web server access to get a transmission number.
      */
     private String getTransmitNumber() throws FatalException {
         String ret = "";
@@ -132,7 +132,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             ret = response.getLocation().toString();
         } else {
             fileUploadListener
-                    .notifyLogMessage("Error getting a control number (code="
+                    .notifyLogMessage("Error getting a transmission number (code="
                             + response.getStatus() + ")");
             throw new FatalException(
                     TagFilerProperties

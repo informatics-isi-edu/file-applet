@@ -51,7 +51,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
      * @param fd
      *            the file download instance
      * @param field
-     *            the control number field
+     *            the transmission number field
      * @param destDirField
      *            the destination directory field
      * @param model
@@ -87,7 +87,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
 
             fileDownloadUI.suspendSession();
 
-            // make sure the control number exists
+            // make sure the transmission number exists
             if (fileDownload.verifyValidControlNumber(controlNumber)) {
                 final List<String> fileList = fileDownload
                         .getFiles(controlNumber);

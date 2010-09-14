@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 
 import edu.isi.misd.tagfiler.exception.FatalException;
@@ -364,10 +367,26 @@ public class DatasetUtils {
      *            the tagfiler server URL to poll
      * @return the full url
      */
-    public static final String getSessionPollURL(String tagFilerServer) {
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-        return new StringBuffer(tagFilerServer).append(
+    public static final String getSessionPollURL(String tagFilerWebauthURL) {
+        assert (tagFilerWebauthURL != null && tagFilerWebauthURL.length() > 0);
+        return new StringBuffer(tagFilerWebauthURL).append(
                 TagFilerProperties.getProperty("tagfiler.url.SessionPoll"))
+                .toString();
+
+    }
+
+    /**
+     * Retrieves the URL to poll a tagfiler server to keep the session alive
+     * 
+     * @param tagFilerServer
+     *            the tagfiler server URL to poll
+     * @return the full url
+     */
+    public static final String getExtendSessionPollURL(String tagFilerWebauthURL) {
+        assert (tagFilerWebauthURL != null && tagFilerWebauthURL.length() > 0);
+        return new StringBuffer(tagFilerWebauthURL).append(
+                TagFilerProperties.getProperty("tagfiler.url.SessionPoll"))
+                .append("?action=extend")
                 .toString();
 
     }
@@ -413,6 +432,22 @@ public class DatasetUtils {
         return new StringBuffer(webauthServer).append(
                 TagFilerProperties.getProperty("tagfiler.url.Status"))
                 .toString();
+    }
+    
+    /**
+     * Build a Date based on its string representation
+     * 
+     * @param value
+     *            the string representation of the data
+     * @return the Date
+     */
+    public static Date getDate(String value) throws ParseException {
+    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	sdf.setLenient(false);
+    	int index = value.lastIndexOf(".");
+    	Date d = sdf.parse(value.substring(0, index));
+    	
+    	return d;
     }
 
 }

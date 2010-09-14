@@ -39,8 +39,8 @@ public interface FileDownload extends FileTransfer {
      * number already exists
      * 
      * @param controlNumber
-     *            the control number to check
-     * @return true if a dataset with the particular control number exists,
+     *            the transmission number to check
+     * @return true if a dataset with the particular transmission number exists,
      *         false otherwise
      */
     public boolean verifyValidControlNumber(String controlNumber);

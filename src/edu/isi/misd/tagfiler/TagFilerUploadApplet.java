@@ -488,13 +488,13 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         }
 
         /**
-         * Called when a control number update starts
+         * Called when a transmission number update starts
          */
         public void notifyUpdateStart(String filename) {
         }
 
         /**
-         * Called when a control number update completes
+         * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
         }
