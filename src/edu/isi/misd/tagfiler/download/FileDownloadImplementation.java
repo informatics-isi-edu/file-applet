@@ -391,9 +391,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             else {
                 System.out.println("transmission number verification failed, code="
                         + response.getStatus());
-                if ((status != 200) && status != 303) {
-                	errorMessage.append("");
-                }
+
             	code.append("Status ").append(status);
                 switch (status) {
                 case 404:
