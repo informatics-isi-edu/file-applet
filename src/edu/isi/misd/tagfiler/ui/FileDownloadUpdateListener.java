@@ -86,7 +86,9 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         	}
 
             // make sure the transmission number exists
-            if (fileDownload.verifyValidControlNumber(controlNumber)) {
+        	StringBuffer errorMessage = new StringBuffer();
+        	StringBuffer status = new StringBuffer();
+            if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {
                 final List<String> fileList = fileDownload
                         .getFiles(controlNumber);
                 if (fileList != null) {
@@ -112,8 +114,8 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
                                 fileDownloadUI.getComponent(),
                         TagFilerProperties.getProperty(
                                 "tagfiler.dialog.InvalidControlNumber",
-                                new String[] { controlNumber }),
-                                "", JOptionPane.ERROR_MESSAGE);
+                                new String[] { controlNumber, errorMessage.toString() }),
+                                status.toString(), JOptionPane.ERROR_MESSAGE);
             }
 
         } else {

@@ -40,9 +40,13 @@ public interface FileDownload extends FileTransfer {
      * 
      * @param controlNumber
      *            the transmission number to check
+     * @param status
+     *            the status returned by the HTTP response 
+     * @param errorMessage
+     *            the error message to be displayed
      * @return true if a dataset with the particular transmission number exists,
      *         false otherwise
      */
-    public boolean verifyValidControlNumber(String controlNumber);
+    public boolean verifyValidControlNumber(String controlNumber, StringBuffer status, StringBuffer errorMessage);
 
 }

@@ -351,12 +351,19 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     }
 
     /**
-     * Makes sure a dataset with the specified transmission number already exists
+     * Checks with the tagfiler server to verify that a dataset by the control
+     * number already exists
      * 
-     * @param control
-     *            number the transmission number
+     * @param controlNumber
+     *            the transmission number to check
+     * @param status
+     *            the status returned by the HTTP response 
+     * @param errorMessage
+     *            the error message to be displayed
+     * @return true if a dataset with the particular transmission number exists,
+     *         false otherwise
      */
-    public boolean verifyValidControlNumber(String controlNumber) {
+    public boolean verifyValidControlNumber(String controlNumber, StringBuffer code, StringBuffer errorMessage) {
         assert (controlNumber != null && controlNumber.length() != 0);
         boolean valid = false;
         ClientResponse response = null;
@@ -384,6 +391,32 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             else {
                 System.out.println("transmission number verification failed, code="
                         + response.getStatus());
+                if ((status != 200) && status != 303) {
+                	errorMessage.append("");
+                }
+            	code.append("Status ").append(status);
+                switch (status) {
+                case 404:
+                	errorMessage.append("Not Found");
+                	break;
+                case 403:
+                	errorMessage.append("Forbidden");
+                	break;
+                case 401:
+                	errorMessage.append("Unauthorized");
+                	break;
+                case 400:
+                	errorMessage.append("Bad Request");
+                	break;
+                case 409:
+                	errorMessage.append("Conflict");
+                	break;
+                case 500:
+                	errorMessage.append("Internal Server Error");
+                	break;
+                default:
+                	errorMessage.append("Unmatched Response Header Pattern");
+                }
             }
             cookie = JerseyClientUtils.updateSessionCookie(response, applet,
                     cookie);
