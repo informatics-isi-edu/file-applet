@@ -154,7 +154,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public void start() {
         client = JerseyClientUtils.createClient();
-        refreshSession(false);
+        //refreshSession(false);
     }
 
     /**
@@ -226,11 +226,13 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
                     }
                 }
                 
-                System.out.println("Refreshed the session, cookie="
-                        + sessionCookie + " (" + textEntity + ")");
-                sessionCookie = JerseyClientUtils.updateSessionCookie(response,
-                        this, sessionCookie);
-                getFileTransfer().updateSessionCookie(sessionCookie);
+                if (untilTime != 0) {
+                    System.out.println("Refreshed the session, cookie="
+                            + sessionCookie + " (" + textEntity + ")");
+                    sessionCookie = JerseyClientUtils.updateSessionCookie(response,
+                            this, sessionCookie);
+                    getFileTransfer().updateSessionCookie(sessionCookie);
+                }
             } else {
                 System.out
                         .println("Could not refresh the session in the server, code="
