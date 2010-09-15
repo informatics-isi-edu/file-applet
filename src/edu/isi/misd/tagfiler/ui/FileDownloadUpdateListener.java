@@ -85,8 +85,6 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
             	return;
         	}
 
-            fileDownloadUI.suspendSession();
-
             // make sure the transmission number exists
             if (fileDownload.verifyValidControlNumber(controlNumber)) {
                 final List<String> fileList = fileDownload

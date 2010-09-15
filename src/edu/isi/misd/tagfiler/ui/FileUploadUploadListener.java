@@ -57,7 +57,6 @@ public class FileUploadUploadListener extends FileUploadActionListener {
         try {
             fileUploadUI.validateFields();
             if (filesToUpload.size() > 0) {
-                fileUploadUI.suspendSession();
                 fileUploadUI.deactivate();
                 // run in a separate thread so that the UI returns
                 threadExecutor.execute(new RunUploadTask());
