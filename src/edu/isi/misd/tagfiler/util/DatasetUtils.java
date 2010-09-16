@@ -141,12 +141,12 @@ public class DatasetUtils {
                         .append(DatasetUtils.urlEncode(customTagMap
                                 .getValue(tagName)));
             }
-            if (readACL_tag != null && readACL_value != null) {
+            if (readACL_tag != null && readACL_value != null && readACL_value != "") {
                 restURL.append("&").append(DatasetUtils.urlEncode(readACL_tag))
                         .append("=")
                         .append(DatasetUtils.urlEncode(readACL_value));
             }
-            if (writeACL_tag != null && readACL_value != null) {
+            if (writeACL_tag != null && writeACL_value != null && writeACL_value != "") {
                 restURL.append("&")
                         .append(DatasetUtils.urlEncode(writeACL_tag))
                         .append("=")
@@ -231,12 +231,12 @@ public class DatasetUtils {
                             .getProperty("tagfiler.tag.checksum")).append("=")
                     .append(checksum);
 
-            if (readACL_tag != null && readACL_value != null) {
+            if (readACL_tag != null && readACL_value != null && readACL_value != "") {
                 restURL.append("&").append(DatasetUtils.urlEncode(readACL_tag))
                         .append("=")
                         .append(DatasetUtils.urlEncode(readACL_value));
             }
-            if (writeACL_tag != null && readACL_value != null) {
+            if (writeACL_tag != null && writeACL_value != null && writeACL_value != "") {
                 restURL.append("&")
                         .append(DatasetUtils.urlEncode(writeACL_tag))
                         .append("=")
