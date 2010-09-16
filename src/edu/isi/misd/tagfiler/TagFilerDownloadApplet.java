@@ -351,6 +351,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         statusLabel.setFont(new Font(statusLabel.getFont().getFontName(),
                 Font.PLAIN, statusLabel.getFont().getSize()));
+        statusLabel.setMaximumSize(new Dimension(500, 16));
 
         bottomTop.add(statusLabel);
         bottomTop.add(progressBar);
