@@ -675,8 +675,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     public int validateFields() {
         int valid = 1;
 
-        if (destinationDirectoryField.getText().trim().length() == 0
-                || fileDownload.getSize() == 0) {
+        if (destinationDirectoryField.getText().trim().length() == 0) {
             valid = -1;
         }
         else {
