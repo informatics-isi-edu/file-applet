@@ -108,4 +108,18 @@ public interface FileUploadListener {
      *            name of the dataset being transferred.
      */
     public void notifyUpdateComplete(String filename);
+
+    /**
+     * Called when retrieving files starts
+     * @param size
+     *            number of files to be retrieved.
+     */
+    public void notifyRetrieveStart(int size);
+
+    /**
+     * Called when the retrieving of a file completed
+     * @param name
+     *            the retrieved file.
+     */
+    public void notifyFileRetrieveComplete(String filename);
 }

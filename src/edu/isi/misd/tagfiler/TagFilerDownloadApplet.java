@@ -608,9 +608,49 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
 
         /**
+         * Called when retrieving files starts
+         * @param size
+         *            number of files to be retrieved.
+         */
+        public void notifyRetrieveStart(int size) {
+            while ((size / unit) >= Integer.MAX_VALUE) {
+                unit *= 10;
+            }
+            progressBar.setValue(0);
+            progressBar.setMaximum((int) size / unit);
+            totalFiles = size;
+            filesCompleted = 0;
+            
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.message.download.FileRetrieveStatus",
+                    new String[] { Integer.toString(filesCompleted + 1),
+                            Integer.toString(totalFiles) }));
+            
+            System.out.println("Start retrieving " + size + " files.");
+        }
+
+        /**
+         * Called when the retrieving of a file completed
+         * @param name
+         *            the retrieved file.
+         */
+        public void notifyFileRetrieveComplete(String filename) {
+        	filesToDownload.add(filesToDownload.size(), filename);
+        	filesCompleted++;
+            progressBar.setValue((int) filesCompleted / unit);
+            if (filesCompleted < totalFiles) {
+                updateStatus(TagFilerProperties.getProperty(
+                        "tagfiler.message.download.FileRetrieveStatus",
+                        new String[] { Integer.toString(filesCompleted + 1),
+                                Integer.toString(totalFiles) }));
+            }
+        }
+
+        /**
          * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
+            progressBar.setValue(0);
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));

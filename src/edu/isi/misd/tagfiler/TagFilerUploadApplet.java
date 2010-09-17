@@ -499,6 +499,22 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         public void notifyUpdateComplete(String filename) {
         }
 
+        /**
+         * Called when retrieving files starts
+         * @param size
+         *            number of files to be retrieved.
+         */
+        public void notifyRetrieveStart(int size) {
+        }
+
+        /**
+         * Called when the retrieving of a file completed
+         * @param name
+         *            the retrieved file.
+         */
+        public void notifyFileRetrieveComplete(String filename) {
+        }
+
         public void notifyError(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e

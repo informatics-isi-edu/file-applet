@@ -225,10 +225,12 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
             // get the files maps
             StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
+            fileUploadListener.notifyRetrieveStart(tokenizer.countTokens());
             while (tokenizer.hasMoreTokens()) {
                 // get the file name
                 String file = tokenizer.nextToken();
                 String name = DatasetUtils.urlDecode(file).substring(1);
+                fileUploadListener.notifyFileRetrieveComplete(name);
                 fileNames.add(name);
                 encodeMap.put(name, file);
 

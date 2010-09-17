@@ -91,11 +91,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
             if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {
                 final List<String> fileList = fileDownload
                         .getFiles(controlNumber);
-                if (fileList != null) {
-                    for (String file : fileList) {
-                        filesToDownload.add(filesToDownload.size(), file);
-                    }
-                }
+
                 if (filesToDownload.size() > 0) {
                     fileDownloadUI.enableSelectDirectory();
                     fileDownloadUI.enableDestinationDirectory();
