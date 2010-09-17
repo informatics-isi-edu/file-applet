@@ -118,6 +118,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	public void run() {
     		updateBtn.doClick();
     		disableUpdate();
+        	enableSelectDirectory();
+        	destinationDirectoryField.setEnabled(true);
+        	controlNumberField.setEnabled(false);
         }
     }
 
@@ -153,9 +156,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         super.start();
         	if (defaultControlNumber.length() > 0)
         	{
-            	enableSelectDirectory();
-            	destinationDirectoryField.setEnabled(true);
-            	controlNumberField.setEnabled(false);
             	filesTimer = new Timer(true);
             	filesTimer.schedule(new EventTimerTask(), 1000);
         	}
