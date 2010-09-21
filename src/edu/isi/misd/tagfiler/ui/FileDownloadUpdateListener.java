@@ -31,10 +31,12 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
     	}
 
     	public void run() {
+    		clicked = true;
     		button.doClick();
     	}
     }
     
+    private	boolean clicked;
     private Timer eventTimer;
 
     private final FileDownload fileDownload;
@@ -58,7 +60,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
      *            the list model that shows the files to download
      */
     public FileDownloadUpdateListener(FileDownloadUI ui, FileDownload fd,
-            JTextField field, DefaultListModel model) {
+            JTextField field, DefaultListModel model, boolean downloadStudy) {
         super(ui);
         assert (fd != null);
         assert (field != null);
@@ -68,6 +70,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         controlNumberField = field;
         filesToDownload = model;
         eventTimer = new Timer(true);
+        clicked = downloadStudy;
     }
 
     /**
@@ -78,8 +81,8 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
         assert (e != null);
         final String controlNumber = controlNumberField.getText().trim();
         if (controlNumber.length() > 0) {
-        	if (filesToDownload.size() > 0) {
-            	fileDownloadUI.clearFields();
+        	if (filesToDownload.size() > 0 || !clicked) {
+        		fileDownloadUI.clearFields();
             	controlNumberField.setText(controlNumber);
             	eventTimer.schedule(new EventTimerTask((JButton)e.getSource()), 1000);
             	return;

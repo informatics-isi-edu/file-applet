@@ -108,6 +108,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     // progress bar used for uploading files
     private JProgressBar progressBar = null;
+    
+    private boolean downloadStudy;
 
 
     private Timer filesTimer;
@@ -116,6 +118,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     	
     	public void run() {
+    		downloadStudy = true;
     		updateBtn.doClick();
     		disableUpdate();
         	enableSelectDirectory();
@@ -383,7 +386,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
         // listeners
         updateBtn.addActionListener(new FileDownloadUpdateListener(this,
-                fileDownload, controlNumberField, filesToDownload));
+                fileDownload, controlNumberField, filesToDownload, (defaultControlNumber.length() > 0)));
 
         selectDirBtn
                 .addActionListener(new FileDownloadSelectDestinationDirectoryListener(
@@ -583,7 +586,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         public void notifyStart(String datasetName, long totalSize) {
 
             totalFiles = filesToDownload.size();
-            totalBytes = totalSize;
+            totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
             // if the size of the transfer is beyond the integer max value,
@@ -673,6 +676,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          */
         public void notifyFileTransferComplete(String filename, long size) {
             filesCompleted++;
+            
+            if (size == 0) {
+            	size++;
+            }
+            
             bytesTransferred += size;
             progressBar.setValue((int) bytesTransferred / unit);
             if (filesCompleted < totalFiles) {
@@ -703,8 +711,20 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * @param status
      */
     private void updateStatus(String status) {
+    	updateStatus(status, false);
+    }
+
+    /**
+     * Convenience method for updating the status label
+     * 
+     * @param status
+     */
+    private void updateStatus(String status, boolean paint) {
     	statusLabel.setText(status);
-    	statusLabel.paintImmediately(statusLabel.getVisibleRect());
+    	
+    	if (paint) {
+        	statusLabel.paintImmediately(statusLabel.getVisibleRect());
+    	}
     }
 
     /**
@@ -766,5 +786,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      */
     public FileTransfer getFileTransfer() {
         return fileDownload;
+    }
+    
+    public boolean isDownloadStudy() {
+    	return downloadStudy;
     }
 }
