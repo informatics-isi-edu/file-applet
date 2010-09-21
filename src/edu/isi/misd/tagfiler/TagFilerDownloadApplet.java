@@ -108,6 +108,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     // progress bar used for uploading files
     private JProgressBar progressBar = null;
+    
+    private boolean downloadStudy;
 
 
     private Timer filesTimer;
@@ -116,8 +118,12 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     	
     	public void run() {
+    		downloadStudy = true;
     		updateBtn.doClick();
     		disableUpdate();
+        	enableSelectDirectory();
+        	destinationDirectoryField.setEnabled(true);
+        	controlNumberField.setEnabled(false);
         }
     }
 
@@ -153,9 +159,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         super.start();
         	if (defaultControlNumber.length() > 0)
         	{
-            	enableSelectDirectory();
-            	destinationDirectoryField.setEnabled(true);
-            	controlNumberField.setEnabled(false);
             	filesTimer = new Timer(true);
             	filesTimer.schedule(new EventTimerTask(), 1000);
         	}
@@ -351,6 +354,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         statusLabel.setFont(new Font(statusLabel.getFont().getFontName(),
                 Font.PLAIN, statusLabel.getFont().getSize()));
+        statusLabel.setMaximumSize(new Dimension(500, 16));
 
         bottomTop.add(statusLabel);
         bottomTop.add(progressBar);
@@ -382,7 +386,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
         // listeners
         updateBtn.addActionListener(new FileDownloadUpdateListener(this,
-                fileDownload, controlNumberField, filesToDownload));
+                fileDownload, controlNumberField, filesToDownload, (defaultControlNumber.length() > 0)));
 
         selectDirBtn
                 .addActionListener(new FileDownloadSelectDestinationDirectoryListener(
@@ -582,7 +586,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         public void notifyStart(String datasetName, long totalSize) {
 
             totalFiles = filesToDownload.size();
-            totalBytes = totalSize;
+            totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
             // if the size of the transfer is beyond the integer max value,
@@ -607,9 +611,49 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
 
         /**
+         * Called when retrieving files starts
+         * @param size
+         *            number of files to be retrieved.
+         */
+        public void notifyRetrieveStart(int size) {
+            while ((size / unit) >= Integer.MAX_VALUE) {
+                unit *= 10;
+            }
+            progressBar.setValue(0);
+            progressBar.setMaximum((int) size / unit);
+            totalFiles = size;
+            filesCompleted = 0;
+            
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.message.download.FileRetrieveStatus",
+                    new String[] { Integer.toString(filesCompleted + 1),
+                            Integer.toString(totalFiles) }));
+            
+            System.out.println("Start retrieving " + size + " files.");
+        }
+
+        /**
+         * Called when the retrieving of a file completed
+         * @param name
+         *            the retrieved file.
+         */
+        public void notifyFileRetrieveComplete(String filename) {
+        	filesToDownload.add(filesToDownload.size(), filename);
+        	filesCompleted++;
+            progressBar.setValue((int) filesCompleted / unit);
+            if (filesCompleted < totalFiles) {
+                updateStatus(TagFilerProperties.getProperty(
+                        "tagfiler.message.download.FileRetrieveStatus",
+                        new String[] { Integer.toString(filesCompleted + 1),
+                                Integer.toString(totalFiles) }));
+            }
+        }
+
+        /**
          * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
+            progressBar.setValue(0);
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));
@@ -632,7 +676,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          */
         public void notifyFileTransferComplete(String filename, long size) {
             filesCompleted++;
-            bytesTransferred += size;
+            
+            bytesTransferred += size + 1;
             progressBar.setValue((int) bytesTransferred / unit);
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
@@ -662,8 +707,20 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * @param status
      */
     private void updateStatus(String status) {
+    	updateStatus(status, false);
+    }
+
+    /**
+     * Convenience method for updating the status label
+     * 
+     * @param status
+     */
+    private void updateStatus(String status, boolean paint) {
     	statusLabel.setText(status);
-    	statusLabel.paintImmediately(statusLabel.getVisibleRect());
+    	
+    	if (paint) {
+        	statusLabel.paintImmediately(statusLabel.getVisibleRect());
+    	}
     }
 
     /**
@@ -674,8 +731,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     public int validateFields() {
         int valid = 1;
 
-        if (destinationDirectoryField.getText().trim().length() == 0
-                || fileDownload.getSize() == 0) {
+        if (destinationDirectoryField.getText().trim().length() == 0) {
             valid = -1;
         }
         else {
@@ -726,5 +782,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      */
     public FileTransfer getFileTransfer() {
         return fileDownload;
+    }
+    
+    public boolean isDownloadStudy() {
+    	return downloadStudy;
     }
 }

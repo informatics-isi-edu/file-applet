@@ -436,7 +436,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         public void notifyStart(String datasetName, long totalSize) {
             assert (datasetName != null && datasetName.length() > 0);
             totalFiles = filesToUpload.size();
-            totalBytes = totalSize;
+            totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
             // if the size of the transfer is beyond the integer max value,
@@ -470,7 +470,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
          */
         public void notifyFileTransferComplete(String filename, long size) {
             filesCompleted++;
-            bytesTransferred += size;
+            
+            bytesTransferred += size + 1;
             progressBar.setValue((int) bytesTransferred / unit);
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
@@ -497,6 +498,22 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
          * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
+        }
+
+        /**
+         * Called when retrieving files starts
+         * @param size
+         *            number of files to be retrieved.
+         */
+        public void notifyRetrieveStart(int size) {
+        }
+
+        /**
+         * Called when the retrieving of a file completed
+         * @param name
+         *            the retrieved file.
+         */
+        public void notifyFileRetrieveComplete(String filename) {
         }
 
         public void notifyError(Throwable e) {

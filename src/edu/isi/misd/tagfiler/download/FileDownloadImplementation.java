@@ -117,6 +117,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         assert (dataset != null && dataset.length() > 0);
         controlNumber = dataset;
     	fileUploadListener.notifyUpdateStart(controlNumber);
+    	boolean success = false;
+        String errMsg = null;
 
         try {
             fileNames = new ArrayList<String>();
@@ -127,11 +129,19 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
             setCustomTags();
             getDataSet();
+            success = true;
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
+            errMsg = e.getMessage();
         }
-    	fileUploadListener.notifyUpdateComplete(controlNumber);
+        finally {
+        	if (success) {
+            	fileUploadListener.notifyUpdateComplete(controlNumber);
+        	} else {
+        		fileUploadListener.notifyFailure(controlNumber, errMsg);
+        	}
+        }
     	
         return fileNames;
     }
@@ -187,7 +197,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     /**
      * Gets the files to be downloaded.
      */
-    private boolean getDataSet() {
+    private boolean getDataSet() throws Exception {
         boolean result = false;
 
         try {
@@ -204,16 +214,24 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
 	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
 
+	    int status = response.getStatus();
+	    if (status != 200) {
+	    	response.close();
+            fileUploadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
+        	throw new Exception("Status Code: " + status);
+	    }
             String textEntity = response.getEntity(String.class);
             textEntity = textEntity.replace(prefix, "");
             response.close();
 
             // get the files maps
             StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
+            fileUploadListener.notifyRetrieveStart(tokenizer.countTokens());
             while (tokenizer.hasMoreTokens()) {
                 // get the file name
                 String file = tokenizer.nextToken();
                 String name = DatasetUtils.urlDecode(file).substring(1);
+                fileUploadListener.notifyFileRetrieveComplete(name);
                 fileNames.add(name);
                 encodeMap.put(name, file);
 
@@ -259,8 +277,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         if (response.getStatus() != 200)
         {
-        	response.close();
         	fileUploadListener.notifyFailure(controlNumber, response.getStatus());
+        	response.close();
         	return "";
         }
 		String value = response.getEntity(String.class);
@@ -289,8 +307,13 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                     .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
                     .get(ClientResponse.class);
 
-	    if (response.getStatus() != 200) {
-        	throw new Exception("Status Code: " + response.getStatus());
+	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+
+	    int status = response.getStatus();
+	    
+	    if (status != 200) {
+	    	response.close();
+        	throw new Exception("Status Code: " + status);
 	    }
 	    InputStream in = response.getEntityInputStream();
 
@@ -325,6 +348,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                 }
                 in.close();
                 fos.close();
+                response.close();
 
                 // verify checksum
                 File downloadFile = new File(baseDirectory + File.separatorChar + localFile);
