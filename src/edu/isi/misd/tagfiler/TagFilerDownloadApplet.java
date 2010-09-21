@@ -677,11 +677,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         public void notifyFileTransferComplete(String filename, long size) {
             filesCompleted++;
             
-            if (size == 0) {
-            	size++;
-            }
-            
-            bytesTransferred += size;
+            bytesTransferred += size + 1;
             progressBar.setValue((int) bytesTransferred / unit);
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
