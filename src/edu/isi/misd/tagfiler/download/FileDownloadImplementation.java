@@ -217,6 +217,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	    int status = response.getStatus();
 	    if (status != 200) {
 	    	response.close();
+            fileUploadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
         	throw new Exception("Status Code: " + status);
 	    }
             String textEntity = response.getEntity(String.class);
