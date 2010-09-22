@@ -85,7 +85,7 @@ public class JerseyClientUtils {
         while (cookies.hasNext()) {
             javax.ws.rs.core.Cookie candidate = ((NewCookie) cookies.next())
                     .toCookie();
-            if (candidate.getName() == "webauthn") {
+            if (candidate.getName().equals("webauthn")) {
                 // this is a new session cookie, so save it for further REST
                 // calls
                 JerseyClientUtils.setCookieInBrowser(applet, cookie);
@@ -158,8 +158,8 @@ public class JerseyClientUtils {
 
         // TODO: I think this will wipe out any other cookies for this domain.
         // Perhaps we should append/replace.
-        ((JSObject) JSObject.getWindow(applet).getMember(DOCUMENT_MEMBER_NAME))
-                .setMember(COOKIE_MEMBER_NAME, cookieStr);
+	String jstext = "setCookie(\"" + cookie.getName() + "\", \"" + cookie.getValue() + "\")";
+        JSObject.getWindow(applet).eval(jstext);
     }
 
     /**
