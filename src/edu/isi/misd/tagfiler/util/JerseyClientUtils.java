@@ -17,6 +17,8 @@ import com.sun.jersey.client.apache.ApacheHttpClient;
 import com.sun.jersey.client.apache.config.ApacheHttpClientConfig;
 import com.sun.jersey.client.apache.config.DefaultApacheHttpClientConfig;
 
+import edu.isi.misd.tagfiler.exception.FatalException;
+
 /**
  * Various helper utilities for Jersey Client related operations.
  * 
@@ -37,16 +39,22 @@ public class JerseyClientUtils {
      * 
      * @return a new instance of a Jersey client
      */
-    public static Client createClient() {
+    public static Client createClient() throws FatalException{
         // TODO: generate specific configuration for each jersey client
         // that is used
         final ApacheHttpClientConfig config = new DefaultApacheHttpClientConfig();
         config.getProperties().put(
                 ApacheHttpClientConfig.PROPERTY_HANDLE_COOKIES, true);
 
-        final Client client = ApacheHttpClient.create(config);
+        try {
+            final Client client = ApacheHttpClient.create(config);
 
-        return client;
+            return client;
+        }
+        catch (Throwable e) {
+        	e.printStackTrace();
+        	throw new FatalException(e);
+        }
     }
 
     /**

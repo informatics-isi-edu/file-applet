@@ -1,7 +1,11 @@
 package edu.isi.misd.tagfiler;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 
 import javax.swing.JApplet;
 import javax.swing.JOptionPane;
@@ -26,6 +30,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     private static final long serialVersionUID = 1L;
 
     // parameter name for the tagserver URL
+    private static final String TAGFILER_APPLET_TEST_FILE = "tagfiler.applet.test";
+
+    // parameter name for the tagserver URL
     private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
 
     // parameter name for the tagserver URL
@@ -39,6 +46,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     protected Cookie sessionCookie = null;
 
     private String tagFilerWebauthURL;
+
+    protected boolean testMode;
+    protected Properties testProperties = new Properties();
 
     /**
      * Loads security settings, common parameters, session cookie
@@ -56,6 +66,22 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
         if (tagFilerServerURL == null || tagFilerServerURL.length() == 0) {
             throw new IllegalArgumentException(TAGFILER_SERVER_URL_PARAM
                     + " must be" + " specified as a parameter to the applet.");
+        }
+
+        // arguments
+        String testFile = this.getParameter(TAGFILER_APPLET_TEST_FILE);
+        if (testFile != null) {
+        	try {
+				FileInputStream fis = new FileInputStream(testFile);
+				testProperties.load(fis);
+	        	testMode = true;
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
 
         // use the tagFilerServerURL to get the webauth URL

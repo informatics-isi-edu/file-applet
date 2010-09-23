@@ -5,8 +5,11 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -23,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
@@ -95,6 +99,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     // progress bar used for uploading files
     private JProgressBar progressBar = null;
 
+    private Timer filesTimer;
+
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -121,6 +127,15 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             e.printStackTrace();
             JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+	public void start() {
+        super.start();
+        
+        if (testMode) {
+        	filesTimer = new Timer(true);
+        	filesTimer.schedule(new TestTimerTask(), 1000);
         }
     }
 
@@ -280,9 +295,13 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         // TODO: create container for cookie so that the object reference
         // remains intact when
         // they are replaced
-        fileUpload = new FileUploadImplementation(tagFilerServerURL,
-                new TagFilerAppletUploadListener(), customTagMap,
-                sessionCookie, this);
+        try {
+            fileUpload = new FileUploadImplementation(tagFilerServerURL,
+                    new TagFilerAppletUploadListener(), customTagMap,
+                    sessionCookie, this);
+        } catch (FatalException e) {
+        	(new TagFilerAppletUploadListener()).notifyError(e);
+        }
 
         // listeners
         uploadBtn.addActionListener(new FileUploadUploadListener(this,
@@ -612,4 +631,26 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     public FileTransfer getFileTransfer() {
         return fileUpload;
     }
+    
+    private class TestTimerTask extends TimerTask {
+
+    	public void run() {
+    		Set<String> tags = customTagMap.getTagNames();
+    		for (String tag : tags) {
+    			String value = testProperties.getProperty(tag, "null");
+    			customTagMap.setValue(tag, value);
+    		}
+    		fileChooser.setSelectedFile(new File(testProperties.getProperty("Source Directory", "null")));
+    		addBtn.doClick();
+    		
+    		while (!uploadBtn.isEnabled()) {
+    			try {
+    				Thread.sleep(1000);
+    			} catch (InterruptedException e) {
+				}
+    		}
+    		uploadBtn.doClick();
+        }
+    }
+
 }

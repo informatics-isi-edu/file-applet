@@ -161,6 +161,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         	{
             	filesTimer = new Timer(true);
             	filesTimer.schedule(new EventTimerTask(), 1000);
+        	} else if (testMode) {
+            	filesTimer = new Timer(true);
+            	filesTimer.schedule(new TestTimerTask(), 1000);
         	}
     }
 
@@ -380,9 +383,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                     customTagMap, this);
         } catch (FatalException e) {
             e.printStackTrace();
-            updateStatus(TagFilerProperties.getProperty(
-                    "tagfiler.message.upload.Error", new String[] { e
-                            .getClass().getCanonicalName() }));
+            (new TagFilerAppletUploadListener()).notifyError(e);
         }
         // listeners
         updateBtn.addActionListener(new FileDownloadUpdateListener(this,
@@ -695,9 +696,21 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
 
         public void notifyError(Throwable e) {
-            updateStatus(TagFilerProperties.getProperty(
+            String message = TagFilerProperties.getProperty(
                     "tagfiler.message.download.Error", new String[] { e
-                            .getClass().getCanonicalName() }));
+                            .getClass().getCanonicalName() });
+            try {
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException f) {
+                // just use the unencoded message
+            }
+
+            StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.GenericFailure",
+                            new String[] { message }));
+
+            redirect(buff.toString());
         }
     }
 
@@ -734,7 +747,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         if (destinationDirectoryField.getText().trim().length() == 0) {
             valid = -1;
         }
-        else {
+        else if (!testMode) {
         	// check the directory is empty to prevent overwriting
         	File dir = new File(destinationDirectoryField.getText().trim());
         	if (dir.list().length > 0) {
@@ -787,4 +800,26 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     public boolean isDownloadStudy() {
     	return downloadStudy;
     }
+    
+    private class TestTimerTask extends TimerTask {
+
+    	
+    	public void run() {
+    		defaultControlNumber = testProperties.getProperty("Control Number", "null");
+            controlNumberField.setText(defaultControlNumber);
+    		updateBtn.doClick();
+    		
+    		while (!selectDirBtn.isEnabled() && !destinationDirectoryField.isEnabled()) {
+    			try {
+    				Thread.sleep(1000);
+    			} catch (InterruptedException e) {
+				}
+    		}
+    		
+    		destinationDirectoryField.setText(testProperties.getProperty("Destination Directory", "null"));
+    		downloadBtn.setEnabled(true);
+    		downloadBtn.doClick();
+        }
+    }
+
 }

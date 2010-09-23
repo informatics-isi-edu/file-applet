@@ -70,7 +70,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            session cookie
      */
     public FileUploadImplementation(String url, FileUploadListener l,
-				    CustomTagMap tagMap, Cookie c, Applet a) {
+				    CustomTagMap tagMap, Cookie c, Applet a) throws FatalException {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (tagMap != null);

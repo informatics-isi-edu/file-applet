@@ -71,7 +71,13 @@ public class FileUploadAddListener extends FileUploadActionListener {
      */
     public void actionPerformed(ActionEvent e) {
         assert (e != null);
-        final int result = fileChooser.showOpenDialog(parentContainer);
+        int result;
+        File fileTest = fileChooser.getSelectedFile();
+        if (fileTest != null && fileTest.getName().length() > 0) {
+        	result = JFileChooser.APPROVE_OPTION;
+        } else {
+            result = fileChooser.showOpenDialog(parentContainer);
+        }
         if (JFileChooser.APPROVE_OPTION == result) {
             File selectedDirectory = fileChooser.getSelectedFile();
             fileUpload.setBaseDirectory(selectedDirectory.getAbsolutePath());
