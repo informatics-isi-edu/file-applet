@@ -30,7 +30,6 @@ import javax.swing.SwingUtilities;
 
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
-import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileDownloadDownloadListener;
@@ -148,10 +147,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
                 }
             });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            (new TagFilerAppletUploadListener()).notifyFatal(e);
         }
     }
 
@@ -377,14 +375,10 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         // TODO: create container for cookie so that the object reference
         // remains intact when
         // they are replaced
-        try {
-            fileDownload = new FileDownloadImplementation(tagFilerServerURL,
-                    new TagFilerAppletUploadListener(), sessionCookie,
-                    customTagMap, this);
-        } catch (FatalException e) {
-            e.printStackTrace();
-            (new TagFilerAppletUploadListener()).notifyError(e);
-        }
+        fileDownload = new FileDownloadImplementation(tagFilerServerURL,
+                new TagFilerAppletUploadListener(), sessionCookie,
+                customTagMap, this);
+
         // listeners
         updateBtn.addActionListener(new FileDownloadUpdateListener(this,
                 fileDownload, controlNumberField, filesToDownload, (defaultControlNumber.length() > 0)));
@@ -696,6 +690,12 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
 
         public void notifyError(Throwable e) {
+            updateStatus(TagFilerProperties.getProperty(
+                    "tagfiler.message.download.Error", new String[] { e
+                            .getClass().getCanonicalName() }));
+        }
+        
+        public void notifyFatal(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.download.Error", new String[] { e
                             .getClass().getCanonicalName() });
@@ -711,6 +711,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                             new String[] { message }));
 
             redirect(buff.toString());
+
         }
     }
 

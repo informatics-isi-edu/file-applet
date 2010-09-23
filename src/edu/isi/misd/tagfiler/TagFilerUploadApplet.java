@@ -26,7 +26,6 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
@@ -123,10 +122,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
                 }
             });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            (new TagFilerAppletUploadListener()).notifyFatal(e);
         }
     }
 
@@ -295,13 +293,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         // TODO: create container for cookie so that the object reference
         // remains intact when
         // they are replaced
-        try {
-            fileUpload = new FileUploadImplementation(tagFilerServerURL,
-                    new TagFilerAppletUploadListener(), customTagMap,
-                    sessionCookie, this);
-        } catch (FatalException e) {
-        	(new TagFilerAppletUploadListener()).notifyError(e);
-        }
+        fileUpload = new FileUploadImplementation(tagFilerServerURL,
+                new TagFilerAppletUploadListener(), customTagMap,
+                sessionCookie, this);
 
         // listeners
         uploadBtn.addActionListener(new FileUploadUploadListener(this,
@@ -553,7 +547,27 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             redirect(buff.toString());
 
         }
-    }
+        
+        public void notifyFatal(Throwable e) {
+            String message = TagFilerProperties.getProperty(
+                    "tagfiler.message.upload.Error", new String[] { e
+                            .getClass().getCanonicalName() });
+            try {
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException f) {
+                // just use the unencoded message
+            }
+
+            StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.GenericFailure",
+                            new String[] { message }));
+
+            redirect(buff.toString());
+
+        }
+        
+}
 
     /**
      * Convenience method for updating the status label
