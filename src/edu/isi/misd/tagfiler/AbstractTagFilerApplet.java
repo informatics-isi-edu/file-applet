@@ -15,7 +15,7 @@ import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.FileUI;
-import edu.isi.misd.tagfiler.util.JerseyClientUtils;
+import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
@@ -58,7 +58,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     	// load any security settings
         TagFilerSecurity.loadSecuritySettings();
 
-        sessionCookie = JerseyClientUtils.getCookieFromBrowser(this,
+        sessionCookie = ClientUtils.getCookieFromBrowser(this,
                 TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
 
         // arguments

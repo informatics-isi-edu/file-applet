@@ -19,10 +19,11 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
-import edu.isi.misd.tagfiler.util.JerseyClientUtils;
+import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -43,7 +44,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     private final FileUploadListener fileUploadListener;
 
     // client used to connect with the tagfiler server
-    private final Client client;
+    private final ClientURL client;
 
     // list containing the files names to be downloaded.
     private List<String> fileNames = new ArrayList<String>();
@@ -93,7 +94,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         tagFilerServerURL = url;
         fileUploadListener = l;
-        client = JerseyClientUtils.createClient();
+        client = ClientUtils.getClientURL();
         cookie = c;
         customTagMap = tagMap;
 	applet = a;
@@ -206,22 +207,19 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             String prefix = DatasetUtils.getDatasetUrl(controlNumber,
                     tagFilerServerURL);
 
-            ClientResponse response = client.resource(url)
-                    .accept("text/uri-list")
-                    .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-                    .get(ClientResponse.class);
+            client.getDataSet(url, cookie);
 
-	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+	    cookie = client.updateSessionCookie(applet, cookie);
 
-	    int status = response.getStatus();
+	    int status = client.getStatus();
 	    if (status != 200) {
-	    	response.close();
+	    	client.close();
             fileUploadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
         	throw new Exception("Status Code: " + status);
 	    }
-            String textEntity = response.getEntity(String.class);
+            String textEntity = client.getEntityString();
             textEntity = textEntity.replace(prefix, "");
-            response.close();
+            client.close();
 
             // get the files maps
             StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
@@ -268,21 +266,19 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             throws UnsupportedEncodingException {
         String query = DatasetUtils.getFileTag(controlNumber,
                 tagFilerServerURL, file, tag);
-        ClientResponse response = client.resource(query)
-                .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-                .get(ClientResponse.class);
+        client.getTagValue(query, cookie);
 
-	cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+	cookie = client.updateSessionCookie(applet, cookie);
 
-        if (response.getStatus() != 200)
+        if (client.getStatus() != 200)
         {
-        	fileUploadListener.notifyFailure(controlNumber, response.getStatus());
-        	response.close();
+        	fileUploadListener.notifyFailure(controlNumber, client.getStatus());
+        	client.close();
         	return "";
         }
-		String value = response.getEntity(String.class);
+		String value = client.getEntityString();
         value = DatasetUtils.urlDecode(value.substring(value.indexOf('=') + 1));
-        response.close();
+        client.close();
 
         return value;
     }
@@ -302,21 +298,17 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             String url = DatasetUtils.getFileUrl(controlNumber,
                     tagFilerServerURL, encodeName);
 
-	    ClientResponse response = client.resource(url)
-                    .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-                    .get(ClientResponse.class);
+            client.downloadFile(url, cookie);
 
-	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+	    cookie = client.updateSessionCookie(applet, cookie);
 
-	    int status = response.getStatus();
+	    int status = client.getStatus();
 	    
 	    if (status != 200) {
-	    	response.close();
+	    	client.close();
         	throw new Exception("Status Code: " + status);
 	    }
-	    InputStream in = response.getEntityInputStream();
-
-	    cookie = JerseyClientUtils.updateSessionCookie(response, applet, cookie);
+	    InputStream in = client.getEntityInputStream();
 
 	    // write the file into the destination
             File dir = new File(baseDirectory);
@@ -347,7 +339,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                 }
                 in.close();
                 fos.close();
-                response.close();
+                client.close();
 
                 // verify checksum
                 File downloadFile = new File(baseDirectory + File.separatorChar + localFile);
@@ -389,20 +381,11 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     public boolean verifyValidControlNumber(String controlNumber, StringBuffer code, StringBuffer errorMessage) {
         assert (controlNumber != null && controlNumber.length() != 0);
         boolean valid = false;
-        ClientResponse response = null;
         try {
-            response = client
-                    .resource(
-                            DatasetUtils.getDatasetUrl(controlNumber,
-                                    tagFilerServerURL)).accept("text/uri-list")
-                    .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-                    .head();
-            int status = response.getStatus();
-            if ((status == 200 || status == 303)
-                    && JerseyClientUtils
-                            .checkResponseHeaderPattern(
-                                    response,
-                    JerseyClientUtils.LOCATION_HEADER_NAME, 
+        	client.verifyValidControlNumber(DatasetUtils.getDatasetUrl(controlNumber, tagFilerServerURL), cookie);
+            int status = client.getStatus();
+            if ((status == 200 || status == 303) && client.checkResponseHeaderPattern(
+            		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
                             + TagFilerProperties
                                     .getProperty("tagfiler.url.queryuri")
@@ -413,7 +396,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             }
             else {
                 System.out.println("transmission number verification failed, code="
-                        + response.getStatus());
+                        + client.getStatus());
 
             	code.append("Status ").append(status);
                 switch (status) {
@@ -439,16 +422,13 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                 	errorMessage.append("Unmatched Response Header Pattern");
                 }
             }
-            cookie = JerseyClientUtils.updateSessionCookie(response, applet,
-                    cookie);
+            cookie = client.updateSessionCookie(applet, cookie);
         } catch (UnsupportedEncodingException e) {
             valid = false;
             e.printStackTrace();
             fileUploadListener.notifyError(e);
         } finally {
-            if (response != null) {
-                response.close();
-            }
+        	client.close();
         }
         return valid;
     }

@@ -13,10 +13,11 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
-import edu.isi.misd.tagfiler.util.JerseyClientUtils;
+import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -37,7 +38,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     private final FileUploadListener fileUploadListener;
 
     // client used to connect with the tagfiler server
-    private final Client client;
+    private final ClientURL client;
 
     // map containing the checksums of all files to be uploaded.
     private final Map<String, String> checksumMap = new HashMap<String, String>();
@@ -77,7 +78,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
         tagFilerServerURL = url;
         fileUploadListener = l;
-        client = JerseyClientUtils.createClient();
+        client = ClientUtils.getClientURL();
         customTagMap = tagMap;
         cookie = c;
 	applet = a;
@@ -119,27 +120,24 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     private String getTransmitNumber() throws FatalException {
         String ret = "";
         String query = tagFilerServerURL + "/transmitnumber";
-        ClientResponse response = client.resource(query)
-                .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
-                .post(ClientResponse.class, "");
+        client.getTransmitNumber(query, cookie);
 
         synchronized (this) {
-            cookie = JerseyClientUtils.updateSessionCookie(response, applet,
-                    cookie);
+            cookie = client.updateSessionCookie(applet, cookie);
         }
 
-        if (200 == response.getStatus()) {
-            ret = response.getLocation().toString();
+        if (200 == client.getStatus()) {
+            ret = client.getLocationString();
         } else {
             fileUploadListener
                     .notifyLogMessage("Error getting a transmission number (code="
-                            + response.getStatus() + ")");
+                            + client.getStatus() + ")");
             throw new FatalException(
                     TagFilerProperties
                             .getProperty("tagfiler.message.upload.ControlNumberError"));
         }
 
-        response.close();
+        client.close();
 
         return ret;
     }
@@ -248,7 +246,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         assert (datasetName != null && datasetName.length() > 0);
 
         boolean success = false;
-        ClientResponse response = null;
 
         // retrieve the amount of total bytes, checksums for each file
         fileUploadListener
@@ -277,22 +274,19 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             // TODO: get the cookie and pass it here to the call
 
             // WebResource webResource =
-            // JerseyClientUtils.createWebResource(client,
+            // ClientUtils.createWebResource(client,
             // datasetURLQuery, null);
 
             // need to capture builder result of cookie() and invoke request on
             // it
             // or cookie is lost!
-            response = client.resource(datasetURLQuery)
-                    .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-                    .cookie(cookie).post(ClientResponse.class, datasetURLBody);
+            client.postFileData(datasetURLQuery, datasetURLBody, cookie);
             synchronized (this) {
-                cookie = JerseyClientUtils.updateSessionCookie(response,
-                        applet, cookie);
+                cookie = client.updateSessionCookie(applet, cookie);
             }
 
             // successful tagfiler POST issues 303 redirect to result page
-            if (200 == response.getStatus() || 303 == response.getStatus()) {
+            if (200 == client.getStatus() || 303 == client.getStatus()) {
                 try {
                     fileUploadListener
                             .notifyLogMessage("Dataset URL entry created successfully.");
@@ -310,18 +304,16 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             } else {
                 fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
-                                + response.getStatus() + ")");
+                                + client.getStatus() + ")");
                 success = false;
-                fileUploadListener.notifyFailure(datasetName, response.getStatus());
+                fileUploadListener.notifyFailure(datasetName, client.getStatus());
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors
             e.printStackTrace();
             fileUploadListener.notifyError(e);
         } finally {
-            if (response != null) {
-                response.close();
-            }
+        	client.close();
         }
         return success;
     }
@@ -363,20 +355,17 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                             + fileUploadQuery);
 
                     // TODO: get the cookie and pass it to this call
-                    // webResource = JerseyClientUtils.createWebResource(client,
+                    // webResource = ClientUtils.createWebResource(client,
                     // fileUploadQuery, cookie);
 
                     // must capture builder result from cookie() and do request
                     // on it!
 		    
 		    client.setChunkedEncodingSize(16 * 1024 * 1024);
+		    client.postFile(fileUploadQuery, file, cookie);
 
-                    response = client.resource(fileUploadQuery)
-                            .type(MediaType.APPLICATION_OCTET_STREAM)
-                            .cookie(cookie).put(ClientResponse.class, file);
                     synchronized (this) {
-                        cookie = JerseyClientUtils.updateSessionCookie(
-                                response, applet, cookie);
+                        cookie = client.updateSessionCookie(applet, cookie);
                     }
 
                     if (201 == response.getStatus()) {
