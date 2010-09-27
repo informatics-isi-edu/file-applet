@@ -51,10 +51,10 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void getDataSet(String url, Cookie cookie) {
+    public void getDataSet(String url, String cookie) {
         response = client.resource(url)
 	        .accept("text/uri-list")
-	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(new javax.ws.rs.core.Cookie("webauthn", cookie))
 	        .get(ClientResponse.class);
     }
     
@@ -66,9 +66,9 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void getTagValue(String url, Cookie cookie) {
+    public void getTagValue(String url, String cookie) {
         response = client.resource(url)
-	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(new javax.ws.rs.core.Cookie("webauthn", cookie))
 	        .get(ClientResponse.class);
     }
     
@@ -80,9 +80,9 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void downloadFile(String url, Cookie cookie) {
+    public void downloadFile(String url, String cookie) {
 	    response = client.resource(url)
-	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(new javax.ws.rs.core.Cookie("webauthn", cookie))
 	        .get(ClientResponse.class);
     }
     
@@ -94,11 +94,11 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void verifyValidControlNumber(String url, Cookie cookie) {
+    public void verifyValidControlNumber(String url, String cookie) {
         response = client
         .resource(url)
         		.accept("text/uri-list")
-        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(new javax.ws.rs.core.Cookie("webauthn", cookie))
         .head();
     }
     
@@ -110,9 +110,9 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void getTransmitNumber(String url, Cookie cookie) {
+    public void getTransmitNumber(String url, String cookie) {
     	response = client.resource(url)
-	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(cookie)
+	        .type(MediaType.APPLICATION_OCTET_STREAM).cookie(new javax.ws.rs.core.Cookie("webauthn", cookie))
 	        .post(ClientResponse.class, "");
     }
     
@@ -127,7 +127,7 @@ public class JerseyClient implements ClientURL {
      *            the cookie to attach to the request, or null if none
      * @return a web resource for the string with the cookie attached
      */
-    public WebResource createWebResource(String u, Cookie cookie) {
+    public WebResource createWebResource(String u, String cookie) {
         assert (u != null);
 
         return client.resource(u);
@@ -144,7 +144,7 @@ public class JerseyClient implements ClientURL {
      *            the current cookie
      * @return the curernt cookie or a new replacement
      */
-    public javax.ws.rs.core.Cookie updateSessionCookie(Applet applet, Cookie cookie) {
+    public String updateSessionCookie(Applet applet, String cookie) {
         Iterator<NewCookie> cookies = response.getCookies().iterator();
         while (cookies.hasNext()) {
             javax.ws.rs.core.Cookie candidate = cookies.next().toCookie();
@@ -152,7 +152,7 @@ public class JerseyClient implements ClientURL {
                 // this is a new session cookie, so save it for further REST
                 // calls
                 ClientUtils.setCookieInBrowser(applet, cookie);
-                return candidate;
+                return candidate.getValue();
             }
         }
         return cookie;
@@ -165,11 +165,11 @@ public class JerseyClient implements ClientURL {
      *            name of the cookie
      * @return the new cookie of the same name, or null if it wasn't found
      */
-    public Cookie getCookieFromClientResponse(String cookieName) {
+    public String getCookieFromClientResponse(String cookieName) {
         List<NewCookie> cookies = response.getCookies();
         for (NewCookie cookie : cookies) {
             if (cookie.getName().equals(cookieName)) {
-                return cookie;
+                return cookie.getValue();
             }
         }
         return null;
@@ -213,10 +213,10 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void postFileData(String url, String datasetURLBody, Cookie cookie) {
+    public void postFileData(String url, String datasetURLBody, String cookie) {
         response = client.resource(url)
         .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-        .cookie(cookie).post(ClientResponse.class, datasetURLBody);
+        .cookie(new javax.ws.rs.core.Cookie("webauthn", cookie)).post(ClientResponse.class, datasetURLBody);
     }
 
     /**
@@ -229,10 +229,10 @@ public class JerseyClient implements ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void postFile(String url, File file, Cookie cookie) {
+    public void postFile(String url, File file, String cookie) {
         response = client.resource(url)
         .type(MediaType.APPLICATION_OCTET_STREAM)
-        .cookie(cookie).put(ClientResponse.class, file);
+        .cookie(new javax.ws.rs.core.Cookie("webauthn", cookie)).put(ClientResponse.class, file);
     }
 
     /**

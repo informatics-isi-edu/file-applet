@@ -1,7 +1,5 @@
 package edu.isi.misd.tagfiler;
 
-import javax.ws.rs.core.Cookie;
-
 /**
  * Interface for a file transfer operation.
  * 
@@ -17,7 +15,7 @@ public interface FileTransfer {
      * @param sessionCookie
      *            the new session cookie
      */
-    public void updateSessionCookie(Cookie sessionCookie);
+    public void updateSessionCookie(String sessionCookie);
 
     /**
      * Retrieves the session cookie maintained by the file transfer session.
@@ -25,5 +23,5 @@ public interface FileTransfer {
      * 
      * @return the session cookie
      */
-    public Cookie getSessionCookie();
+    public String getSessionCookie();
 }

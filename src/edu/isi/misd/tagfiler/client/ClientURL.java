@@ -3,7 +3,6 @@ package edu.isi.misd.tagfiler.client;
 import java.applet.Applet;
 import java.io.File;
 import java.io.InputStream;
-import javax.ws.rs.core.Cookie;
 
 import com.sun.jersey.api.client.WebResource;
 
@@ -22,7 +21,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void getDataSet(String url, Cookie cookie);
+    public void getDataSet(String url, String cookie);
     
     /**
      * Get the value of a tag
@@ -32,7 +31,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void getTagValue(String url, Cookie cookie);
+    public void getTagValue(String url, String cookie);
     
     /**
      * Get the content of a file to be downloaded
@@ -42,7 +41,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void downloadFile(String url, Cookie cookie);
+    public void downloadFile(String url, String cookie);
     
     /**
      * Verify that we have a valid control number
@@ -52,7 +51,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void verifyValidControlNumber(String url, Cookie cookie);
+    public void verifyValidControlNumber(String url, String cookie);
     
     /**
      * checks a particular header in the response to see if it matches an
@@ -76,7 +75,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void getTransmitNumber(String url, Cookie cookie);
+    public void getTransmitNumber(String url, String cookie);
     
     /**
      * Creates a web resource instance contaiing a cookie
@@ -89,7 +88,7 @@ public interface ClientURL {
      *            the cookie to attach to the request, or null if none
      * @return a web resource for the string with the cookie attached
      */
-    public WebResource createWebResource(String u, Cookie cookie);
+    public WebResource createWebResource(String u, String cookie);
     
     /**
      * Checks for and saves updated session cookie
@@ -102,7 +101,7 @@ public interface ClientURL {
      *            the current cookie
      * @return the curernt cookie or a new replacement
      */
-    public javax.ws.rs.core.Cookie updateSessionCookie(Applet applet, Cookie cookie);
+    public String updateSessionCookie(Applet applet, String cookie);
     
     /**
      * Retrieves a given cookie from a client response
@@ -111,7 +110,7 @@ public interface ClientURL {
      *            name of the cookie
      * @return the new cookie of the same name, or null if it wasn't found
      */
-    public Cookie getCookieFromClientResponse(String cookieName);
+    public String getCookieFromClientResponse(String cookieName);
     
     /**
      * Uploads a set of given files with a specified dataset name.
@@ -123,7 +122,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void postFileData(String url, String datasetURLBody, Cookie cookie);
+    public void postFileData(String url, String datasetURLBody, String cookie);
     
     /**
      * Uploads a set of given files with a specified dataset name.
@@ -135,7 +134,7 @@ public interface ClientURL {
      * @param cookie
      *            the cookie to be set in the request
      */
-    public void postFile(String url, File file, Cookie cookie);
+    public void postFile(String url, File file, String cookie);
     
     /**
      * Return the status code

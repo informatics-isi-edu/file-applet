@@ -6,12 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.exception.FatalException;
@@ -53,7 +47,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     private final CustomTagMap customTagMap;
 
     // the session cookie
-    private Cookie cookie = null;
+    private String cookie = null;
 
     // the applet
     private Applet applet = null;
@@ -71,7 +65,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            session cookie
      */
     public FileUploadImplementation(String url, FileUploadListener l,
-				    CustomTagMap tagMap, Cookie c, Applet a) {
+				    CustomTagMap tagMap, String c, Applet a) {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (tagMap != null);
@@ -334,7 +328,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
-        ClientResponse response = null;
         File file = null;
         for (String fileName : files) {
         	buildChecksumHelper(fileName);
@@ -368,7 +361,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         cookie = client.updateSessionCookie(applet, cookie);
                     }
 
-                    if (201 == response.getStatus()) {
+                    if (201 == client.getStatus()) {
                         fileUploadListener.notifyFileTransferComplete(
                                 file.getAbsolutePath(), file.length());
                         fileUploadListener.notifyLogMessage("File '"
@@ -378,10 +371,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         fileUploadListener
                                 .notifyLogMessage("Error transferring file '"
                                         + file.getAbsolutePath() + "' (code="
-                                        + response.getStatus() + ")");
+                                        + client.getStatus() + ")");
                         return false;
                     }
-                    response.close();
+                    client.close();
                 } else if (file.isDirectory()) {
                     // do nothing -- contents were expanded in the list already
                     fileUploadListener.notifyFileTransferSkip(file

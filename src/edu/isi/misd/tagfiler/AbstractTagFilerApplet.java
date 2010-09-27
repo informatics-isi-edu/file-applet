@@ -9,7 +9,6 @@ import java.util.Properties;
 
 import javax.swing.JApplet;
 import javax.swing.JOptionPane;
-import javax.ws.rs.core.Cookie;
 
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
@@ -43,7 +42,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     protected String tagFilerServerURL = null;
 
     // cookie maintainined in the session
-    protected Cookie sessionCookie = null;
+    protected String sessionCookie = null;
 
     private String tagFilerWebauthURL;
 

@@ -12,12 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -86,7 +80,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      *            map of the custom tags
      */
     public FileDownloadImplementation(String url, FileUploadListener l,
-				      Cookie c, CustomTagMap tagMap, Applet a) {
+				      String c, CustomTagMap tagMap, Applet a) {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (c != null);
