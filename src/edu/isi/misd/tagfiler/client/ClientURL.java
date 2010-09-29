@@ -4,8 +4,6 @@ import java.applet.Applet;
 import java.io.File;
 import java.io.InputStream;
 
-import com.sun.jersey.api.client.WebResource;
-
 /**
  * Client Interface to handle Web Services
  * 
@@ -76,19 +74,6 @@ public interface ClientURL {
      *            the cookie to be set in the request
      */
     public void getTransmitNumber(String url, String cookie);
-    
-    /**
-     * Creates a web resource instance contaiing a cookie
-     * 
-     * @param client
-     *            the Jersey client
-     * @param u
-     *            the string of the resource
-     * @param cookie
-     *            the cookie to attach to the request, or null if none
-     * @return a web resource for the string with the cookie attached
-     */
-    public WebResource createWebResource(String u, String cookie);
     
     /**
      * Checks for and saves updated session cookie
@@ -165,6 +150,12 @@ public interface ClientURL {
      * 
      */
     public void setChunkedEncodingSize(int size);
+    
+    /**
+     * Get the response size
+     * 
+     */
+    public int getResponseSize();
     
     /**
      * Release the responses

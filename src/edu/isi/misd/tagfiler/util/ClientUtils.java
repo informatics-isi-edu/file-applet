@@ -5,7 +5,7 @@ import java.applet.Applet;
 import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.client.ClientURL;
-import edu.isi.misd.tagfiler.client.JerseyClient;
+import edu.isi.misd.tagfiler.client.JakartaClient;
 
 /**
  * Various helper utilities for Jersey Client related operations.
@@ -29,7 +29,13 @@ public class ClientUtils {
      */
     public static ClientURL getClientURL() {
 
-        return new JerseyClient();
+    	JakartaClient client = new JakartaClient();
+    	
+    	if (client.isValid()) {
+    		return client;
+    	} else {
+    		return null;
+    	}
     }
 
     /**

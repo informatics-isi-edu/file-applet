@@ -319,17 +319,16 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                         + localFile);
                 FileOutputStream fos = new FileOutputStream(baseDirectory + File.separatorChar
                         + localFile);
-                while (true) {
-                    int count = in.available();
-                    if (count == 0) {
-                        count = 1;
-                    }
-                    byte ret[] = new byte[count];
+                int length = client.getResponseSize();
+                int read = 0;
+                byte ret[] = new byte[1048576];
+                while (read < length) {
                     int res = in.read(ret);
                     if (res == -1) {
                         break;
                     }
-                    fos.write(ret);
+                    read +=res;
+                    fos.write(ret, 0, res);
                 }
                 in.close();
                 fos.close();
