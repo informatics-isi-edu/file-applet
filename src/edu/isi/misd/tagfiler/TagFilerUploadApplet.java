@@ -2,9 +2,7 @@ package edu.isi.misd.tagfiler;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
@@ -19,12 +17,12 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+
+import netscape.javascript.JSException;
+import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
@@ -78,8 +76,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     private JList list = null;
 
-    private JLabel statusLabel = null;
-
     private DefaultListModel filesToUpload = null;
 
     private JFileChooser fileChooser = null;
@@ -94,9 +90,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     // map containing the names and values of custom tags
     private CustomTagMap customTagMap = null;
-
-    // progress bar used for uploading files
-    private JProgressBar progressBar = null;
 
     private Timer filesTimer;
 
@@ -157,31 +150,20 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
         list = new JList(filesToUpload);
         list.setVisibleRowCount(10);
-        final JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.setAutoscrolls(true);
-
-        // progress bar
-        progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        final Dimension progressBarDimension = new Dimension(
-                Integer.parseInt(TagFilerProperties
-                        .getProperty("tagfiler.progressbar.MaxWidth")),
-                Integer.parseInt(TagFilerProperties
-                        .getProperty("tagfiler.progressbar.MaxHeight")));
-        progressBar.setMaximumSize(progressBarDimension);
 
         final JLabel lbl = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDirectoryToUpload"));
+
+        final JLabel lbl2 = createLabel("        ");
 
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
         top.setAlignmentY(Component.TOP_ALIGNMENT);
         lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lbl2.setAlignmentX(Component.CENTER_ALIGNMENT);
         addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // top.add(controlNumberLabel);
         top.add(lbl, Component.CENTER_ALIGNMENT);
         top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
@@ -196,92 +178,27 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         leftHalf.setLayout(new BoxLayout(leftHalf, BoxLayout.Y_AXIS));
         leftHalf.setAlignmentY(Component.TOP_ALIGNMENT);
         leftHalf.setAlignmentX(Component.LEFT_ALIGNMENT);
+        leftHalf.add(lbl2, Component.CENTER_ALIGNMENT);
 
-        // create the custom tags
-        final JPanel tagAndTitlePanel = createPanel();
-        tagAndTitlePanel.setLayout(new BoxLayout(tagAndTitlePanel,
-                BoxLayout.Y_AXIS));
-        tagAndTitlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         customTagMap = new CustomTagMapImplementation();
-        Set<String> customTagNames = customTagMap.getTagNames();
-        final JPanel customTagPanel = createPanel();
-        customTagPanel.setLayout(new GridLayout(customTagNames.size(), 2));
-        customTagPanel.setMaximumSize(new Dimension(customTagPanel
-                .getMaximumSize().width, 22 * customTagNames.size()));
-        final Font tagFont = new Font(font.getName(), Font.PLAIN,
-                font.getSize());
-
-        final Color customTagLabelColor = TagFilerPropertyUtils
-                .renderColor("tagfiler.tag.label.font.color");
-        for (String customTagName : customTagNames) {
-            final JLabel tagLabel = createLabel(customTagName);
-            tagLabel.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
-            tagLabel.setHorizontalAlignment(SwingConstants.LEFT);
-            tagLabel.setFont(tagFont);
-            tagLabel.setBackground(customTagLabelColor);
-            tagLabel.setOpaque(true);
-            customTagPanel.add(tagLabel);
-            customTagPanel.add(customTagMap.getComponent(customTagName));
-        }
-        final JLabel tagLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.FillCustomTags"));
-        tagAndTitlePanel.add(tagLabel);
-        tagAndTitlePanel.add(customTagPanel);
-
-        leftHalf.add(tagAndTitlePanel);
-
         final JPanel rightHalf = createPanel();
         rightHalf.setLayout(new BoxLayout(rightHalf, BoxLayout.Y_AXIS));
         rightHalf.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        // begin top of right middle ------------------------
-        final JPanel rightTop = createPanel();
-        rightTop.setLayout(new BoxLayout(rightTop, BoxLayout.Y_AXIS));
-        rightTop.setAlignmentY(Component.TOP_ALIGNMENT);
-        rightTop.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel fileUploadLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.FilesToUpload"));
-        fileUploadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        rightTop.add(fileUploadLabel, Component.CENTER_ALIGNMENT);
-        rightTop.add(scrollPane);
 
         final JPanel rightButtonPanel = createPanel();
         rightButtonPanel.setLayout(new BoxLayout(rightButtonPanel,
                 BoxLayout.X_AXIS));
         rightButtonPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-        rightButtonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        rightButtonPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
         rightButtonPanel.add(uploadBtn);
         rightButtonPanel.add(Box.createHorizontalGlue());
 
-        rightHalf.add(rightTop);
         rightHalf.add(rightButtonPanel);
 
+        middle.add(top);
         middle.add(leftHalf);
         middle.add(rightHalf);
 
-        // end middle panel -------------------
-        // begin bottom panel ------------------
-        final JPanel bottom = createPanel();
-        bottom.setLayout(new GridLayout(2, 1));
-
-        final JPanel bottomTop = createPanel();
-        bottomTop.setLayout(new BoxLayout(bottomTop, BoxLayout.Y_AXIS));
-        bottomTop.setAlignmentX(Component.LEFT_ALIGNMENT);
-        bottomTop.setPreferredSize(new Dimension(Integer.MAX_VALUE, 50));
-
-        statusLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.DefaultUploadStatus"));
-        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        statusLabel.setFont(new Font(statusLabel.getFont().getFontName(),
-                Font.PLAIN, statusLabel.getFont().getSize()));
-
-        bottomTop.add(statusLabel);
-        bottomTop.add(progressBar);
-
-        bottom.add(bottomTop);
-        leftHalf.add(bottom);
-
-        // end bottom panel -----------------------
         // file chooser window
         fileChooser = new JFileChooser();
         fileChooser.setDialogTitle(TagFilerProperties
@@ -307,9 +224,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         final JPanel main = createPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        main.add(top);
         main.add(middle);
-        main.add(bottom);
 
         getContentPane().setBackground(Color.white);
         getContentPane().add(main);
@@ -402,7 +317,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             System.out.println(TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetSuccess"));
 
-            progressBar.setValue((int) totalBytes / unit);
+            //progressBar.setValue((int) totalBytes / unit);
 
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(
@@ -458,8 +373,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             while ((totalBytes / unit) >= Integer.MAX_VALUE) {
                 unit *= 10;
             }
-            progressBar.setValue(0);
-            progressBar.setMaximum((int) totalBytes / unit);
+            //progressBar.setValue(0);
+            //progressBar.setMaximum((int) totalBytes / unit);
             updateStatus(TagFilerProperties
                     .getProperty(
                             "tagfiler.message.upload.FileTransferStatus",
@@ -485,7 +400,18 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             filesCompleted++;
             
             bytesTransferred += size + 1;
-            progressBar.setValue((int) bytesTransferred / unit);
+            //progressBar.setValue((int) bytesTransferred / unit);
+            long percent = bytesTransferred * 100 / totalBytes;
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                		TagFilerUploadApplet.this);
+
+                window.eval("drawProgressBar(" + percent + ")");
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
+
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
                         "tagfiler.message.upload.FileTransferStatus",
@@ -576,6 +502,16 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      */
     private void updateStatus(String status) {
         updateStatus(status, fontColor);
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+            		TagFilerUploadApplet.this);
+
+            window.eval("setStatus('" + status + "')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+
     }
 
     /**
@@ -586,8 +522,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      *            the font color
      */
     private void updateStatus(String status, Color c) {
-        statusLabel.setForeground(c);
-        statusLabel.setText(status);
+        //statusLabel.setForeground(c);
+        //statusLabel.setText(status);
     }
 
     /**
@@ -596,6 +532,21 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      */
     public boolean validateFields() throws Exception {
         boolean valid = true;
+
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+                    this);
+
+            String tags = (String) window.eval("getTags()");
+            String customTag[] = tags.split("<br/>");
+            for (int i=0; i < customTag.length; i+=2) {
+            	customTagMap.setValue(customTag[i], i < customTag.length - 1 ? customTag[i+1] : "");
+            }
+
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
 
         // make sure the custom tags all have values
         Set<String> customTagNames = customTagMap.getTagNames();

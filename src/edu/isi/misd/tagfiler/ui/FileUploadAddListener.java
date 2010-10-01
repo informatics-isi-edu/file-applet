@@ -4,11 +4,15 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
+
+import netscape.javascript.JSException;
+import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.upload.FileUpload;
 
@@ -28,6 +32,8 @@ public class FileUploadAddListener extends FileUploadActionListener {
     private final DefaultListModel filesToUpload;
 
     private final FileUpload fileUpload;
+
+    private List<String> filesList;
 
     /**
      * Excludes "." and ".." from directory lists in case the client is
@@ -82,9 +88,11 @@ public class FileUploadAddListener extends FileUploadActionListener {
             File selectedDirectory = fileChooser.getSelectedFile();
             fileUpload.setBaseDirectory(selectedDirectory.getAbsolutePath());
             filesToUpload.clear();
+            filesList = new ArrayList<String>();
             addFilesToList(new File[] { selectedDirectory });
             fileUploadUI.enableUpload();
             fileUploadUI.getComponent().requestFocusInWindow();
+            fileUpload.addFilesToList(filesList);
         }
         // clear out the selected files, regardless
         fileChooser.setSelectedFiles(new File[] { new File("") });
@@ -106,6 +114,7 @@ public class FileUploadAddListener extends FileUploadActionListener {
             } else if (files[i].isFile()) {
                 filesToUpload.add(filesToUpload.getSize(),
                         files[i].getAbsolutePath());
+                filesList.add(files[i].getAbsolutePath());
             }
         }
 

@@ -6,7 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import netscape.javascript.JSException;
+import netscape.javascript.JSObject;
+
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -87,6 +91,35 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     public void setBaseDirectory(String baseDir) {
         assert (baseDir != null);
         baseDirectory = baseDir;
+    }
+
+    /**
+     * Sets the files to be uploaded on the Web Page.
+     * 
+     * @param filesList
+     *            the list of files
+     */
+    public void addFilesToList(List<String> filesList) {
+        assert (filesList != null);
+        StringBuffer buffer = new StringBuffer();
+        for (String file : filesList) {
+        	buffer.append(file).append("<br/>");
+        }
+        
+        if (buffer.length() > 0) {
+        	buffer.setLength(buffer.length() - "<br/>".length());
+        }
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+                    applet);
+
+            window.eval("setFiles('" + buffer.toString() + "')");
+
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+
     }
 
     /**

@@ -42,5 +42,12 @@ public interface FileUpload extends FileTransfer {
      */
     public boolean postFileData(List<String> files, String datasetName);
 
+    /**
+     * Sets the files to be uploaded on the Web Page.
+     * 
+     * @param filesList
+     *            the list of files
+     */
+    public void addFilesToList(List<String> filesList);
 
 }
