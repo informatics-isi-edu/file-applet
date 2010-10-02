@@ -11,16 +11,6 @@ package edu.isi.misd.tagfiler.ui;
 public interface FileDownloadUI extends FileUI {
 
     /**
-     * Enables the destination directory
-     */
-    public void enableDestinationDirectory();
-
-    /**
-     * Disables the destination directory
-     */
-    public void disableDestinationDirectory();
-
-    /**
      * Enables the download operation
      */
     public void enableDownload();
@@ -49,13 +39,4 @@ public interface FileDownloadUI extends FileUI {
      */
     public int validateFields();
 
-    /**
-     * Enables the update operation
-     */
-    public void enableUpdate();
-
-    /**
-     * Disables the update operation
-     */
-    public void disableUpdate();
 }

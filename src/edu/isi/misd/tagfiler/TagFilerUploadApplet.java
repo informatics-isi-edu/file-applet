@@ -244,7 +244,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         label.setForeground(fontColor);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setFont(font);
-        // label.setBorder(BorderFactory.createLineBorder(Color.red, 2));
         return label;
     }
 
@@ -258,7 +257,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         final JPanel panel = new JPanel();
         panel.setBackground(Color.white);
         panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        // panel.setBorder(BorderFactory.createLineBorder(Color.blue, 2));
         return panel;
     }
 
@@ -317,8 +315,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             System.out.println(TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetSuccess"));
 
-            //progressBar.setValue((int) totalBytes / unit);
-
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.UploadSuccess",
@@ -373,8 +369,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             while ((totalBytes / unit) >= Integer.MAX_VALUE) {
                 unit *= 10;
             }
-            //progressBar.setValue(0);
-            //progressBar.setMaximum((int) totalBytes / unit);
             updateStatus(TagFilerProperties
                     .getProperty(
                             "tagfiler.message.upload.FileTransferStatus",
@@ -400,7 +394,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             filesCompleted++;
             
             bytesTransferred += size + 1;
-            //progressBar.setValue((int) bytesTransferred / unit);
             long percent = bytesTransferred * 100 / totalBytes;
             try {
                 JSObject window = (JSObject) JSObject.getWindow(

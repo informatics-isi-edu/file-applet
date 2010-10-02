@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import netscape.javascript.JSException;
+import netscape.javascript.JSObject;
+
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -182,9 +185,22 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      */
     private void setCustomTags() throws UnsupportedEncodingException {
         Set<String> tags = customTagMap.getTagNames();
+        StringBuffer buffer = new StringBuffer();
         for (String tag : tags) {
+        	buffer.append(tag).append("<br/>");
             String value = getTagValue("", tag);
+        	buffer.append(value).append("<br/>");
             customTagMap.setValue(tag, value);
+        }
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+                    applet);
+
+            window.eval("setTags('" + buffer.toString() + "')");
+
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
         }
     }
 
@@ -237,6 +253,24 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                 checksumMap.put(name, checksum);
             }
 
+            StringBuffer buffer = new StringBuffer();
+            for (String file : fileNames) {
+            	buffer.append(file).append("<br/>");
+            }
+            
+            if (buffer.length() > 0) {
+            	buffer.setLength(buffer.length() - "<br/>".length());
+            }
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                        applet);
+
+                window.eval("setFiles('" + buffer.toString() + "')");
+
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
             result = true;
         } catch (Exception e) {
             e.printStackTrace();

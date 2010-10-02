@@ -15,7 +15,7 @@ import javax.swing.JTextField;
 public class FileDownloadSelectDestinationDirectoryListener extends
         FileDownloadActionListener {
 
-    private final JTextField destinationDirectoryField;
+    private StringBuffer destinationDirectoryField;
 
     private final JFileChooser fileChooser;
 
@@ -29,14 +29,14 @@ public class FileDownloadSelectDestinationDirectoryListener extends
      * @param chooser
      *            the file chooser
      */
-    public FileDownloadSelectDestinationDirectoryListener(FileDownloadUI ui,
-            JTextField field, JFileChooser chooser) {
+    public FileDownloadSelectDestinationDirectoryListener(FileDownloadUI ui, StringBuffer field,
+            JFileChooser chooser) {
         super(ui);
-        assert (field != null);
         assert (chooser != null);
+        assert (field != null);
 
-        destinationDirectoryField = field;
         fileChooser = chooser;
+        destinationDirectoryField = field;
     }
 
     /**
@@ -49,9 +49,8 @@ public class FileDownloadSelectDestinationDirectoryListener extends
                 .getComponent());
         if (JFileChooser.APPROVE_OPTION == result) {
             File selectedDirectory = fileChooser.getSelectedFile();
-            destinationDirectoryField.setText(selectedDirectory
-                    .getAbsolutePath());
-            if (destinationDirectoryField.getText().trim().length() > 0) {
+            destinationDirectoryField.append(selectedDirectory.getAbsolutePath());
+            if (destinationDirectoryField.toString().trim().length() > 0) {
             	fileDownloadUI.enableDownload();
             }
             fileDownloadUI.getComponent().requestFocusInWindow();

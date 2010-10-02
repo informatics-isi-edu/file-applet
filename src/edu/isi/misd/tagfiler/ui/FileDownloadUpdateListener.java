@@ -97,7 +97,7 @@ public class FileDownloadUpdateListener extends FileDownloadActionListener {
 
                 if (filesToDownload.size() > 0) {
                     fileDownloadUI.enableSelectDirectory();
-                    fileDownloadUI.enableDestinationDirectory();
+                    //fileDownloadUI.enableDestinationDirectory();
                 }
 
                 // start the session in the applet again after the files have

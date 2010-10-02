@@ -2,31 +2,26 @@ package edu.isi.misd.tagfiler;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+
+import netscape.javascript.JSException;
+import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
@@ -35,7 +30,6 @@ import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileDownloadDownloadListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadSelectDestinationDirectoryListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
-import edu.isi.misd.tagfiler.ui.FileDownloadUpdateListener;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
@@ -78,19 +72,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     private JButton selectDirBtn = null;
 
-    private JButton updateBtn = null;
-
-    private JTextField controlNumberField = null;
-
-    private JTextField destinationDirectoryField = null;
+    private StringBuffer destinationDirectoryField = new StringBuffer();
 
     private String defaultControlNumber = null;
 
-    private JList list = null;
-
-    private JLabel statusLabel = null;
-
-    private DefaultListModel filesToDownload = null;
+    private List<String> filesToDownload = null;
 
     private JFileChooser fileChooser = null;
 
@@ -105,11 +91,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     // map containing the names and values of custom tags
     private CustomTagMap customTagMap = null;
 
-    // progress bar used for uploading files
-    private JProgressBar progressBar = null;
-    
     private boolean downloadStudy;
-
 
     private Timer filesTimer;
 
@@ -118,11 +100,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	
     	public void run() {
     		downloadStudy = true;
-    		updateBtn.doClick();
-    		disableUpdate();
-        	enableSelectDirectory();
-        	destinationDirectoryField.setEnabled(true);
-        	controlNumberField.setEnabled(false);
         }
     }
 
@@ -183,50 +160,17 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                         .getProperty("tagfiler.button.SelectDirectory"));
 
         disableSelectDirectory();
-        updateBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.Update"));
 
-        filesToDownload = new DefaultListModel();
+        filesToDownload = new ArrayList<String>();
 
-        list = new JList(filesToDownload);
-        list.setVisibleRowCount(10);
-        final JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.setAutoscrolls(true);
-
-        // progress bar
-        progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        final Dimension progressBarDimension = new Dimension(
-                Integer.parseInt(TagFilerProperties
-                        .getProperty("tagfiler.progressbar.MaxWidth")),
-                Integer.parseInt(TagFilerProperties
-                        .getProperty("tagfiler.progressbar.MaxHeight")));
-        progressBar.setMaximumSize(progressBarDimension);
-
-        final JLabel enterControlNumberLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.EnterControlNumber"));
-        enterControlNumberLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        enterControlNumberLabel.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        controlNumberField = new JTextField("", 12);
-        controlNumberField
-                .setMaximumSize(controlNumberField.getPreferredSize());
-        controlNumberField.setText(defaultControlNumber);
-        controlNumberField.setHorizontalAlignment(JTextField.CENTER);
+        final JLabel selectDestinationLabel = createLabel(TagFilerProperties
+                .getProperty("tagfiler.label.SelectDestinationDir"));
+        final JLabel lbl2 = createLabel("        ");
 
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
         top.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        updateBtn.setAlignmentX(CENTER_ALIGNMENT);
-
-        top.add(enterControlNumberLabel);
-        top.add(controlNumberField);
-        top.add(updateBtn);
-        // top.validate();
-        // begin middle panel --------------------
 
         final JPanel middle = createPanel();
         middle.setLayout(new BoxLayout(middle, BoxLayout.X_AXIS));
@@ -237,133 +181,20 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         leftHalf.setLayout(new BoxLayout(leftHalf, BoxLayout.Y_AXIS));
         leftHalf.setAlignmentY(Component.TOP_ALIGNMENT);
         leftHalf.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // create the custom tags
-        final JPanel tagAndTitlePanel = createPanel();
-        tagAndTitlePanel.setLayout(new BoxLayout(tagAndTitlePanel,
-                BoxLayout.Y_AXIS));
-
-        final JPanel dirAndLabelPanel = createPanel();
-        dirAndLabelPanel.setLayout(new BoxLayout(dirAndLabelPanel,
-                BoxLayout.Y_AXIS));
-        dirAndLabelPanel.setAlignmentX(CENTER_ALIGNMENT);
-        dirAndLabelPanel.setAlignmentY(TOP_ALIGNMENT);
-
-        final JLabel selectDestinationLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.SelectDestinationDir"));
-        destinationDirectoryField = new JTextField("", 30);
-        destinationDirectoryField.setMaximumSize(new Dimension(1000, 25));
-        destinationDirectoryField.setBackground(Color.white);
-        destinationDirectoryField.setEnabled(false);
-        destinationDirectoryField.addKeyListener(new KeyAdapter() {
-        	        public void keyReleased(KeyEvent e) {
-        	            if (destinationDirectoryField.getText().trim().length() > 0) {
-        	            	enableDownload();
-        	            }
-        	            else {
-        	            	disableDownload();        	            	
-        	            }
-        	        }
-        	    }
-        	);
-        
-        final JPanel destDirPanel = createPanel();
-        destDirPanel.setLayout(new BoxLayout(destDirPanel, BoxLayout.X_AXIS));
-        destDirPanel.setAlignmentX(CENTER_ALIGNMENT);
-        destDirPanel.add(destinationDirectoryField);
-        destDirPanel.add(selectDirBtn);
-
-        // tagAndTitlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        dirAndLabelPanel.add(selectDestinationLabel);
-        dirAndLabelPanel.add(destDirPanel);
-        tagAndTitlePanel.add(dirAndLabelPanel);
+        leftHalf.add(lbl2);
 
         customTagMap = new CustomTagMapImplementation();
-        Set<String> customTagNames = customTagMap.getTagNames();
-        final JPanel customTagPanel = createPanel();
-        customTagPanel.setLayout(new GridLayout(customTagNames.size(), 2));
-        customTagPanel.setMaximumSize(new Dimension(customTagPanel
-                .getMaximumSize().width, 22 * customTagNames.size()));
-        final Font tagFont = new Font(font.getName(), Font.PLAIN,
-                font.getSize());
-
-        final Color customTagLabelColor = TagFilerPropertyUtils
-                .renderColor("tagfiler.tag.label.font.color");
-        for (String customTagName : customTagNames) {
-            final JLabel tagLabel = createLabel(customTagName);
-            tagLabel.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
-            tagLabel.setHorizontalAlignment(SwingConstants.LEFT);
-            tagLabel.setFont(tagFont);
-            tagLabel.setBackground(customTagLabelColor);
-            tagLabel.setOpaque(true);
-            customTagPanel.add(tagLabel);
-            final Component tagComponent = customTagMap
-                    .getComponent(customTagName);
-            ((JTextField) tagComponent).setEditable(false);
-            ((JTextField) tagComponent).setBackground(Color.white);
-            customTagPanel.add(tagComponent);
-        }
-        final JLabel tagLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.CustomTags"));
-        tagAndTitlePanel.add(tagLabel);
-        tagAndTitlePanel.add(customTagPanel);
-
-        leftHalf.add(tagAndTitlePanel);
 
         final JPanel rightHalf = createPanel();
         rightHalf.setLayout(new BoxLayout(rightHalf, BoxLayout.Y_AXIS));
         rightHalf.setAlignmentY(Component.TOP_ALIGNMENT);
 
-        // begin top of right middle ------------------------
-        final JPanel rightTop = createPanel();
-        rightTop.setLayout(new BoxLayout(rightTop, BoxLayout.Y_AXIS));
-        rightTop.setAlignmentY(Component.TOP_ALIGNMENT);
-        rightTop.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel fileDownloadLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.FilesToDownload"));
-        fileDownloadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        rightTop.add(fileDownloadLabel, Component.CENTER_ALIGNMENT);
-        rightTop.add(scrollPane);
+        rightHalf.add(downloadBtn);
 
-        final JPanel rightButtonPanel = createPanel();
-        rightButtonPanel.setLayout(new BoxLayout(rightButtonPanel,
-                BoxLayout.X_AXIS));
-        rightButtonPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-        rightButtonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        rightButtonPanel.add(downloadBtn);
-        // rightButtonPanel.add(Box.createHorizontalGlue());
-        // rightButtonPanel.add(removeBtn);
-
-        rightHalf.add(rightTop);
-        rightHalf.add(rightButtonPanel);
-
+        middle.add(top);
         middle.add(leftHalf);
         middle.add(rightHalf);
 
-        // end middle panel -------------------
-        // begin bottom panel ------------------
-        final JPanel bottom = createPanel();
-        bottom.setLayout(new GridLayout(2, 1));
-
-        final JPanel bottomTop = createPanel();
-        bottomTop.setLayout(new BoxLayout(bottomTop, BoxLayout.Y_AXIS));
-        bottomTop.setAlignmentX(Component.LEFT_ALIGNMENT);
-        bottomTop.setPreferredSize(new Dimension(Integer.MAX_VALUE, 50));
-
-        statusLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.DefaultUpdateStatus"));
-        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        statusLabel.setFont(new Font(statusLabel.getFont().getFontName(),
-                Font.PLAIN, statusLabel.getFont().getSize()));
-        statusLabel.setMaximumSize(new Dimension(500, 16));
-
-        bottomTop.add(statusLabel);
-        bottomTop.add(progressBar);
-
-        bottom.add(bottomTop);
-        leftHalf.add(bottom);
-
-        // end bottom panel -----------------------
         // file chooser window
         fileChooser = new JFileChooser();
         fileChooser.setDialogTitle(TagFilerProperties
@@ -379,10 +210,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                 new TagFilerAppletUploadListener(), sessionCookie,
                 customTagMap, this);
 
-        // listeners
-        updateBtn.addActionListener(new FileDownloadUpdateListener(this,
-                fileDownload, controlNumberField, filesToDownload, (defaultControlNumber.length() > 0)));
-
         selectDirBtn
                 .addActionListener(new FileDownloadSelectDestinationDirectoryListener(
                         this, destinationDirectoryField, fileChooser));
@@ -390,13 +217,14 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         downloadBtn.addActionListener(new FileDownloadDownloadListener(this,
                 fileDownload, destinationDirectoryField));
 
+        top.add(selectDestinationLabel);
+        top.add(selectDirBtn);
+
         // begin main panel -----------------------
         final JPanel main = createPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        main.add(top);
         main.add(middle);
-        main.add(bottom);
 
         getContentPane().setBackground(Color.white);
         getContentPane().add(main);
@@ -416,7 +244,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         label.setForeground(fontColor);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setFont(font);
-        // label.setBorder(BorderFactory.createLineBorder(Color.red, 2));
         return label;
     }
 
@@ -430,22 +257,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         final JPanel panel = new JPanel();
         panel.setBackground(Color.white);
         panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        // panel.setBorder(BorderFactory.createLineBorder(Color.blue, 2));
         return panel;
-    }
-
-    /**
-     * Enables the destination directory
-     */
-    public void enableDestinationDirectory() {
-    	destinationDirectoryField.setEnabled(true);
-    }
-
-    /**
-     * Disables the destination directory
-     */
-    public void disableDestinationDirectory() {
-    	destinationDirectoryField.setEnabled(false);
     }
 
     /**
@@ -453,6 +265,14 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      */
     public void enableDownload() {
         downloadBtn.setEnabled(true);
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+
+            window.eval("setDestinationDirectory('" + destinationDirectoryField.toString().trim() + "')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultDownloadStatus"));
     }
@@ -481,20 +301,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * Disables the update button
-     */
-    public void disableUpdate() {
-        updateBtn.setEnabled(false);
-    }
-
-    /**
-     * Enables the update button
-     */
-    public void enableUpdate() {
-        updateBtn.setEnabled(true);
-    }
-
-    /**
      * Private class that listens for progress from the file download process
      * and takes action on the applet UI based on this progress.
      * 
@@ -520,8 +326,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             System.out.println(TagFilerProperties.getProperty(
                     "tagfiler.message.download.DatasetSuccess",
                     new String[] { datasetName }));
-
-            progressBar.setValue((int) totalBytes / unit);
 
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(
@@ -590,8 +394,17 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             while ((totalBytes / unit) >= Integer.MAX_VALUE) {
                 unit *= 10;
             }
-            progressBar.setValue(0);
-            progressBar.setMaximum((int) totalBytes / unit);
+
+            long percent = 0;
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                		TagFilerDownloadApplet.this);
+
+                window.eval("drawProgressBar(" + percent + ")");
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
 
         }
 
@@ -614,10 +427,19 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             while ((size / unit) >= Integer.MAX_VALUE) {
                 unit *= 10;
             }
-            progressBar.setValue(0);
-            progressBar.setMaximum((int) size / unit);
+
             totalFiles = size;
             filesCompleted = 0;
+            long percent = 0;
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                		TagFilerDownloadApplet.this);
+
+                window.eval("drawProgressBar(" + percent + ")");
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
             
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.message.download.FileRetrieveStatus",
@@ -633,9 +455,18 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          *            the retrieved file.
          */
         public void notifyFileRetrieveComplete(String filename) {
-        	filesToDownload.add(filesToDownload.size(), filename);
+        	filesToDownload.add(filename);
         	filesCompleted++;
-            progressBar.setValue((int) filesCompleted / unit);
+            long percent = filesCompleted * 100 / totalFiles;
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                		TagFilerDownloadApplet.this);
+
+                window.eval("drawProgressBar(" + percent + ")");
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
                         "tagfiler.message.download.FileRetrieveStatus",
@@ -648,7 +479,16 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
-            progressBar.setValue(0);
+            long percent = 0;
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                		TagFilerDownloadApplet.this);
+
+                window.eval("drawProgressBar(" + percent + ")");
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));
@@ -673,7 +513,16 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             filesCompleted++;
             
             bytesTransferred += size + 1;
-            progressBar.setValue((int) bytesTransferred / unit);
+            long percent = bytesTransferred * 100 / totalBytes;
+            try {
+                JSObject window = (JSObject) JSObject.getWindow(
+                		TagFilerDownloadApplet.this);
+
+                window.eval("drawProgressBar(" + percent + ")");
+            } catch (JSException e) {
+                // don't throw, but make sure the UI is unuseable
+            	e.printStackTrace();
+            }
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
                         "tagfiler.message.download.FileTransferStatus",
@@ -730,10 +579,17 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * @param status
      */
     private void updateStatus(String status, boolean paint) {
-    	statusLabel.setText(status);
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+
+            window.eval("setStatus('" + status + "')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
     	
     	if (paint) {
-        	statusLabel.paintImmediately(statusLabel.getVisibleRect());
+        	//statusLabel.paintImmediately(statusLabel.getVisibleRect());
     	}
     }
 
@@ -745,12 +601,12 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     public int validateFields() {
         int valid = 1;
 
-        if (destinationDirectoryField.getText().trim().length() == 0) {
+        if (destinationDirectoryField.toString().trim().length() == 0) {
             valid = -1;
         }
         else if (!testMode) {
         	// check the directory is empty to prevent overwriting
-        	File dir = new File(destinationDirectoryField.getText().trim());
+        	File dir = new File(destinationDirectoryField.toString().trim());
         	if (dir.list().length > 0) {
         		int res = JOptionPane.showConfirmDialog(getComponent(),
         			    "The destination directory is not empty.\n"
@@ -776,17 +632,12 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     public void clearFields() {
         filesToDownload.clear();
         customTagMap.clearValues();
-        destinationDirectoryField.setText("");
-        controlNumberField.setText("");
     }
 
     /**
      * Deactivates the applet controls
      */
     public void deactivate() {
-        destinationDirectoryField.setEnabled(false);
-        controlNumberField.setEnabled(false);
-        updateBtn.setEnabled(false);
         selectDirBtn.setEnabled(false);
         downloadBtn.setEnabled(false);
     }
@@ -802,22 +653,50 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	return downloadStudy;
     }
     
+    public void getDatasetInfo(String controlNumber, String tags) {
+    	String name[] = tags.split("<br/>");
+        //customTagMap.clearValues();
+        defaultControlNumber = controlNumber;
+        //for (int i=0; i < name.length; i++) {
+        //	customTagMap.setValue(name[i], "");
+        //}
+
+        // make sure the transmission number exists
+    	StringBuffer errorMessage = new StringBuffer();
+    	StringBuffer status = new StringBuffer();
+        if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {
+            final List<String> fileList = fileDownload
+                    .getFiles(controlNumber);
+
+            if (fileList.size() > 0) {
+                enableSelectDirectory();
+            }
+
+        } else {
+            JOptionPane
+                    .showMessageDialog(
+                            getComponent(),
+                    TagFilerProperties.getProperty(
+                            "tagfiler.dialog.InvalidControlNumber",
+                            new String[] { controlNumber, errorMessage.toString() }),
+                            status.toString(), JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
     private class TestTimerTask extends TimerTask {
 
     	
     	public void run() {
     		defaultControlNumber = testProperties.getProperty("Control Number", "null");
-            controlNumberField.setText(defaultControlNumber);
-    		updateBtn.doClick();
     		
-    		while (!selectDirBtn.isEnabled() && !destinationDirectoryField.isEnabled()) {
+    		while (!selectDirBtn.isEnabled() && destinationDirectoryField.toString().trim().length() == 0) {
     			try {
     				Thread.sleep(1000);
     			} catch (InterruptedException e) {
 				}
     		}
     		
-    		destinationDirectoryField.setText(testProperties.getProperty("Destination Directory", "null"));
+    		destinationDirectoryField.append(testProperties.getProperty("Destination Directory", "null"));
     		downloadBtn.setEnabled(true);
     		downloadBtn.doClick();
         }

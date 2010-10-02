@@ -20,7 +20,7 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
 
     private final FileDownload fileDownload;
 
-    private final JTextField destinationDirectoryField;
+    private final StringBuffer destinationDirectoryField;
 
     private final ExecutorService threadExecutor;
 
@@ -37,7 +37,7 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
      *            the destination directory field
      */
     public FileDownloadDownloadListener(FileDownloadUI ui, FileDownload fd,
-            JTextField destDirField) {
+    		StringBuffer destDirField) {
         super(ui);
         assert (fd != null);
         assert (destDirField != null);
@@ -59,7 +59,7 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
         if (valid == 1) {
             fileDownloadUI.disableDownload();
             fileDownloadUI.disableSelectDirectory();
-            fileDownloadUI.disableUpdate();
+            //fileDownloadUI.disableUpdate();
 
             threadExecutor.execute(new RunDownloadTask());
         } else if (valid == -1) {
@@ -78,11 +78,10 @@ public class FileDownloadDownloadListener extends FileDownloadActionListener {
      */
     private class RunDownloadTask implements Runnable {
         public void run() {
-            fileDownload.downloadFiles(destinationDirectoryField.getText()
-                    .trim());
+            fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
 
             fileDownloadUI.clearFields();
-            fileDownloadUI.enableUpdate();
+            //fileDownloadUI.enableUpdate();
             fileDownloadUI.enableSelectDirectory();
 
             fileDownloadUI.getComponent().requestFocusInWindow();
