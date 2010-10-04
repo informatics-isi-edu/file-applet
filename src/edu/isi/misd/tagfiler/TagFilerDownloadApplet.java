@@ -87,6 +87,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     private Color fontColor;
 
     private Font font;
+    
+    private boolean started;
 
     // map containing the names and values of custom tags
     private CustomTagMap customTagMap = null;
@@ -132,6 +134,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
 	public void start() {
         super.start();
+        started = true;
         	if (defaultControlNumber.length() > 0)
         	{
             	filesTimer = new Timer(true);
@@ -157,9 +160,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         selectDirBtn = new JButton(
                 TagFilerProperties
-                        .getProperty("tagfiler.button.SelectDirectory"));
-
-        disableSelectDirectory();
+                        .getProperty("tagfiler.button.Browse"));
 
         filesToDownload = new ArrayList<String>();
 
@@ -167,10 +168,19 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                 .getProperty("tagfiler.label.SelectDestinationDir"));
         final JLabel lbl2 = createLabel("        ");
 
+        selectDestinationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lbl2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        selectDirBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        disableSelectDirectory();
+
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
         top.setAlignmentY(Component.TOP_ALIGNMENT);
+
+        top.add(selectDestinationLabel, Component.CENTER_ALIGNMENT);
+        top.add(selectDirBtn, Component.CENTER_ALIGNMENT);
+        top.validate();
 
         final JPanel middle = createPanel();
         middle.setLayout(new BoxLayout(middle, BoxLayout.X_AXIS));
@@ -216,9 +226,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         downloadBtn.addActionListener(new FileDownloadDownloadListener(this,
                 fileDownload, destinationDirectoryField));
-
-        top.add(selectDestinationLabel);
-        top.add(selectDirBtn);
 
         // begin main panel -----------------------
         final JPanel main = createPanel();
@@ -664,7 +671,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         // make sure the transmission number exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
-    	while (fileDownload == null) {
+    	while (!started) {
     		try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
