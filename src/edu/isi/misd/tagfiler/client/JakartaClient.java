@@ -454,10 +454,10 @@ public class JakartaClient  implements ClientURL {
 			e.printStackTrace();
 			return null;
 		}
-		int index = value.indexOf('|');
-		if (index != -1) {
-			value = value.substring(0, index);
-		}
+		//int index = value.indexOf('|');
+		//if (index != -1) {
+		//	value = value.substring(0, index);
+		//}
 		
 		return value;
     }
