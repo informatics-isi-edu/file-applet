@@ -664,6 +664,14 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         // make sure the transmission number exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
+    	while (fileDownload == null) {
+    		try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
         if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {
             final List<String> fileList = fileDownload
                     .getFiles(controlNumber);
