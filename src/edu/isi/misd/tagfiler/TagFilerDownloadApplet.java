@@ -469,6 +469,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                 JSObject window = (JSObject) JSObject.getWindow(
                 		TagFilerDownloadApplet.this);
 
+                window.eval((filesCompleted == 1 ? "setFiles('" : "addFile('") + filename + "')");
                 window.eval("drawProgressBar(" + percent + ")");
             } catch (JSException e) {
                 // don't throw, but make sure the UI is unuseable
