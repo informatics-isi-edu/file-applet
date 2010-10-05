@@ -5,18 +5,19 @@ import java.awt.Component;
 import java.awt.Font;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -28,7 +29,6 @@ import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
 import edu.isi.misd.tagfiler.ui.FileUploadUI;
-import edu.isi.misd.tagfiler.ui.FileUploadUploadListener;
 import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
@@ -69,12 +69,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
 
-    // buttons used by the applet UI
-    private JButton uploadBtn = null;
-
     private JButton addBtn = null;
-
-    private JList list = null;
 
     private DefaultListModel filesToUpload = null;
 
@@ -93,6 +88,10 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     private Timer filesTimer;
 
+    private boolean upload;
+
+    private Object lock= new Object();
+
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -101,13 +100,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     public void init() {
         super.init();
 
-        /*
-         * tagFilerWebauthURL = this.getParameter(TAGFILER_WEBAUTH_URL_PARAM);
-         * if (tagFilerWebauthURL == null || tagFilerWebauthURL.length() == 0) {
-         * throw new IllegalArgumentException(TAGFILER_WEBAUTH_URL_PARAM +
-         * " must be specified as a parameter to the applet"); }
-         */
-        
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
@@ -124,8 +116,10 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 	public void start() {
         super.start();
         
+    	filesTimer = new Timer(true);
+    	filesTimer.schedule(new UploadTask(), 1000);
+    	
         if (testMode) {
-        	filesTimer = new Timer(true);
         	filesTimer.schedule(new TestTimerTask(), 1000);
         }
     }
@@ -139,65 +133,26 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         font = TagFilerPropertyUtils.renderFont(FONT_NAME_PROPERTY,
                 FONT_STYLE_PROPERTY, FONT_SIZE_PROPERTY);
 
-        uploadBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.Upload"));
-        uploadBtn.setEnabled(false);
-
         addBtn = new JButton(
                 TagFilerProperties.getProperty("tagfiler.button.Browse"));
 
         filesToUpload = new DefaultListModel();
 
-        list = new JList(filesToUpload);
-        list.setVisibleRowCount(10);
-
-        final JLabel lbl = createLabel(TagFilerProperties
+       final JLabel lbl = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDirectoryToUpload"));
-
-        final JLabel lbl2 = createLabel("        ");
 
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
         top.setAlignmentY(Component.TOP_ALIGNMENT);
         lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lbl2.setAlignmentX(Component.CENTER_ALIGNMENT);
         addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         top.add(lbl, Component.CENTER_ALIGNMENT);
         top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
-        // begin middle panel --------------------
-
-        final JPanel middle = createPanel();
-        middle.setLayout(new BoxLayout(middle, BoxLayout.X_AXIS));
-        middle.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        // begin left middle --------------------------
-        final JPanel leftHalf = createPanel();
-        leftHalf.setLayout(new BoxLayout(leftHalf, BoxLayout.Y_AXIS));
-        leftHalf.setAlignmentY(Component.TOP_ALIGNMENT);
-        leftHalf.setAlignmentX(Component.LEFT_ALIGNMENT);
-        leftHalf.add(lbl2, Component.CENTER_ALIGNMENT);
 
         customTagMap = new CustomTagMapImplementation();
-        final JPanel rightHalf = createPanel();
-        rightHalf.setLayout(new BoxLayout(rightHalf, BoxLayout.Y_AXIS));
-        rightHalf.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        final JPanel rightButtonPanel = createPanel();
-        rightButtonPanel.setLayout(new BoxLayout(rightButtonPanel,
-                BoxLayout.X_AXIS));
-        rightButtonPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-        rightButtonPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        rightButtonPanel.add(uploadBtn);
-        rightButtonPanel.add(Box.createHorizontalGlue());
-
-        rightHalf.add(rightButtonPanel);
-
-        middle.add(top);
-        middle.add(leftHalf);
-        middle.add(rightHalf);
 
         // file chooser window
         fileChooser = new JFileChooser();
@@ -215,8 +170,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
                 sessionCookie, this);
 
         // listeners
-        uploadBtn.addActionListener(new FileUploadUploadListener(this,
-                fileUpload, filesToUpload));
         addBtn.addActionListener(new FileUploadAddListener(this, fileUpload,
                 fileChooser, getContentPane(), filesToUpload));
 
@@ -224,7 +177,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         final JPanel main = createPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        main.add(middle);
+        main.add(top);
 
         getContentPane().setBackground(Color.white);
         getContentPane().add(main);
@@ -264,14 +217,22 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * Allows the upload action to be invoked.
      */
     public void enableUpload() {
-        uploadBtn.setEnabled(true);
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+            		TagFilerUploadApplet.this);
+
+            window.eval("setEnabled('Upload All')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+
     }
 
     /**
      * Disallows the upload action to be invoked.
      */
     public void disableUpload() {
-        uploadBtn.setEnabled(false);
     }
 
     /**
@@ -515,8 +476,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      *            the font color
      */
     private void updateStatus(String status, Color c) {
-        //statusLabel.setForeground(c);
-        //statusLabel.setText(status);
     }
 
     /**
@@ -553,6 +512,16 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     /**
      * @return the component representing this UI
      */
+    public void uploadAll() {
+        synchronized (lock) {
+        	upload = true;
+        	lock.notifyAll();
+        }
+    }
+
+    /**
+     * @return the component representing this UI
+     */
     public Component getComponent() {
         return getContentPane();
     }
@@ -569,7 +538,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      */
     public void deactivate() {
         addBtn.setEnabled(false);
-        uploadBtn.setEnabled(false);
         Set<String> customTagNames = customTagMap.getTagNames();
         for (String customTagName : customTagNames) {
             customTagMap.getComponent(customTagName).setEnabled(false);
@@ -600,14 +568,40 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     		}
     		fileChooser.setSelectedFile(new File(testProperties.getProperty("Source Directory", "null")));
     		addBtn.doClick();
-    		
-    		while (!uploadBtn.isEnabled()) {
-    			try {
-    				Thread.sleep(1000);
-    			} catch (InterruptedException e) {
-				}
+        }
+    }
+
+    private class UploadTask extends TimerTask {
+
+    	public void run() {
+    		synchronized (lock) {
+        		while (!upload) {
+        			try {
+        				lock.wait();
+    				} catch (InterruptedException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+        		}
+        		if (upload) {
+        			upload = false;
+        	        try {
+        	            validateFields();
+        	            if (filesToUpload.size() > 0) {
+        	                deactivate();
+        	                List<String> files = new LinkedList<String>();
+        	                for (int i = 0; i < filesToUpload.size(); i++) {
+        	                    files.add((String) filesToUpload.get(i));
+        	                }
+        	                fileUpload.postFileData(files);
+        	            }
+        	        } catch (Exception ex) {
+        	            JOptionPane.showMessageDialog(getComponent(),
+        	                    ex.getMessage());
+        	            getComponent().requestFocusInWindow();
+        	        }
+        		}
     		}
-    		uploadBtn.doClick();
         }
     }
 

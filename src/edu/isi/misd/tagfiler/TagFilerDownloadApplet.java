@@ -27,7 +27,6 @@ import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
-import edu.isi.misd.tagfiler.ui.FileDownloadDownloadListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadSelectDestinationDirectoryListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
@@ -67,9 +66,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
 
-    // buttons used by the applet UI
-    private JButton downloadBtn = null;
-
     private JButton selectDirBtn = null;
 
     private StringBuffer destinationDirectoryField = new StringBuffer();
@@ -96,6 +92,10 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     private boolean downloadStudy;
 
     private Timer filesTimer;
+
+    private boolean download;
+
+    private Object lock= new Object();
 
     private class EventTimerTask extends TimerTask {
 
@@ -135,12 +135,12 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 	public void start() {
         super.start();
         started = true;
+    	filesTimer = new Timer(true);
+    	filesTimer.schedule(new DownloadTask(), 1000);
         	if (defaultControlNumber.length() > 0)
         	{
-            	filesTimer = new Timer(true);
             	filesTimer.schedule(new EventTimerTask(), 1000);
         	} else if (testMode) {
-            	filesTimer = new Timer(true);
             	filesTimer.schedule(new TestTimerTask(), 1000);
         	}
     }
@@ -154,10 +154,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         font = TagFilerPropertyUtils.renderFont(FONT_NAME_PROPERTY,
                 FONT_STYLE_PROPERTY, FONT_SIZE_PROPERTY);
 
-        downloadBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.Download"));
-        downloadBtn.setEnabled(false);
-
         selectDirBtn = new JButton(
                 TagFilerProperties
                         .getProperty("tagfiler.button.Browse"));
@@ -166,10 +162,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         final JLabel selectDestinationLabel = createLabel(TagFilerProperties
                 .getProperty("tagfiler.label.SelectDestinationDir"));
-        final JLabel lbl2 = createLabel("        ");
 
         selectDestinationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lbl2.setAlignmentX(Component.CENTER_ALIGNMENT);
         selectDirBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         disableSelectDirectory();
 
@@ -182,28 +176,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         top.add(selectDirBtn, Component.CENTER_ALIGNMENT);
         top.validate();
 
-        final JPanel middle = createPanel();
-        middle.setLayout(new BoxLayout(middle, BoxLayout.X_AXIS));
-        middle.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        // begin left middle --------------------------
-        final JPanel leftHalf = createPanel();
-        leftHalf.setLayout(new BoxLayout(leftHalf, BoxLayout.Y_AXIS));
-        leftHalf.setAlignmentY(Component.TOP_ALIGNMENT);
-        leftHalf.setAlignmentX(Component.LEFT_ALIGNMENT);
-        leftHalf.add(lbl2);
-
         customTagMap = new CustomTagMapImplementation();
-
-        final JPanel rightHalf = createPanel();
-        rightHalf.setLayout(new BoxLayout(rightHalf, BoxLayout.Y_AXIS));
-        rightHalf.setAlignmentY(Component.TOP_ALIGNMENT);
-
-        rightHalf.add(downloadBtn);
-
-        middle.add(top);
-        middle.add(leftHalf);
-        middle.add(rightHalf);
 
         // file chooser window
         fileChooser = new JFileChooser();
@@ -224,14 +197,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                 .addActionListener(new FileDownloadSelectDestinationDirectoryListener(
                         this, destinationDirectoryField, fileChooser));
 
-        downloadBtn.addActionListener(new FileDownloadDownloadListener(this,
-                fileDownload, destinationDirectoryField));
-
         // begin main panel -----------------------
         final JPanel main = createPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        main.add(middle);
+        main.add(top);
 
         getContentPane().setBackground(Color.white);
         getContentPane().add(main);
@@ -271,11 +241,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * Enables the download button
      */
     public void enableDownload() {
-        downloadBtn.setEnabled(true);
         try {
             JSObject window = (JSObject) JSObject.getWindow(this);
 
             window.eval("setDestinationDirectory('" + destinationDirectoryField.toString().trim() + "')");
+            window.eval("setEnabled('Download Files')");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();
@@ -288,7 +258,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * Disables the download button
      */
     public void disableDownload() {
-        downloadBtn.setEnabled(false);
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultDestinationStatus"));
     }
@@ -630,6 +599,16 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     /**
      * @return the component representing this UI
      */
+    public void downloadFiles() {
+        synchronized (lock) {
+        	download = true;
+        	lock.notifyAll();
+        }
+    }
+
+    /**
+     * @return the component representing this UI
+     */
     public Component getComponent() {
         return getContentPane();
     }
@@ -647,7 +626,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      */
     public void deactivate() {
         selectDirBtn.setEnabled(false);
-        downloadBtn.setEnabled(false);
     }
 
     /**
@@ -713,8 +691,34 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     		}
     		
     		destinationDirectoryField.append(testProperties.getProperty("Destination Directory", "null"));
-    		downloadBtn.setEnabled(true);
-    		downloadBtn.doClick();
+        }
+    }
+
+    private class DownloadTask extends TimerTask {
+
+    	public void run() {
+    		synchronized (lock) {
+        		while (!download) {
+        			try {
+        				lock.wait();
+    				} catch (InterruptedException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+        		}
+        		if (download) {
+        			download = false;
+        	        int valid = validateFields();
+        	        if (valid == 1) {
+                        fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
+        	        } else if (valid == -1) {
+        	            JOptionPane.showMessageDialog(getComponent(),
+        	                    TagFilerProperties
+        	                            .getProperty("tagfiler.dialog.FieldsNotFilled"));
+        	            getComponent().requestFocusInWindow();
+        	        }
+        		}
+    		}
         }
     }
 
