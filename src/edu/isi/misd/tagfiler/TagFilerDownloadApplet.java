@@ -293,8 +293,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         private long bytesTransferred = 0;
 
-        private int unit = 1;
-
         /**
          * Called when a dataset is complete.
          */
@@ -364,13 +362,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
-            // if the size of the transfer is beyond the integer max value,
-            // make sure we divide the total and increments so that they fit in
-            // the progress bar's integer units
-            while ((totalBytes / unit) >= Integer.MAX_VALUE) {
-                unit *= 10;
-            }
-
             long percent = 0;
             try {
                 JSObject window = (JSObject) JSObject.getWindow(
@@ -400,10 +391,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          *            number of files to be retrieved.
          */
         public void notifyRetrieveStart(int size) {
-            while ((size / unit) >= Integer.MAX_VALUE) {
-                unit *= 10;
-            }
-
             totalFiles = size;
             filesCompleted = 0;
             long percent = 0;
@@ -641,12 +628,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     
     public void getDatasetInfo(String controlNumber, String tags) {
     	String name[] = tags.split("<br/>");
-        //customTagMap.clearValues();
         defaultControlNumber = controlNumber;
-        //for (int i=0; i < name.length; i++) {
-        //	customTagMap.setValue(name[i], "");
-        //}
-
+        for (int i=0; i < name.length; i++) {
+        	customTagMap.setValue(name[i], "");
+        }
+        
         // make sure the transmission number exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
@@ -698,26 +684,28 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     	public void run() {
     		synchronized (lock) {
-        		while (!download) {
-        			try {
-        				lock.wait();
-    				} catch (InterruptedException e) {
-    					// TODO Auto-generated catch block
-    					e.printStackTrace();
-    				}
-        		}
-        		if (download) {
-        			download = false;
-        	        int valid = validateFields();
-        	        if (valid == 1) {
-                        fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
-        	        } else if (valid == -1) {
-        	            JOptionPane.showMessageDialog(getComponent(),
-        	                    TagFilerProperties
-        	                            .getProperty("tagfiler.dialog.FieldsNotFilled"));
-        	            getComponent().requestFocusInWindow();
-        	        }
-        		}
+    			while (true) {
+            		while (!download) {
+            			try {
+            				lock.wait();
+        				} catch (InterruptedException e) {
+        					// TODO Auto-generated catch block
+        					e.printStackTrace();
+        				}
+            		}
+            		if (download) {
+            			download = false;
+            	        int valid = validateFields();
+            	        if (valid == 1) {
+                            fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
+            	        } else if (valid == -1) {
+            	            JOptionPane.showMessageDialog(getComponent(),
+            	                    TagFilerProperties
+            	                            .getProperty("tagfiler.dialog.FieldsNotFilled"));
+            	            getComponent().requestFocusInWindow();
+            	        }
+            		}
+    			}
     		}
         }
     }

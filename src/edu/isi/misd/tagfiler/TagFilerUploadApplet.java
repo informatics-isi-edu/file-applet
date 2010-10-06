@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -266,8 +267,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
         private long bytesTransferred = 0;
 
-        private int unit = 1;
-
         /**
          * Called when a dataset is complete.
          */
@@ -324,12 +323,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
-            // if the size of the transfer is beyond the integer max value,
-            // make sure we divide the total and increments so that they fit in
-            // the progress bar's integer units
-            while ((totalBytes / unit) >= Integer.MAX_VALUE) {
-                unit *= 10;
-            }
             updateStatus(TagFilerProperties
                     .getProperty(
                             "tagfiler.message.upload.FileTransferStatus",
@@ -482,9 +475,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * @return true if the custom fields that are editable by the user are all
      *         valid.
      */
-    public boolean validateFields() throws Exception {
-        boolean valid = true;
-
+    public void setCustomTags() throws Exception {
         try {
             JSObject window = (JSObject) JSObject.getWindow(
                     this);
@@ -499,14 +490,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();
         }
-
-        // make sure the custom tags all have values
-        Set<String> customTagNames = customTagMap.getTagNames();
-        for (String customTagName : customTagNames) {
-            final String value = customTagMap.getValue(customTagName);
-            customTagMap.validate(customTagName, value);
-        }
-        return valid;
     }
 
     /**
@@ -517,6 +500,22 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         	upload = true;
         	lock.notifyAll();
         }
+    }
+
+    /**
+     * @return the component representing this UI
+     */
+    public boolean validateDate(String date) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			sdf.setLenient(false);
+			sdf.parse(date);
+			return true;
+		}
+		catch (Throwable e) {
+			e.printStackTrace();
+			return false;
+		}
     }
 
     /**
@@ -538,10 +537,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      */
     public void deactivate() {
         addBtn.setEnabled(false);
-        Set<String> customTagNames = customTagMap.getTagNames();
-        for (String customTagName : customTagNames) {
-            customTagMap.getComponent(customTagName).setEnabled(false);
-        }
     }
 
     /**
@@ -575,32 +570,34 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     	public void run() {
     		synchronized (lock) {
-        		while (!upload) {
-        			try {
-        				lock.wait();
-    				} catch (InterruptedException e) {
-    					// TODO Auto-generated catch block
-    					e.printStackTrace();
-    				}
-        		}
-        		if (upload) {
-        			upload = false;
-        	        try {
-        	            validateFields();
-        	            if (filesToUpload.size() > 0) {
-        	                deactivate();
-        	                List<String> files = new LinkedList<String>();
-        	                for (int i = 0; i < filesToUpload.size(); i++) {
-        	                    files.add((String) filesToUpload.get(i));
-        	                }
-        	                fileUpload.postFileData(files);
-        	            }
-        	        } catch (Exception ex) {
-        	            JOptionPane.showMessageDialog(getComponent(),
-        	                    ex.getMessage());
-        	            getComponent().requestFocusInWindow();
-        	        }
-        		}
+    			while (true) {
+            		while (!upload) {
+            			try {
+            				lock.wait();
+        				} catch (InterruptedException e) {
+        					// TODO Auto-generated catch block
+        					e.printStackTrace();
+        				}
+            		}
+            		if (upload) {
+            			upload = false;
+            	        try {
+            	        	setCustomTags();
+            	            if (filesToUpload.size() > 0) {
+            	                deactivate();
+            	                List<String> files = new LinkedList<String>();
+            	                for (int i = 0; i < filesToUpload.size(); i++) {
+            	                    files.add((String) filesToUpload.get(i));
+            	                }
+            	                fileUpload.postFileData(files);
+            	            }
+            	        } catch (Exception ex) {
+            	            JOptionPane.showMessageDialog(getComponent(),
+            	                    ex.getMessage());
+            	            getComponent().requestFocusInWindow();
+            	        }
+            		}
+    			}
     		}
         }
     }

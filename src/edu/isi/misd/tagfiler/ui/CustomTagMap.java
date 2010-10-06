@@ -22,16 +22,6 @@ public interface CustomTagMap {
      *            the tag's new value
      */
     public void setValue(String key, String value);
-
-    /**
-     * Validates a tag/value pair.
-     * Throw an exception if values are not defined for required tags or if a date is not in the MM-dd-yyyy format
-     * @param name
-     *            the tag name.
-     * @param value
-     *            the tag value.
-     */
-    public boolean validate(String name, String value) throws Exception;
     
     /**
      * 
@@ -46,14 +36,6 @@ public interface CustomTagMap {
      * @return a set of all the tag names defined.
      */
     public Set<String> getTagNames();
-
-    /**
-     * 
-     * @param key
-     *            name of the tag
-     * @return the component referenced by this tag
-     */
-    public Component getComponent(String key);
 
     /**
      * Clears the map of the tags.

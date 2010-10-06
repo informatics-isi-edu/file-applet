@@ -39,6 +39,4 @@ public interface FileUploadUI extends FileUI {
 
     public void deactivate();
 
-    public boolean validateFields() throws Exception;
-
 }
