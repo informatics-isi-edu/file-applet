@@ -27,8 +27,6 @@ import javax.swing.SwingUtilities;
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
-import edu.isi.misd.tagfiler.ui.CustomTagMap;
-import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUploadUI;
 import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
@@ -83,9 +81,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     private Color fontColor;
 
     private Font font;
-
-    // map containing the names and values of custom tags
-    private CustomTagMap customTagMap = null;
 
     private Timer filesTimer;
 
@@ -160,8 +155,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         top.add(lbl, Component.CENTER_ALIGNMENT);
         //top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
-
-        customTagMap = new CustomTagMapImplementation();
 
         // file chooser window
         fileChooser = new JFileChooser();

@@ -25,7 +25,6 @@ import netscape.javascript.JSObject;
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
-import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
@@ -82,23 +81,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     
     private boolean started;
 
-    // map containing the names and values of custom tags
-    private CustomTagMap customTagMap = null;
-
-    private boolean downloadStudy;
-
-    private Timer filesTimer;
-
     private boolean download;
 
-    private class EventTimerTask extends TimerTask {
-
-    	
-    	public void run() {
-    		downloadStudy = true;
-        }
-    }
-
+    private Timer filesTimer;
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -128,15 +113,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
 	public void start() {
         super.start();
-        started = true;
     	filesTimer = new Timer(true);
     	filesTimer.schedule(new DownloadTask(), 1000);
-        	if (defaultControlNumber.length() > 0)
-        	{
-            	filesTimer.schedule(new EventTimerTask(), 1000);
-        	} else if (testMode) {
-            	filesTimer.schedule(new TestTimerTask(), 1000);
-        	}
+    	if (testMode) {
+        	filesTimer.schedule(new TestTimerTask(), 1000);
+    	}
     }
 
     /**
@@ -162,8 +143,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         top.add(selectDestinationLabel, Component.CENTER_ALIGNMENT);
         top.validate();
-
-        customTagMap = new CustomTagMapImplementation();
 
         // file chooser window
         fileChooser = new JFileChooser();
@@ -637,11 +616,17 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         return fileDownload;
     }
     
-    public boolean isDownloadStudy() {
-    	return downloadStudy;
-    }
-    
     public void getDatasetInfo(String controlNumber, String tags) {
+    	synchronized (lock) {
+    		while (!started) {
+    			try {
+					lock.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    		}
+    	}
     	String name[] = tags.split("<br/>");
         defaultControlNumber = controlNumber;
         for (int i=0; i < name.length; i++) {
@@ -651,14 +636,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         // make sure the transmission number exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
-    	while (!started) {
-    		try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	}
         if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {
             final List<String> fileList = fileDownload
                     .getFiles(controlNumber);
@@ -699,6 +676,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     	public void run() {
     		synchronized (lock) {
+    			started = true;
+    			lock.notifyAll();
     			while (!stopped) {
             		while (!download && !browseDir) {
             			try {
