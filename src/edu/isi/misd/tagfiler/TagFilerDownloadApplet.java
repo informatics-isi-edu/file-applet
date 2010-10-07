@@ -95,8 +95,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     private boolean download;
 
-    private Object lock= new Object();
-
     private class EventTimerTask extends TimerTask {
 
     	
@@ -684,7 +682,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     	public void run() {
     		synchronized (lock) {
-    			while (true) {
+    			while (!stopped) {
             		while (!download) {
             			try {
             				lock.wait();

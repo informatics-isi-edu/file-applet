@@ -91,8 +91,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     private boolean upload;
 
-    private Object lock= new Object();
-
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -570,7 +568,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     	public void run() {
     		synchronized (lock) {
-    			while (true) {
+    			while (!stopped) {
             		while (!upload) {
             			try {
             				lock.wait();

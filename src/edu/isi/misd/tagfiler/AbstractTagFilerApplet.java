@@ -47,6 +47,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     private String tagFilerWebauthURL;
 
     protected boolean testMode;
+    protected boolean stopped;
+    protected Object lock= new Object();
+
     protected Properties testProperties = new Properties();
 
     /**
@@ -99,12 +102,21 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
                     + " is not a valid URL for the tagfiler server.");
         }
     }
+    
+    public void stop() {
+    	synchronized (lock) {
+    		stopped = true;
+        	lock.notifyAll();
+    	}
+    	super.stop();
+    }
 
     /**
      * Redirects to an url
      */
     public void redirect(String urlStr) {
         assert (urlStr != null);
+        this.stop();
         System.out.println("redirect: " + urlStr);
         try {
             final URL url = new URL(urlStr);
