@@ -12,7 +12,6 @@ import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,7 +26,6 @@ import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
-import edu.isi.misd.tagfiler.ui.FileDownloadSelectDestinationDirectoryListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
@@ -65,8 +63,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     private static final String FONT_SIZE_PROPERTY = "tagfiler.font.size";
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
-
-    private JButton selectDirBtn = null;
 
     private StringBuffer destinationDirectoryField = new StringBuffer();
 
@@ -152,17 +148,11 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         font = TagFilerPropertyUtils.renderFont(FONT_NAME_PROPERTY,
                 FONT_STYLE_PROPERTY, FONT_SIZE_PROPERTY);
 
-        selectDirBtn = new JButton(
-                TagFilerProperties
-                        .getProperty("tagfiler.button.Browse"));
-
         filesToDownload = new ArrayList<String>();
 
-        final JLabel selectDestinationLabel = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.SelectDestinationDir"));
+        final JLabel selectDestinationLabel = createLabel("Service Started");
 
         selectDestinationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        selectDirBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         disableSelectDirectory();
 
         final JPanel top = createPanel();
@@ -171,7 +161,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         top.setAlignmentY(Component.TOP_ALIGNMENT);
 
         top.add(selectDestinationLabel, Component.CENTER_ALIGNMENT);
-        top.add(selectDirBtn, Component.CENTER_ALIGNMENT);
         top.validate();
 
         customTagMap = new CustomTagMapImplementation();
@@ -190,10 +179,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         fileDownload = new FileDownloadImplementation(tagFilerServerURL,
                 new TagFilerAppletUploadListener(), sessionCookie,
                 customTagMap, this);
-
-        selectDirBtn
-                .addActionListener(new FileDownloadSelectDestinationDirectoryListener(
-                        this, destinationDirectoryField, fileChooser));
 
         // begin main panel -----------------------
         final JPanel main = createPanel();
@@ -264,14 +249,20 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * Enables the select directory button
      */
     public void enableSelectDirectory() {
-        selectDirBtn.setEnabled(true);
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+
+            window.eval("setEnabled('Browse')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
     }
 
     /**
      * Disallows the adding of a directory to be invoked.
      */
     public void disableSelectDirectory() {
-        selectDirBtn.setEnabled(false);
     }
 
     /**
@@ -594,6 +585,33 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     /**
      * @return the component representing this UI
      */
+    public void browse() {
+        synchronized (lock) {
+        	browseDir = true;
+        	lock.notifyAll();
+        }
+    }
+
+    /**
+     * Called when the action fires. Opens a file dialog window and writes the
+     * result to the UI.
+     */
+    private void chooseDir() {
+        final int result = fileChooser.showOpenDialog(getComponent());
+        if (JFileChooser.APPROVE_OPTION == result) {
+            File selectedDirectory = fileChooser.getSelectedFile();
+            destinationDirectoryField.append(selectedDirectory.getAbsolutePath());
+            if (destinationDirectoryField.toString().trim().length() > 0) {
+            	enableDownload();
+            }
+            getComponent().requestFocusInWindow();
+        }
+        // clear out the selected files, regardless
+        fileChooser.setSelectedFiles(new File[] { new File("") });
+    }
+    /**
+     * @return the component representing this UI
+     */
     public Component getComponent() {
         return getContentPane();
     }
@@ -610,7 +628,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * Deactivates the applet controls
      */
     public void deactivate() {
-        selectDirBtn.setEnabled(false);
     }
 
     /**
@@ -667,12 +684,12 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	public void run() {
     		defaultControlNumber = testProperties.getProperty("Control Number", "null");
     		
-    		while (!selectDirBtn.isEnabled() && destinationDirectoryField.toString().trim().length() == 0) {
-    			try {
-    				Thread.sleep(1000);
-    			} catch (InterruptedException e) {
-				}
-    		}
+    		//while (!selectDirBtn.isEnabled() && destinationDirectoryField.toString().trim().length() == 0) {
+    		//	try {
+    		//		Thread.sleep(1000);
+    		//	} catch (InterruptedException e) {
+			//	}
+    		//}
     		
     		destinationDirectoryField.append(testProperties.getProperty("Destination Directory", "null"));
         }
@@ -683,7 +700,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	public void run() {
     		synchronized (lock) {
     			while (!stopped) {
-            		while (!download) {
+            		while (!download && !browseDir) {
             			try {
             				lock.wait();
         				} catch (InterruptedException e) {
@@ -702,6 +719,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             	                            .getProperty("tagfiler.dialog.FieldsNotFilled"));
             	            getComponent().requestFocusInWindow();
             	        }
+            		} else if (browseDir) {
+            			browseDir = false;
+            			chooseDir();
             		}
     			}
     		}

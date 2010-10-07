@@ -48,6 +48,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     protected boolean testMode;
     protected boolean stopped;
+    protected boolean browseDir;
     protected Object lock= new Object();
 
     protected Properties testProperties = new Properties();

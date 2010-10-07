@@ -4,8 +4,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +17,6 @@ import java.util.TimerTask;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -28,7 +29,6 @@ import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
-import edu.isi.misd.tagfiler.ui.FileUploadAddListener;
 import edu.isi.misd.tagfiler.ui.FileUploadUI;
 import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
@@ -70,7 +70,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
 
-    private JButton addBtn = null;
+    //private JButton addBtn = null;
 
     private DefaultListModel filesToUpload = null;
 
@@ -90,6 +90,17 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     private Timer filesTimer;
 
     private boolean upload;
+
+    private List<String> filesList;
+    /**
+     * Excludes "." and ".." from directory lists in case the client is
+     * UNIX-based.
+     */
+    private static final FilenameFilter excludeDirFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return (!name.equals(".") && !name.equals(".."));
+        }
+    };
 
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
@@ -132,23 +143,22 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         font = TagFilerPropertyUtils.renderFont(FONT_NAME_PROPERTY,
                 FONT_STYLE_PROPERTY, FONT_SIZE_PROPERTY);
 
-        addBtn = new JButton(
-                TagFilerProperties.getProperty("tagfiler.button.Browse"));
+        //addBtn = new JButton(
+        //        TagFilerProperties.getProperty("tagfiler.button.Browse"));
 
         filesToUpload = new DefaultListModel();
 
-       final JLabel lbl = createLabel(TagFilerProperties
-                .getProperty("tagfiler.label.SelectDirectoryToUpload"));
+       final JLabel lbl = createLabel("Service Started");
 
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
         top.setAlignmentY(Component.TOP_ALIGNMENT);
         lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-        addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         top.add(lbl, Component.CENTER_ALIGNMENT);
-        top.add(addBtn, Component.CENTER_ALIGNMENT);
+        //top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
 
         customTagMap = new CustomTagMapImplementation();
@@ -169,8 +179,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
                 sessionCookie, this);
 
         // listeners
-        addBtn.addActionListener(new FileUploadAddListener(this, fileUpload,
-                fileChooser, getContentPane(), filesToUpload));
+        //addBtn.addActionListener(new FileUploadAddListener(this, fileUpload,
+        //        fileChooser, getContentPane(), filesToUpload));
 
         // begin main panel -----------------------
         final JPanel main = createPanel();
@@ -238,14 +248,14 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * Allows the adding of a directory to be invoked.
      */
     public void enableAdd() {
-        addBtn.setEnabled(true);
+        //addBtn.setEnabled(true);
     }
 
     /**
      * Disallows the adding of a directory to be invoked.
      */
     public void disableAdd() {
-        addBtn.setEnabled(false);
+        //addBtn.setEnabled(false);
     }
 
     /**
@@ -503,6 +513,68 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     /**
      * @return the component representing this UI
      */
+    public void browse() {
+        synchronized (lock) {
+        	browseDir = true;
+        	lock.notifyAll();
+        }
+    }
+
+    /**
+     * @return the component representing this UI
+     */
+    private void chooseDir() {
+        int result;
+        File fileTest = fileChooser.getSelectedFile();
+        if (fileTest != null && fileTest.getName().length() > 0) {
+        	result = JFileChooser.APPROVE_OPTION;
+        } else {
+            result = fileChooser.showOpenDialog(getContentPane());
+        }
+        if (JFileChooser.APPROVE_OPTION == result) {
+            File selectedDirectory = fileChooser.getSelectedFile();
+            fileUpload.setBaseDirectory(selectedDirectory.getAbsolutePath());
+            filesToUpload.clear();
+            filesList = new ArrayList<String>();
+            addFilesToList(new File[] { selectedDirectory });
+            enableUpload();
+            fileUpload.addFilesToList(filesList);
+        }
+        // clear out the selected files, regardless
+        fileChooser.setSelectedFiles(new File[] { new File("") });
+    }
+
+    /**
+     * Adds the files to the list, if an entry is a directory then all its files
+     * are added as well.
+     * 
+     * @param files
+     *            the files to add
+     */
+    private void addFilesToList(File[] files) {
+        assert (files != null);
+        final List<File> dirs = new LinkedList<File>();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isDirectory()) {
+                dirs.add(files[i].getAbsoluteFile());
+            } else if (files[i].isFile()) {
+                filesToUpload.add(filesToUpload.getSize(),
+                        files[i].getAbsolutePath());
+                filesList.add(files[i].getAbsolutePath());
+            }
+        }
+
+        // go through any directories
+        for (File dir : dirs) {
+            final File[] children = dir.listFiles(excludeDirFilter);
+            if (children != null) {
+                addFilesToList(children);
+            }
+        }
+    }
+    /**
+     * @return the component representing this UI
+     */
     public boolean validateDate(String date) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -534,7 +606,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * Puts the UI in a state where it is no longer active
      */
     public void deactivate() {
-        addBtn.setEnabled(false);
+        //addBtn.setEnabled(false);
     }
 
     /**
@@ -560,7 +632,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     			customTagMap.setValue(tag, value);
     		}
     		fileChooser.setSelectedFile(new File(testProperties.getProperty("Source Directory", "null")));
-    		addBtn.doClick();
+    		//addBtn.doClick();
         }
     }
 
@@ -569,7 +641,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     	public void run() {
     		synchronized (lock) {
     			while (!stopped) {
-            		while (!upload) {
+            		while (!upload && !browseDir) {
             			try {
             				lock.wait();
         				} catch (InterruptedException e) {
@@ -594,6 +666,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             	                    ex.getMessage());
             	            getComponent().requestFocusInWindow();
             	        }
+            		} else if (browseDir) {
+            			browseDir = false;
+            			chooseDir();
             		}
     			}
     		}
