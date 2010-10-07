@@ -91,6 +91,14 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     public void setBaseDirectory(String baseDir) {
         assert (baseDir != null);
         baseDirectory = baseDir;
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(applet);
+
+            window.eval("setDestinationDirectory('" + baseDir + "')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
     }
 
     /**
