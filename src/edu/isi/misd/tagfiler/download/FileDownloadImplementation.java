@@ -196,7 +196,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             JSObject window = (JSObject) JSObject.getWindow(
                     applet);
 
-            window.eval("setTags('" + buffer.toString() + "')");
+            String expr = "setTags('" + buffer.toString() + "')";
+            System.out.println(expr);
+            window.eval(expr);
 
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
