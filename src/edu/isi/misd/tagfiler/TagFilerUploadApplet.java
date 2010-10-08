@@ -123,6 +123,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         
     	filesTimer = new Timer(true);
     	filesTimer.schedule(new UploadTask(), 1000);
+    	enableAdd();
     	
         if (testMode) {
         	filesTimer.schedule(new TestTimerTask(), 1000);
@@ -241,7 +242,16 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * Allows the adding of a directory to be invoked.
      */
     public void enableAdd() {
-        //addBtn.setEnabled(true);
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(
+            		TagFilerUploadApplet.this);
+
+            window.eval("setEnabled('Browse')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+
     }
 
     /**

@@ -24,7 +24,6 @@ import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
-import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
@@ -79,7 +78,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     private Font font;
     
-    private boolean started;
+    //private boolean started;
 
     private boolean download;
 
@@ -118,6 +117,20 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	if (testMode) {
         	filesTimer.schedule(new TestTimerTask(), 1000);
     	}
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+
+        	if (defaultControlNumber.length() == 0) {
+                window.eval("setEnabled('UpdateButton')");
+                window.eval("setEnabled('TransmissionNumber')");
+        	} else {
+        		String tags = (String) window.eval("getTagsName()");
+        		getDatasetInfo(defaultControlNumber, tags);
+        	}
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
     }
 
     /**
@@ -617,16 +630,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     }
     
     public void getDatasetInfo(String controlNumber, String tags) {
-    	synchronized (lock) {
-    		while (!started) {
-    			try {
-					lock.wait();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-    		}
-    	}
     	String name[] = tags.split("<br/>");
         defaultControlNumber = controlNumber;
         for (int i=0; i < name.length; i++) {
@@ -676,8 +679,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     	public void run() {
     		synchronized (lock) {
-    			started = true;
-    			lock.notifyAll();
     			while (!stopped) {
             		while (!download && !browseDir) {
             			try {
