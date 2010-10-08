@@ -144,17 +144,19 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         filesToDownload = new ArrayList<String>();
 
-        final JLabel selectDestinationLabel = createLabel("Service Started");
+        //final JLabel selectDestinationLabel = createLabel("Service Started");
 
-        selectDestinationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //selectDestinationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         disableSelectDirectory();
 
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
-        top.setAlignmentY(Component.TOP_ALIGNMENT);
+        top.setAlignmentY(Component.CENTER_ALIGNMENT);
+        top.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+        top.setBackground(Color.green);
 
-        top.add(selectDestinationLabel, Component.CENTER_ALIGNMENT);
+        //top.add(selectDestinationLabel, Component.CENTER_ALIGNMENT);
         top.validate();
 
         // file chooser window
@@ -173,13 +175,13 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                 customTagMap, this);
 
         // begin main panel -----------------------
-        final JPanel main = createPanel();
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        main.add(top);
+        //final JPanel main = createPanel();
+       // main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+        //main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+        //main.add(top);
 
         getContentPane().setBackground(Color.white);
-        getContentPane().add(main);
+        getContentPane().add(top);
         // end main panel ---------------------------
     }
 

@@ -2,6 +2,7 @@ package edu.isi.misd.tagfiler;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -144,16 +145,20 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
         filesToUpload = new DefaultListModel();
 
-       final JLabel lbl = createLabel("Service Started");
+       //final JLabel lbl = createLabel("Service Started");
 
         final JPanel top = createPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setAlignmentX(Component.CENTER_ALIGNMENT);
-        top.setAlignmentY(Component.TOP_ALIGNMENT);
-        lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+        top.setAlignmentY(Component.CENTER_ALIGNMENT);
+        top.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+        top.setBackground(Color.green);
+        //lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //lbl.setAlignmentY(Component.CENTER_ALIGNMENT);
         //addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        top.add(lbl, Component.CENTER_ALIGNMENT);
+        //top.add(lbl, Component.CENTER_ALIGNMENT);
+        // top.add(lbl);
         //top.add(addBtn, Component.CENTER_ALIGNMENT);
         top.validate();
 
@@ -177,13 +182,14 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         //        fileChooser, getContentPane(), filesToUpload));
 
         // begin main panel -----------------------
-        final JPanel main = createPanel();
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        main.add(top);
+        //final JPanel main = createPanel();
+        //main.setMaximumSize(new Dimension(150, 25));
+        //main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+        //main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+        //main.add(top);
 
         getContentPane().setBackground(Color.white);
-        getContentPane().add(main);
+        getContentPane().add(top);
         // end main panel ---------------------------
     }
 
@@ -199,6 +205,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         label.setBackground(Color.white);
         label.setForeground(fontColor);
         label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setVerticalAlignment(SwingConstants.CENTER);
         label.setFont(font);
         return label;
     }
