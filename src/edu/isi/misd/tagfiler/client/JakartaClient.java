@@ -12,6 +12,7 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.swing.JOptionPane;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -217,7 +218,10 @@ public class JakartaClient  implements ClientURL {
         if (headerValue != null && headerValue.matches(expectedPattern)) {
             matches = true;
         } else {
-        	System.out.println("checkResponseHeaderPattern: " + headerName + "=" + headerValue + " does not match " + expectedPattern);
+        	String err = "checkResponseHeaderPattern: " + headerName + "=" + headerValue + " does not match " + expectedPattern;
+            JOptionPane.showMessageDialog(null,
+            		err);
+
         }
         return matches;
 	}
