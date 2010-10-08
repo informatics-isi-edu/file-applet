@@ -2,7 +2,10 @@ package edu.isi.misd.tagfiler;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
@@ -32,6 +35,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     // parameter name for the tagserver URL
     private static final String TAGFILER_APPLET_TEST_FILE = "tagfiler.applet.test";
+
+    // parameter name for the tagserver URL
+    private static final String TAGFILER_APPLET_LOG_FILE = "tagfiler.applet.log";
 
     // parameter name for the tagserver URL
     private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
@@ -92,6 +98,17 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 			}
         }
 
+        String logFile = this.getParameter(TAGFILER_APPLET_LOG_FILE);
+        if (logFile != null) {
+            try {
+            	PrintStream ps = new PrintStream(new FileOutputStream(logFile, true));
+            	System.setOut(ps);
+            	System.setErr(ps);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
         // use the tagFilerServerURL to get the webauth URL
         // TODO: pass this as a parameter
         try {
