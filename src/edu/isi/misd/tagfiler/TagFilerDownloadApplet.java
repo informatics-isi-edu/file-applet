@@ -120,6 +120,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         super.createUI();
 
+        fileChooser.setDialogTitle(TagFilerProperties
+                .getProperty("tagfiler.filedialog.SelectDirectoryToDownload"));
+        
         // the file uploader itself
         fileDownload = new FileDownloadImplementation(tagFilerServerURL,
                 new TagFilerAppletUploadListener(), sessionCookie,

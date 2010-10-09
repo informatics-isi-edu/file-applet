@@ -112,6 +112,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
         super.createUI();
 
+        fileChooser.setDialogTitle(TagFilerProperties
+                .getProperty("tagfiler.filedialog.SelectDirectoryToUpload"));
+        
         // the file uploader itself
         fileUpload = new FileUploadImplementation(tagFilerServerURL,
                 new TagFilerAppletUploadListener(), customTagMap,

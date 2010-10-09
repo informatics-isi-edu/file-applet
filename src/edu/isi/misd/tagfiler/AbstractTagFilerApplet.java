@@ -161,8 +161,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
         // file chooser window
         fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle(TagFilerProperties
-                .getProperty("tagfiler.filedialog.SelectDirectoryToUpload"));
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setMultiSelectionEnabled(false);
 
