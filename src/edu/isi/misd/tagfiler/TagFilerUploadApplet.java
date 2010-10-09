@@ -1,9 +1,5 @@
 package edu.isi.misd.tagfiler;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
@@ -15,14 +11,8 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import netscape.javascript.JSException;
@@ -34,7 +24,6 @@ import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
-import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
 
 /**
  * Applet class that is used for uploading a directory of files from an end
@@ -60,34 +49,15 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
     private static final long serialVersionUID = 2134123;
 
-    // parameters referenced from the applet.properties file
-    private static final String FONT_NAME_PROPERTY = "tagfiler.font.name";
-
-    private static final String FONT_STYLE_PROPERTY = "tagfiler.font.style";
-
-    private static final String FONT_SIZE_PROPERTY = "tagfiler.font.size";
-
-    private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
-
-    //private JButton addBtn = null;
-
-    private DefaultListModel filesToUpload = null;
-
-    private JFileChooser fileChooser = null;
-
     // does the work of the file upload
     private FileUpload fileUpload = null;
 
-    // font, color used in the applet
-    private Color fontColor;
-
-    private Font font;
-
-    private Timer filesTimer;
-
+    // true if an upload request was issued
     private boolean upload;
 
-    private List<String> filesList;
+    // files to upload
+    private List<String> filesList = new ArrayList<String>();
+    
     /**
      * Excludes "." and ".." from directory lists in case the client is
      * UNIX-based.
@@ -119,6 +89,10 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         }
     }
 
+    /**
+     * Start the threads
+     * Enable the HTML buttons
+     */
 	public void start() {
         super.start();
         
@@ -134,93 +108,14 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     /**
      * Create the applet UI.
      */
-    private void createUI() {
+    protected void createUI() {
 
-        fontColor = TagFilerPropertyUtils.renderColor(FONT_COLOR_PROPERTY);
-        font = TagFilerPropertyUtils.renderFont(FONT_NAME_PROPERTY,
-                FONT_STYLE_PROPERTY, FONT_SIZE_PROPERTY);
-
-        //addBtn = new JButton(
-        //        TagFilerProperties.getProperty("tagfiler.button.Browse"));
-
-        filesToUpload = new DefaultListModel();
-
-       //final JLabel lbl = createLabel("Service Started");
-
-        final JPanel top = createPanel();
-        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
-        top.setAlignmentX(Component.CENTER_ALIGNMENT);
-        top.setAlignmentY(Component.CENTER_ALIGNMENT);
-        top.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        top.setBackground(Color.green);
-        //lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-        //lbl.setAlignmentY(Component.CENTER_ALIGNMENT);
-        //addBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        //top.add(lbl, Component.CENTER_ALIGNMENT);
-        // top.add(lbl);
-        //top.add(addBtn, Component.CENTER_ALIGNMENT);
-        top.validate();
-
-        // file chooser window
-        fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle(TagFilerProperties
-                .getProperty("tagfiler.filedialog.SelectDirectoryToUpload"));
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fileChooser.setMultiSelectionEnabled(false);
+        super.createUI();
 
         // the file uploader itself
-        // TODO: create container for cookie so that the object reference
-        // remains intact when
-        // they are replaced
         fileUpload = new FileUploadImplementation(tagFilerServerURL,
                 new TagFilerAppletUploadListener(), customTagMap,
                 sessionCookie, this);
-
-        // listeners
-        //addBtn.addActionListener(new FileUploadAddListener(this, fileUpload,
-        //        fileChooser, getContentPane(), filesToUpload));
-
-        // begin main panel -----------------------
-        //final JPanel main = createPanel();
-        //main.setMaximumSize(new Dimension(150, 25));
-        //main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        //main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        //main.add(top);
-
-        getContentPane().setBackground(Color.white);
-        getContentPane().add(top);
-        // end main panel ---------------------------
-    }
-
-    /**
-     * Creates a label
-     * 
-     * @param str
-     *            text of the label
-     * @return new JLabel with the default styling
-     */
-    private JLabel createLabel(String str) {
-        final JLabel label = new JLabel(str);
-        label.setBackground(Color.white);
-        label.setForeground(fontColor);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
-        label.setFont(font);
-        return label;
-    }
-
-    /**
-     * Creates a panel
-     * 
-     * @return a new JPanel with the default styling
-     */
-    private JPanel createPanel() {
-
-        final JPanel panel = new JPanel();
-        panel.setBackground(Color.white);
-        panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        return panel;
     }
 
     /**
@@ -236,13 +131,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();
         }
-
-    }
-
-    /**
-     * Disallows the upload action to be invoked.
-     */
-    public void disableUpload() {
     }
 
     /**
@@ -259,13 +147,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         	e.printStackTrace();
         }
 
-    }
-
-    /**
-     * Disallows the adding of a directory to be invoked.
-     */
-    public void disableAdd() {
-        //addBtn.setEnabled(false);
     }
 
     /**
@@ -300,6 +181,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             redirect(buff.toString());
         }
 
+        /**
+         * Called when a failure occurred.
+         */
         public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
             String message = TagFilerProperties
@@ -320,24 +204,33 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
         }
 
+        /**
+         * Called when a failure occurred.
+         */
         public void notifyFailure(String datasetName) {
             notifyFailure(datasetName, -1);
-
         }
 
+        /**
+         * Called when a failure occurred.
+         */
         public void notifyFailure(String datasetName, String err) {
-            notifyFailure(datasetName, -1);
-
         }
 
+        /**
+         * Called to log a message.
+         */
         public void notifyLogMessage(String message) {
             assert (message != null);
             System.out.println(message);
         }
 
+        /**
+         * Called when upload starts.
+         */
         public void notifyStart(String datasetName, long totalSize) {
             assert (datasetName != null && datasetName.length() > 0);
-            totalFiles = filesToUpload.size();
+            totalFiles = filesList.size();
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
@@ -420,6 +313,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         public void notifyFileRetrieveComplete(String filename) {
         }
 
+        /**
+         * Called when an error occurred
+         */
         public void notifyError(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e
@@ -439,6 +335,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 
         }
         
+        /**
+         * Called when a fatal error occurred
+         */
         public void notifyFatal(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e
@@ -461,39 +360,9 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
 }
 
     /**
-     * Convenience method for updating the status label
-     * 
-     * @param status
+     * set the custom tags values as received from the HTML page
      */
-    private void updateStatus(String status) {
-        updateStatus(status, fontColor);
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-            		TagFilerUploadApplet.this);
-
-            window.eval("setStatus('" + status + "')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Convenience method for updating the status label with a font color
-     * 
-     * @param status
-     * @param c
-     *            the font color
-     */
-    private void updateStatus(String status, Color c) {
-    }
-
-    /**
-     * @return true if the custom fields that are editable by the user are all
-     *         valid.
-     */
-    public void setCustomTags() throws Exception {
+    private void setCustomTags() throws Exception {
         try {
             JSObject window = (JSObject) JSObject.getWindow(
                     this);
@@ -511,7 +380,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the component representing this UI
+     * send event for the upload process
      */
     public void uploadAll() {
         synchronized (lock) {
@@ -521,7 +390,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the component representing this UI
+     * send event for selecting the upload directory
      */
     public void browse() {
         synchronized (lock) {
@@ -531,7 +400,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the component representing this UI
+     * select the upload directory
      */
     private void chooseDir() {
         int result;
@@ -544,8 +413,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         if (JFileChooser.APPROVE_OPTION == result) {
             File selectedDirectory = fileChooser.getSelectedFile();
             fileUpload.setBaseDirectory(selectedDirectory.getAbsolutePath());
-            filesToUpload.clear();
-            filesList = new ArrayList<String>();
+            filesList.clear();
             addFilesToList(new File[] { selectedDirectory });
             enableUpload();
             fileUpload.addFilesToList(filesList);
@@ -568,8 +436,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             if (files[i].isDirectory()) {
                 dirs.add(files[i].getAbsoluteFile());
             } else if (files[i].isFile()) {
-                filesToUpload.add(filesToUpload.getSize(),
-                        files[i].getAbsolutePath());
                 filesList.add(files[i].getAbsolutePath());
             }
         }
@@ -583,7 +449,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         }
     }
     /**
-     * @return the component representing this UI
+     * validate a Date value
      */
     public boolean validateDate(String date) {
 		try {
@@ -599,27 +465,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the component representing this UI
-     */
-    public Component getComponent() {
-        return getContentPane();
-    }
-
-    /**
-     * Clears all user-editable fields
-     */
-    public void clearFields() {
-        customTagMap.clearValues();
-    }
-
-    /**
-     * Puts the UI in a state where it is no longer active
-     */
-    public void deactivate() {
-        //addBtn.setEnabled(false);
-    }
-
-    /**
      * Destroys the applet
      */
     public void destroy() {
@@ -627,12 +472,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the FileUpload object
+     * Task to execute a test
      */
-    public FileTransfer getFileTransfer() {
-        return fileUpload;
-    }
-    
     private class TestTimerTask extends TimerTask {
 
     	public void run() {
@@ -642,10 +483,12 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     			customTagMap.setValue(tag, value);
     		}
     		fileChooser.setSelectedFile(new File(testProperties.getProperty("Source Directory", "null")));
-    		//addBtn.doClick();
         }
     }
 
+    /**
+     * Process select upload directory and upload files
+     */
     private class UploadTask extends TimerTask {
 
     	public void run() {
@@ -663,13 +506,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             			upload = false;
             	        try {
             	        	setCustomTags();
-            	            if (filesToUpload.size() > 0) {
-            	                deactivate();
-            	                List<String> files = new LinkedList<String>();
-            	                for (int i = 0; i < filesToUpload.size(); i++) {
-            	                    files.add((String) filesToUpload.get(i));
-            	                }
-            	                fileUpload.postFileData(files);
+            	            if (filesList.size() > 0) {
+            	                fileUpload.postFileData(filesList);
             	            }
             	        } catch (Exception ex) {
             	            JOptionPane.showMessageDialog(getComponent(),

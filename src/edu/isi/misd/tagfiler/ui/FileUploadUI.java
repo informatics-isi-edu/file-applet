@@ -17,26 +17,8 @@ public interface FileUploadUI extends FileUI {
     public void enableUpload();
 
     /**
-     * Don't allow the user to click the "Upload" button
-     * 
-     */
-    public void disableUpload();
-
-    /**
      * Allow the user to click the "Add" button.
      */
     public void enableAdd();
-
-    /**
-     * Don't allow the user to click the "Add" button.
-     */
-    public void disableAdd();
-
-    /**
-     * Clear all the user-defined fields
-     */
-    public void clearFields();
-
-    public void deactivate();
 
 }

@@ -1,8 +1,5 @@
 package edu.isi.misd.tagfiler;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -10,13 +7,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import netscape.javascript.JSException;
@@ -28,7 +20,6 @@ import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
-import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
 
 /**
  * Applet class that is used for downloading a set of files from a tagfiler
@@ -53,36 +44,21 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
     private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.server.transmissionnum";
 
-    // parameters referenced from the applet.properties file
-    private static final String FONT_NAME_PROPERTY = "tagfiler.font.name";
-
-    private static final String FONT_STYLE_PROPERTY = "tagfiler.font.style";
-
-    private static final String FONT_SIZE_PROPERTY = "tagfiler.font.size";
-
-    private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
-
+    // download directory
     private StringBuffer destinationDirectoryField = new StringBuffer();
 
+    // transmission number
     private String defaultControlNumber = null;
 
-    private List<String> filesToDownload = null;
-
-    private JFileChooser fileChooser = null;
+    // download files
+    private List<String> filesToDownload = new ArrayList<String>();
 
     // does the work of the file download
     private FileDownload fileDownload = null;
 
-    // font, color used in the applet
-    private Color fontColor;
-
-    private Font font;
-    
-    //private boolean started;
-
+    // if true, process download
     private boolean download;
 
-    private Timer filesTimer;
     /**
      * Initializes the applet by reading parameters, polling the tagfiler
      * servlet to retrieve any authentication requests, and constructing the
@@ -110,6 +86,10 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
     }
 
+    /**
+     * Start the threads
+     * Enable the HTML buttons
+     */
 	public void start() {
         super.start();
     	filesTimer = new Timer(true);
@@ -136,82 +116,14 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     /**
      * Create the applet UI.
      */
-    private void createUI() {
+    protected void createUI() {
 
-        fontColor = TagFilerPropertyUtils.renderColor(FONT_COLOR_PROPERTY);
-        font = TagFilerPropertyUtils.renderFont(FONT_NAME_PROPERTY,
-                FONT_STYLE_PROPERTY, FONT_SIZE_PROPERTY);
-
-        filesToDownload = new ArrayList<String>();
-
-        //final JLabel selectDestinationLabel = createLabel("Service Started");
-
-        //selectDestinationLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        disableSelectDirectory();
-
-        final JPanel top = createPanel();
-        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
-        top.setAlignmentX(Component.CENTER_ALIGNMENT);
-        top.setAlignmentY(Component.CENTER_ALIGNMENT);
-        top.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        top.setBackground(Color.green);
-
-        //top.add(selectDestinationLabel, Component.CENTER_ALIGNMENT);
-        top.validate();
-
-        // file chooser window
-        fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle(TagFilerProperties
-                .getProperty("tagfiler.filedialog.SelectDestinationDirectory"));
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fileChooser.setMultiSelectionEnabled(false);
+        super.createUI();
 
         // the file uploader itself
-        // TODO: create container for cookie so that the object reference
-        // remains intact when
-        // they are replaced
         fileDownload = new FileDownloadImplementation(tagFilerServerURL,
                 new TagFilerAppletUploadListener(), sessionCookie,
                 customTagMap, this);
-
-        // begin main panel -----------------------
-        //final JPanel main = createPanel();
-       // main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        //main.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        //main.add(top);
-
-        getContentPane().setBackground(Color.white);
-        getContentPane().add(top);
-        // end main panel ---------------------------
-    }
-
-    /**
-     * Creates a label
-     * 
-     * @param str
-     *            text of the label
-     * @return new JLabel with the default styling
-     */
-    private JLabel createLabel(String str) {
-        final JLabel label = new JLabel(str);
-        label.setBackground(Color.white);
-        label.setForeground(fontColor);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setFont(font);
-        return label;
-    }
-
-    /**
-     * Creates a panel
-     * 
-     * @return a new JPanel with the default styling
-     */
-    private JPanel createPanel() {
-
-        final JPanel panel = new JPanel();
-        panel.setBackground(Color.white);
-        panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        return panel;
     }
 
     /**
@@ -254,12 +166,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * Disallows the adding of a directory to be invoked.
-     */
-    public void disableSelectDirectory() {
-    }
-
-    /**
      * Private class that listens for progress from the file download process
      * and takes action on the applet UI based on this progress.
      * 
@@ -291,6 +197,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             redirect(buff.toString());
         }
 
+        /**
+         * Called when a failure occurred.
+         */
         public void notifyFailure(String datasetName, String err) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.download.DatasetFailure",
@@ -310,6 +219,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             redirect(buff.toString());
         }
 
+        /**
+         * Called when a failure occurred.
+         */
         public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
             String message = TagFilerProperties.getProperty(
@@ -331,14 +243,23 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 
         }
 
+        /**
+         * Called when a failure occurred.
+         */
         public void notifyFailure(String datasetName) {
             notifyFailure(datasetName, -1);
         }
 
+        /**
+         * Called to log a message.
+         */
         public void notifyLogMessage(String message) {
             System.out.println(message);
         }
 
+        /**
+         * Called when download starts.
+         */
         public void notifyStart(String datasetName, long totalSize) {
 
             totalFiles = filesToDownload.size();
@@ -485,12 +406,18 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             filesCompleted++;
         }
 
+        /**
+         * Called when an error occurred
+         */
         public void notifyError(Throwable e) {
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.message.download.Error", new String[] { e
                             .getClass().getCanonicalName() }));
         }
         
+        /**
+         * Called when a fatal error occurred
+         */
         public void notifyFatal(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.download.Error", new String[] { e
@@ -509,35 +436,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             redirect(buff.toString());
 
         }
-    }
-
-    /**
-     * Convenience method for updating the status label
-     * 
-     * @param status
-     */
-    private void updateStatus(String status) {
-    	updateStatus(status, false);
-    }
-
-    /**
-     * Convenience method for updating the status label
-     * 
-     * @param status
-     */
-    private void updateStatus(String status, boolean paint) {
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
-
-            window.eval("setStatus('" + status + "')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
-    	
-    	if (paint) {
-        	//statusLabel.paintImmediately(statusLabel.getVisibleRect());
-    	}
     }
 
     /**
@@ -567,7 +465,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the component representing this UI
+     * send event for the download process
      */
     public void downloadFiles() {
         synchronized (lock) {
@@ -577,7 +475,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * @return the component representing this UI
+     * send event for selecting the download directory
      */
     public void browse() {
         synchronized (lock) {
@@ -587,8 +485,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     }
 
     /**
-     * Called when the action fires. Opens a file dialog window and writes the
-     * result to the UI.
+     * select the download directory
      */
     private void chooseDir() {
         final int result = fileChooser.showOpenDialog(getComponent());
@@ -603,34 +500,10 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         // clear out the selected files, regardless
         fileChooser.setSelectedFiles(new File[] { new File("") });
     }
-    /**
-     * @return the component representing this UI
-     */
-    public Component getComponent() {
-        return getContentPane();
-    }
 
     /**
-     * Clears all user-editable fields
+     * Retrieve the tags and files to be downloaded
      */
-    public void clearFields() {
-        filesToDownload.clear();
-        customTagMap.clearValues();
-    }
-
-    /**
-     * Deactivates the applet controls
-     */
-    public void deactivate() {
-    }
-
-    /**
-     * @return the FileDownload object
-     */
-    public FileTransfer getFileTransfer() {
-        return fileDownload;
-    }
-    
     public void getDatasetInfo(String controlNumber, String tags) {
     	String name[] = tags.split("<br/>");
         defaultControlNumber = controlNumber;
@@ -660,23 +533,21 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
     }
     
+    /**
+     * Task to execute a test
+     */
     private class TestTimerTask extends TimerTask {
 
     	
     	public void run() {
     		defaultControlNumber = testProperties.getProperty("Control Number", "null");
-    		
-    		//while (!selectDirBtn.isEnabled() && destinationDirectoryField.toString().trim().length() == 0) {
-    		//	try {
-    		//		Thread.sleep(1000);
-    		//	} catch (InterruptedException e) {
-			//	}
-    		//}
-    		
     		destinationDirectoryField.append(testProperties.getProperty("Destination Directory", "null"));
         }
     }
 
+    /**
+     * Process select download directory and download files
+     */
     private class DownloadTask extends TimerTask {
 
     	public void run() {

@@ -10,7 +10,6 @@ import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
-import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;

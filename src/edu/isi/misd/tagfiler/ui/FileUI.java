@@ -25,18 +25,6 @@ public interface FileUI {
      */
     public Component getComponent();
 
-
-    /**
-     * Tells the UI to clear all of its user-editable fields.
-     */
-    public void clearFields();
-
-    /**
-     * Tells the UI to deactivate all of its user-actionable components (i.e.
-     * buttons, fields)
-     */
-    public void deactivate();
-
     /**
      * Reloads the UI
      */

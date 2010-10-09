@@ -1,6 +1,5 @@
 package edu.isi.misd.tagfiler.ui;
 
-import java.awt.Component;
 import java.util.Set;
 
 /**

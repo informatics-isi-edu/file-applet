@@ -26,11 +26,6 @@ public interface FileDownloadUI extends FileUI {
     public void disableDownload();
 
     /**
-     * Disables the select destination directory operation
-     */
-    public void disableSelectDirectory();
-
-    /**
      * Validate all user-defined fields.
      * 
      * @return 1 if the custom fields that are editable by the user are all
