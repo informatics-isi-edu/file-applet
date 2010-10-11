@@ -93,7 +93,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         try {
             JSObject window = (JSObject) JSObject.getWindow(applet);
 
-            window.eval("setDestinationDirectory('" + baseDir + "')");
+            window.eval("setDestinationDirectory('" + baseDir.replaceAll("\\\\", "\\\\\\\\") + "')");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();
@@ -120,7 +120,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             JSObject window = (JSObject) JSObject.getWindow(
                     applet);
 
-            window.eval("setFiles('" + buffer.toString() + "')");
+            window.eval("setFiles('" + buffer.toString().replaceAll("\\\\", "\\\\\\\\") + "')");
 
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable

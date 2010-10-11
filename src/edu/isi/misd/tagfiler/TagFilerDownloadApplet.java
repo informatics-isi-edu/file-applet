@@ -136,7 +136,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         try {
             JSObject window = (JSObject) JSObject.getWindow(this);
 
-            window.eval("setDestinationDirectory('" + destinationDirectoryField.toString().trim() + "')");
+            window.eval("setDestinationDirectory('" + destinationDirectoryField.toString().trim().replaceAll("\\\\", "\\\\\\\\") + "')");
             window.eval("setEnabled('Download Files')");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
