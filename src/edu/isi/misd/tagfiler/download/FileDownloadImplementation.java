@@ -196,7 +196,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             JSObject window = (JSObject) JSObject.getWindow(
                     applet);
 
-            String expr = "setTags('" + buffer.toString() + "')";
+            // for JavaScript, quote the "'" characters
+            String values = buffer.toString().replaceAll("'", "\\\\'");
+            String expr = "setTags('" + values + "')";
             System.out.println(expr);
             window.eval(expr);
 
