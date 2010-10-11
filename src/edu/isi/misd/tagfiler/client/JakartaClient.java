@@ -219,8 +219,8 @@ public class JakartaClient  implements ClientURL {
             matches = true;
         } else {
         	String err = "checkResponseHeaderPattern: " + headerName + "=" + headerValue + " does not match " + expectedPattern;
-            JOptionPane.showMessageDialog(null,
-            		err);
+            System.out.println(err);
+        	//JOptionPane.showMessageDialog(null, err);
 
         }
         return matches;

@@ -134,6 +134,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();
         }
+        updateStatus(TagFilerProperties
+                .getProperty("tagfiler.label.DefaultUploadStatus"));
     }
 
     /**
