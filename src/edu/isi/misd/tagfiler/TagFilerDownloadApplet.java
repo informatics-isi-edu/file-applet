@@ -16,8 +16,8 @@ import netscape.javascript.JSObject;
 
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
+import edu.isi.misd.tagfiler.download.FileDownloadListener;
 import edu.isi.misd.tagfiler.ui.FileDownloadUI;
-import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -82,7 +82,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             });
         } catch (Throwable e) {
             e.printStackTrace();
-            (new TagFilerAppletUploadListener()).notifyFatal(e);
+            (new TagFilerAppletDownloadListener()).notifyFatal(e);
         }
     }
 
@@ -125,7 +125,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         
         // the file uploader itself
         fileDownload = new FileDownloadImplementation(tagFilerServerURL,
-                new TagFilerAppletUploadListener(), sessionCookie,
+                new TagFilerAppletDownloadListener(), sessionCookie,
                 customTagMap, this);
     }
 
@@ -175,7 +175,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * @author David Smith
      * 
      */
-    private class TagFilerAppletUploadListener implements FileUploadListener {
+    private class TagFilerAppletDownloadListener implements FileDownloadListener {
 
         private int filesCompleted = 0;
 
@@ -244,13 +244,6 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
                                     datasetName, message }));
             redirect(buff.toString());
 
-        }
-
-        /**
-         * Called when a failure occurred.
-         */
-        public void notifyFailure(String datasetName) {
-            notifyFailure(datasetName, -1);
         }
 
         /**

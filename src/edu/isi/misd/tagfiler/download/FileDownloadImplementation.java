@@ -18,7 +18,6 @@ import netscape.javascript.JSObject;
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
-import edu.isi.misd.tagfiler.upload.FileUploadListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
@@ -38,7 +37,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     private final String tagFilerServerURL;
 
     // listener for file download progress
-    private final FileUploadListener fileUploadListener;
+    private final FileDownloadListener fileDownloadListener;
 
     // client used to connect with the tagfiler server
     private final ClientURL client;
@@ -82,7 +81,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * @param tagMap
      *            map of the custom tags
      */
-    public FileDownloadImplementation(String url, FileUploadListener l,
+    public FileDownloadImplementation(String url, FileDownloadListener l,
 				      String c, CustomTagMap tagMap, Applet a) {
         assert (url != null && url.length() > 0);
         assert (l != null);
@@ -90,7 +89,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         assert (tagMap != null);
 
         tagFilerServerURL = url;
-        fileUploadListener = l;
+        fileDownloadListener = l;
         client = ClientUtils.getClientURL();
         cookie = c;
         customTagMap = tagMap;
@@ -113,7 +112,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     public List<String> getFiles(String dataset) {
         assert (dataset != null && dataset.length() > 0);
         controlNumber = dataset;
-    	fileUploadListener.notifyUpdateStart(controlNumber);
+    	fileDownloadListener.notifyUpdateStart(controlNumber);
     	boolean success = false;
         String errMsg = null;
 
@@ -129,14 +128,14 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             success = true;
         } catch (Exception e) {
             e.printStackTrace();
-            fileUploadListener.notifyError(e);
+            fileDownloadListener.notifyError(e);
             errMsg = e.getMessage();
         }
         finally {
         	if (success) {
-            	fileUploadListener.notifyUpdateComplete(controlNumber);
+            	fileDownloadListener.notifyUpdateComplete(controlNumber);
         	} else {
-        		fileUploadListener.notifyFailure(controlNumber, errMsg);
+        		fileDownloadListener.notifyFailure(controlNumber, errMsg);
         	}
         }
     	
@@ -156,22 +155,22 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         Set<String> files = encodeMap.keySet();
         boolean success = true;
-        fileUploadListener.notifyStart(controlNumber, datasetSize);
+        fileDownloadListener.notifyStart(controlNumber, datasetSize);
         try {
             for (String file : files) {
             	downloadFile(file);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            fileUploadListener.notifyError(e);
+            fileDownloadListener.notifyError(e);
             errMsg = e.getMessage();
             success = false;
         }
         finally {
         	if (success) {
-        		fileUploadListener.notifySuccess(controlNumber);
+        		fileDownloadListener.notifySuccess(controlNumber);
         	} else {
-        		fileUploadListener.notifyFailure(controlNumber, errMsg);
+        		fileDownloadListener.notifyFailure(controlNumber, errMsg);
         	}
         }
 
@@ -228,7 +227,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	    int status = client.getStatus();
 	    if (status != 200) {
 	    	client.close();
-            fileUploadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
+            fileDownloadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
         	throw new Exception("Status Code: " + status);
 	    }
             String textEntity = client.getEntityString();
@@ -237,12 +236,12 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
             // get the files maps
             StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
-            fileUploadListener.notifyRetrieveStart(tokenizer.countTokens());
+            fileDownloadListener.notifyRetrieveStart(tokenizer.countTokens());
             while (tokenizer.hasMoreTokens()) {
                 // get the file name
                 String file = tokenizer.nextToken();
                 String name = DatasetUtils.urlDecode(file).substring(1);
-                fileUploadListener.notifyFileRetrieveComplete(name);
+                fileDownloadListener.notifyFileRetrieveComplete(name);
                 fileNames.add(name);
                 encodeMap.put(name, file);
 
@@ -260,7 +259,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             result = true;
         } catch (Exception e) {
             e.printStackTrace();
-            fileUploadListener.notifyError(e);
+            fileDownloadListener.notifyError(e);
             result = false;
         }
 
@@ -286,7 +285,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         if (client.getStatus() != 200)
         {
-        	fileUploadListener.notifyFailure(controlNumber, client.getStatus());
+        	fileDownloadListener.notifyFailure(controlNumber, client.getStatus());
         	client.close();
         	return "";
         }
@@ -335,7 +334,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             }
 
             if (dir.isDirectory() || dir.mkdirs()) {
-                fileUploadListener.notifyFileTransferStart(baseDirectory + File.separatorChar
+                fileDownloadListener.notifyFileTransferStart(baseDirectory + File.separatorChar
                         + localFile);
                 FileOutputStream fos = new FileOutputStream(baseDirectory + File.separatorChar
                         + localFile);
@@ -362,7 +361,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                     throw new Exception(
                             "Checksum failed for downloading the file: " + file);
                 }
-                fileUploadListener.notifyFileTransferComplete(baseDirectory
+                fileDownloadListener.notifyFileTransferComplete(baseDirectory
                         + File.separatorChar + localFile, bytesMap.get(file));
             } else {
                 in.close();
@@ -372,7 +371,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         } catch (Exception e) {
             e.printStackTrace();
-            fileUploadListener.notifyError(e);
+            fileDownloadListener.notifyError(e);
             throw e;
         }
         return result;
@@ -439,7 +438,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         } catch (UnsupportedEncodingException e) {
             valid = false;
             e.printStackTrace();
-            fileUploadListener.notifyError(e);
+            fileDownloadListener.notifyError(e);
         } finally {
         	client.close();
         }

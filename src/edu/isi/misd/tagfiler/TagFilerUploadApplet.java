@@ -217,12 +217,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         }
 
         /**
-         * Called when a failure occurred.
-         */
-        public void notifyFailure(String datasetName, String err) {
-        }
-
-        /**
          * Called to log a message.
          */
         public void notifyLogMessage(String message) {
@@ -288,34 +282,6 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
          */
         public void notifyFileTransferSkip(String filename) {
             filesCompleted++;
-        }
-
-        /**
-         * Called when a transmission number update starts
-         */
-        public void notifyUpdateStart(String filename) {
-        }
-
-        /**
-         * Called when a transmission number update completes
-         */
-        public void notifyUpdateComplete(String filename) {
-        }
-
-        /**
-         * Called when retrieving files starts
-         * @param size
-         *            number of files to be retrieved.
-         */
-        public void notifyRetrieveStart(int size) {
-        }
-
-        /**
-         * Called when the retrieving of a file completed
-         * @param name
-         *            the retrieved file.
-         */
-        public void notifyFileRetrieveComplete(String filename) {
         }
 
         /**
