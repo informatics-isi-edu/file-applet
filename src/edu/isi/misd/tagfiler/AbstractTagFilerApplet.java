@@ -186,6 +186,74 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
         }
 
     }
+    
+    /**
+     * Convenience method for drawing the progress bar
+     * 
+     * @param percent
+     */
+    protected void drawProgressBar(long percent) {
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+            window.eval("drawProgressBar(" + percent + ")");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+    }
+
+    /**
+     * Convenience method for evaluating a JS function
+     * 
+     * @param function
+     * 			the function to be evaluated
+     */
+    public String eval(String function) {
+    	String res = "";
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+            res = (String) window.eval(function);
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+        
+        return res;
+    }
+
+    /**
+     * Convenience method for evaluating a JS function
+     * 
+     * @param function
+     * 			the function to be evaluated
+     * @param arg
+     * 			the function argument
+     */
+    public void eval(String function, String arg) {
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+            window.eval(function + "('" + arg + "')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+    }
+
+    /**
+     * Convenience method for enabling an HTML button
+     * 
+     * @param button
+     * 			the button to be enabled
+     */
+    protected void setEnabled(String button) {
+        try {
+            JSObject window = (JSObject) JSObject.getWindow(this);
+            window.eval("setEnabled('" + button + "')");
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+    }
 
     /**
      * @return the component representing this UI

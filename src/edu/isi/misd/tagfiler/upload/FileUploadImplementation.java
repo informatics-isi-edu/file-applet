@@ -1,15 +1,12 @@
 package edu.isi.misd.tagfiler.upload;
 
-import java.applet.Applet;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import netscape.javascript.JSException;
-import netscape.javascript.JSObject;
-
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.TagFilerUploadApplet;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -53,7 +50,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     private String cookie = null;
 
     // the applet
-    private Applet applet = null;
+    private TagFilerUploadApplet applet = null;
 
     /**
      * Constructs a new file upload
@@ -68,7 +65,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            session cookie
      */
     public FileUploadImplementation(String url, FileUploadListener l,
-				    CustomTagMap tagMap, String c, Applet a) {
+				    CustomTagMap tagMap, String c, TagFilerUploadApplet a) {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (tagMap != null);
@@ -90,14 +87,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     public void setBaseDirectory(String baseDir) {
         assert (baseDir != null);
         baseDirectory = baseDir;
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(applet);
-
-            window.eval("setDestinationDirectory('" + baseDir.replaceAll("\\\\", "\\\\\\\\") + "')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+        applet.eval("setDestinationDirectory", baseDir.replaceAll("\\\\", "\\\\\\\\"));
     }
 
     /**
@@ -116,16 +106,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         if (buffer.length() > 0) {
         	buffer.setLength(buffer.length() - "<br/>".length());
         }
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-                    applet);
-
-            window.eval("setFiles('" + buffer.toString().replaceAll("\\\\", "\\\\\\\\") + "')");
-
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+        applet.eval("setFiles", buffer.toString().replaceAll("\\\\", "\\\\\\\\"));
 
     }
 

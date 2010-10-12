@@ -11,9 +11,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import netscape.javascript.JSException;
-import netscape.javascript.JSObject;
-
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.download.FileDownloadListener;
@@ -97,20 +94,14 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	if (testMode) {
         	filesTimer.schedule(new TestTimerTask(), 1000);
     	}
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
-
-        	if (defaultControlNumber.length() == 0) {
-                window.eval("setEnabled('UpdateButton')");
-                window.eval("setEnabled('TransmissionNumber')");
-        	} else {
-        		String tags = (String) window.eval("getTagsName()");
-        		getDatasetInfo(defaultControlNumber, tags);
-        	}
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	if (defaultControlNumber.length() == 0) {
+    		setEnabled("UpdateButton");
+    		setEnabled("TransmissionNumber");
+    	} else {
+    		String tags = eval("getTagsName()");
+        	getDatasetInfo(defaultControlNumber, tags);
+    		
+    	}
     }
 
     /**
@@ -133,15 +124,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * Enables the download button
      */
     public void enableDownload() {
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
-
-            window.eval("setDestinationDirectory('" + destinationDirectoryField.toString().trim().replaceAll("\\\\", "\\\\\\\\") + "')");
-            window.eval("setEnabled('Download Files')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	setEnabled("Download Files");
+    	eval("setDestinationDirectory", destinationDirectoryField.toString().trim().replaceAll("\\\\", "\\\\\\\\"));
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultDownloadStatus"));
     }
@@ -158,14 +142,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * Enables the select directory button
      */
     public void enableSelectDirectory() {
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
-
-            window.eval("setEnabled('Browse')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	setEnabled("Browse");
     }
 
     /**
@@ -262,16 +239,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
 
-            long percent = 0;
-            try {
-                JSObject window = (JSObject) JSObject.getWindow(
-                		TagFilerDownloadApplet.this);
-
-                window.eval("drawProgressBar(" + percent + ")");
-            } catch (JSException e) {
-                // don't throw, but make sure the UI is unuseable
-            	e.printStackTrace();
-            }
+            drawProgressBar(0);
 
         }
 
@@ -293,17 +261,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         public void notifyRetrieveStart(int size) {
             totalFiles = size;
             filesCompleted = 0;
-            long percent = 0;
-            try {
-                JSObject window = (JSObject) JSObject.getWindow(
-                		TagFilerDownloadApplet.this);
-
-                window.eval("drawProgressBar(" + percent + ")");
-            } catch (JSException e) {
-                // don't throw, but make sure the UI is unuseable
-            	e.printStackTrace();
-            }
             
+            drawProgressBar(0);
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.message.download.FileRetrieveStatus",
                     new String[] { Integer.toString(filesCompleted + 1),
@@ -321,16 +280,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         	filesToDownload.add(filename);
         	filesCompleted++;
             long percent = filesCompleted * 100 / totalFiles;
-            try {
-                JSObject window = (JSObject) JSObject.getWindow(
-                		TagFilerDownloadApplet.this);
-
-                window.eval((filesCompleted == 1 ? "setFiles('" : "addFile('") + filename + "')");
-                window.eval("drawProgressBar(" + percent + ")");
-            } catch (JSException e) {
-                // don't throw, but make sure the UI is unuseable
-            	e.printStackTrace();
-            }
+            drawProgressBar(percent);
+            eval(filesCompleted == 1 ? "setFiles" : "addFile", filename);
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
                         "tagfiler.message.download.FileRetrieveStatus",
@@ -343,16 +294,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          * Called when a transmission number update completes
          */
         public void notifyUpdateComplete(String filename) {
-            long percent = 0;
-            try {
-                JSObject window = (JSObject) JSObject.getWindow(
-                		TagFilerDownloadApplet.this);
-
-                window.eval("drawProgressBar(" + percent + ")");
-            } catch (JSException e) {
-                // don't throw, but make sure the UI is unuseable
-            	e.printStackTrace();
-            }
+        	drawProgressBar(0);
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));
@@ -378,15 +320,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
             
             bytesTransferred += size + 1;
             long percent = bytesTransferred * 100 / totalBytes;
-            try {
-                JSObject window = (JSObject) JSObject.getWindow(
-                		TagFilerDownloadApplet.this);
-
-                window.eval("drawProgressBar(" + percent + ")");
-            } catch (JSException e) {
-                // don't throw, but make sure the UI is unuseable
-            	e.printStackTrace();
-            }
+            drawProgressBar(percent);
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
                         "tagfiler.message.download.FileTransferStatus",

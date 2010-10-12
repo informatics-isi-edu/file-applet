@@ -15,9 +15,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import netscape.javascript.JSException;
-import netscape.javascript.JSObject;
-
 import edu.isi.misd.tagfiler.ui.FileUploadUI;
 import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
@@ -125,15 +122,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * Allows the upload action to be invoked.
      */
     public void enableUpload() {
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-            		TagFilerUploadApplet.this);
-
-            window.eval("setEnabled('Upload All')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	setEnabled("Upload All");
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultUploadStatus"));
     }
@@ -142,15 +131,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * Allows the adding of a directory to be invoked.
      */
     public void enableAdd() {
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-            		TagFilerUploadApplet.this);
-
-            window.eval("setEnabled('Browse')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	setEnabled("Browse");
 
     }
 
@@ -259,15 +240,7 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
             
             bytesTransferred += size + 1;
             long percent = bytesTransferred * 100 / totalBytes;
-            try {
-                JSObject window = (JSObject) JSObject.getWindow(
-                		TagFilerUploadApplet.this);
-
-                window.eval("drawProgressBar(" + percent + ")");
-            } catch (JSException e) {
-                // don't throw, but make sure the UI is unuseable
-            	e.printStackTrace();
-            }
+            drawProgressBar(percent);
 
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
@@ -334,21 +307,12 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      * set the custom tags values as received from the HTML page
      */
     private void setCustomTags() throws Exception {
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-                    this);
-
-            String tags = (String) window.eval("getTags()");
-            String customTag[] = tags.split("<br/>");
-            for (int i=0; i < customTag.length; i+=2) {
-            	customTagMap.setValue(customTag[i], i < customTag.length - 1 ? customTag[i+1] : "");
-            }
-
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
+        String tags = eval("getTags()");
+        String customTag[] = tags.split("<br/>");
+        for (int i=0; i < customTag.length; i+=2) {
+        	customTagMap.setValue(customTag[i], i < customTag.length - 1 ? customTag[i+1] : "");
         }
-    }
+  	  }
 
     /**
      * send event for the upload process

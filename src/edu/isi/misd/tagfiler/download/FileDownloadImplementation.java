@@ -1,6 +1,5 @@
 package edu.isi.misd.tagfiler.download;
 
-import java.applet.Applet;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -12,10 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import netscape.javascript.JSException;
-import netscape.javascript.JSObject;
-
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.TagFilerDownloadApplet;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
@@ -67,7 +64,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     private final CustomTagMap customTagMap;
 
     // the applet
-    private Applet applet = null;
+    private TagFilerDownloadApplet applet = null;
 
     /**
      * Constructs a new file download
@@ -82,7 +79,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      *            map of the custom tags
      */
     public FileDownloadImplementation(String url, FileDownloadListener l,
-				      String c, CustomTagMap tagMap, Applet a) {
+				      String c, CustomTagMap tagMap, TagFilerDownloadApplet a) {
         assert (url != null && url.length() > 0);
         assert (l != null);
         assert (c != null);
@@ -191,20 +188,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	buffer.append(value).append("<br/>");
             customTagMap.setValue(tag, value);
         }
-        try {
-            JSObject window = (JSObject) JSObject.getWindow(
-                    applet);
-
-            // for JavaScript, quote the "'" characters
-            String values = buffer.toString().replaceAll("'", "\\\\'");
-            String expr = "setTags('" + values + "')";
-            System.out.println(expr);
-            window.eval(expr);
-
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+        String values = buffer.toString().replaceAll("'", "\\\\'");
+        applet.eval("setTags", values);
     }
 
     /**
