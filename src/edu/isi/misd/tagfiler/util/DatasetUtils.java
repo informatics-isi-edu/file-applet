@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Set;
 
 import edu.isi.misd.tagfiler.exception.FatalException;
@@ -32,20 +29,6 @@ public class DatasetUtils {
     private static final String readACL_tag_PROPERTY = "tagfiler.tag.readacl";
 
     private static final String writeACL_tag_PROPERTY = "tagfiler.tag.writeacl";
-
-    /**
-     * 
-     * @return a randomly-generated dataset name
-     */
-    public static String generateDatasetName() {
-        final long randomNumber = (long) (10000000000L * Math.random()) + 1;
-        final String datasetName = String.valueOf(randomNumber);
-        final StringBuffer ret = new StringBuffer();
-        for (int i = (10 - datasetName.length()); i > 0; i--) {
-            ret.append("0");
-        }
-        return ret.append(datasetName).toString();
-    }
 
     /**
      * 
@@ -358,95 +341,6 @@ public class DatasetUtils {
                 .append(datasetName).append(file).append("/")
                 .append(DatasetUtils.urlEncode(tag));
         return restURL.toString();
-    }
-
-    /**
-     * Retrieves the URL to poll a tagfiler server to keep the session alive
-     * 
-     * @param tagFilerServer
-     *            the tagfiler server URL to poll
-     * @return the full url
-     */
-    public static final String getSessionPollURL(String tagFilerWebauthURL) {
-        assert (tagFilerWebauthURL != null && tagFilerWebauthURL.length() > 0);
-        return new StringBuffer(tagFilerWebauthURL).append(
-                TagFilerProperties.getProperty("tagfiler.url.SessionPoll"))
-                .toString();
-
-    }
-
-    /**
-     * Retrieves the URL to poll a tagfiler server to keep the session alive
-     * 
-     * @param tagFilerServer
-     *            the tagfiler server URL to poll
-     * @return the full url
-     */
-    public static final String getExtendSessionPollURL(String tagFilerWebauthURL) {
-        assert (tagFilerWebauthURL != null && tagFilerWebauthURL.length() > 0);
-        return new StringBuffer(tagFilerWebauthURL).append(
-                TagFilerProperties.getProperty("tagfiler.url.SessionPoll"))
-                .append("?action=extend")
-                .toString();
-
-    }
-
-    /**
-     * Retrieves the URL to logout a user from the tagfiler server
-     * 
-     * @param webauthServer
-     *            the URL of the webauth server
-     * @return the full url
-     */
-    public static final String getLogoutURL(String webauthServer) {
-        assert (webauthServer != null && webauthServer.length() > 0);
-        final String logout = new StringBuffer(webauthServer).append(
-                TagFilerProperties.getProperty("tagfiler.url.Logout"))
-                .toString();
-        return logout;
-    }
-
-    /**
-     * Retrieves the URL to login to a tagfiler server
-     * 
-     * @param webauthServer
-     *            the webauth server URL
-     * @return the full URL
-     */
-    public static final String getLoginURL(String webauthServer) {
-        assert (webauthServer != null && webauthServer.length() > 0);
-        return new StringBuffer(webauthServer).append(
-                TagFilerProperties.getProperty("tagfiler.url.Login"))
-                .toString();
-    }
-
-    /**
-     * Retrieves the URL of the status page
-     * 
-     * @param webauthServer
-     *            the URL of the webauth server
-     * @return the full URL
-     */
-    public static final String getStatusPageURL(String webauthServer) {
-        assert (webauthServer != null && webauthServer.length() > 0);
-        return new StringBuffer(webauthServer).append(
-                TagFilerProperties.getProperty("tagfiler.url.Status"))
-                .toString();
-    }
-    
-    /**
-     * Build a Date based on its string representation
-     * 
-     * @param value
-     *            the string representation of the data
-     * @return the Date
-     */
-    public synchronized static Date getDate(String value) throws ParseException {
-    	SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
-    	sdf.setLenient(false);
-    	Date d = sdf.parse(value);
-    	
-    	return d;
     }
 
 }

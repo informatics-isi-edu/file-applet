@@ -152,15 +152,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * @author David Smith
      * 
      */
-    private class TagFilerAppletDownloadListener implements FileDownloadListener {
-
-        private int filesCompleted = 0;
-
-        private int totalFiles = 0;
-
-        private long totalBytes = 0;
-
-        private long bytesTransferred = 0;
+    private class TagFilerAppletDownloadListener extends TagFilerAppletListener implements FileDownloadListener {
 
         /**
          * Called when a dataset is complete.
@@ -204,30 +196,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          */
         public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
-            String message = TagFilerProperties.getProperty(
-                    "tagfiler.message.download.DatasetFailure",
-                    new String[] { datasetName });
-            if (code != -1) {
-                message += " (Status Code: " + code + ").";
-            }
-            try {
-                message = DatasetUtils.urlEncode(message);
-            } catch (UnsupportedEncodingException e) {
-                // just pass the unencoded message
-            }
-            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
-                    .append(TagFilerProperties.getProperty(
-                            "tagfiler.url.DownloadFailure", new String[] {
-                                    datasetName, message }));
-            redirect(buff.toString());
-
-        }
-
-        /**
-         * Called to log a message.
-         */
-        public void notifyLogMessage(String message) {
-            System.out.println(message);
+        	super.notifyFailure(TagFilerDownloadApplet.this, "tagfiler.url.DownloadFailure", datasetName, code);
         }
 
         /**
@@ -305,35 +274,14 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          * Called when a file transfer starts
          */
         public void notifyFileTransferStart(String filename) {
-            updateStatus(TagFilerProperties.getProperty(
-                    "tagfiler.message.download.FileTransferStatus",
-                    new String[] { Integer.toString(filesCompleted + 1),
-                            Integer.toString(totalFiles) }));
-            System.out.println("Transferring " + filename + "...");
+        	super.notifyFileTransferStart(TagFilerDownloadApplet.this, "tagfiler.message.download.FileTransferStatus", filename);
         }
 
         /**
          * Called when a file transfer completes
          */
         public void notifyFileTransferComplete(String filename, long size) {
-            filesCompleted++;
-            
-            bytesTransferred += size + 1;
-            long percent = bytesTransferred * 100 / totalBytes;
-            drawProgressBar(percent);
-            if (filesCompleted < totalFiles) {
-                updateStatus(TagFilerProperties.getProperty(
-                        "tagfiler.message.download.FileTransferStatus",
-                        new String[] { Integer.toString(filesCompleted + 1),
-                                Integer.toString(totalFiles) }));
-            }
-        }
-
-        /**
-         * Called if a file is skipped and not transferred
-         */
-        public void notifyFileTransferSkip(String filename) {
-            filesCompleted++;
+        	super.notifyFileTransferComplete(TagFilerDownloadApplet.this, "tagfiler.message.download.FileTransferStatus", filename, size);
         }
 
         /**
@@ -349,22 +297,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          * Called when a fatal error occurred
          */
         public void notifyFatal(Throwable e) {
-            String message = TagFilerProperties.getProperty(
-                    "tagfiler.message.download.Error", new String[] { e
-                            .getClass().getCanonicalName() });
-            try {
-                message = DatasetUtils.urlEncode(message);
-            } catch (UnsupportedEncodingException f) {
-                // just use the unencoded message
-            }
-
-            StringBuffer buff = new StringBuffer(tagFilerServerURL)
-                    .append(TagFilerProperties.getProperty(
-                            "tagfiler.url.GenericFailure",
-                            new String[] { message }));
-
-            redirect(buff.toString());
-
+        	super.notifyFatal(TagFilerDownloadApplet.this, "tagfiler.message.download.Error", e);
         }
     }
 

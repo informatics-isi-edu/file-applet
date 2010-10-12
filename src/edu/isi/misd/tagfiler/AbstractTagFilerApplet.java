@@ -27,7 +27,6 @@ import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileUI;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
-import edu.isi.misd.tagfiler.util.TagFilerPropertyUtils;
 
 /**
  * Common parent class for the upload and download applet, which is responsible
@@ -51,8 +50,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
     
-    private static final String FONT_COLOR_PROPERTY = "tagfiler.font.color";
-
     // tagfiler server URL specified from the parameter of the applet
     protected String tagFilerServerURL = null;
 
@@ -61,9 +58,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     // map containing the names and values of custom tags
     protected CustomTagMap customTagMap = new CustomTagMapImplementation();
-
-    // font, color used in the applet
-    protected Color fontColor;
 
     // file chooser for upload/download directory
     protected JFileChooser fileChooser = null;
@@ -150,8 +144,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     protected void createUI() {
 
-        fontColor = TagFilerPropertyUtils.renderColor(FONT_COLOR_PROPERTY);
-
         // panel for creating an icon with green background
         final JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
@@ -174,8 +166,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * 
      * @param status
      */
-    protected void updateStatus(String status) {
-        //updateStatus(status, fontColor);
+    public void updateStatus(String status) {
         try {
             JSObject window = (JSObject) JSObject.getWindow(this);
 
@@ -260,6 +251,10 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public Component getComponent() {
         return getContentPane();
+    }
+    
+    public String getTagFilerServerURL() {
+    	return tagFilerServerURL;
     }
 
     /**
