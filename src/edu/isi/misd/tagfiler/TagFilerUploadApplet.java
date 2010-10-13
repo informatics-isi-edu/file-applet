@@ -94,12 +94,13 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         super.start();
         
     	filesTimer = new Timer(true);
-    	filesTimer.schedule(new UploadTask(), 1000);
     	enableAdd();
-    	
-        if (testMode) {
+    	if (testMode) {
         	filesTimer.schedule(new TestTimerTask(), 1000);
+        } else {
+        	filesTimer.schedule(new UploadTask(), 1000);
         }
+    	
     }
 
     /**
@@ -344,12 +345,32 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
     private class TestTimerTask extends TimerTask {
 
     	public void run() {
-    		Set<String> tags = customTagMap.getTagNames();
-    		for (String tag : tags) {
-    			String value = testProperties.getProperty(tag, "null");
-    			customTagMap.setValue(tag, value);
-    		}
+    		try {
+    			// get the tags from the templates
+				setCustomTags();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	        Set<String> tags = customTagMap.getTagNames();
+	        StringBuffer buffer = new StringBuffer();
+	        for (String tag : tags) {
+	        	buffer.append(tag).append("<br/>");
+	            String value = testProperties.getProperty(tag, "null");
+	        	buffer.append(value).append("<br/>");
+	        }
+	        eval("setInputTags", buffer.toString().replaceAll("'", "\\\\'"));
     		fileChooser.setSelectedFile(new File(testProperties.getProperty("Source Directory", "null")));
+    		chooseDir();
+        	try {
+				setCustomTags();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            if (filesList.size() > 0) {
+                fileUpload.postFileData(filesList);
+            }
         }
     }
 
