@@ -90,18 +90,20 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
 	public void start() {
         super.start();
     	filesTimer = new Timer(true);
-    	filesTimer.schedule(new DownloadTask(), 1000);
     	if (testMode) {
         	filesTimer.schedule(new TestTimerTask(), 1000);
     	}
-    	if (defaultControlNumber.length() == 0) {
-    		setEnabled("UpdateButton");
-    		setEnabled("TransmissionNumber");
-    	} else {
-    		String tags = eval("getTagsName()");
-        	getDatasetInfo(defaultControlNumber, tags);
-    		
+    	else {
+        	filesTimer.schedule(new DownloadTask(), 1000);
+        	if (defaultControlNumber.length() == 0) {
+        		setEnabled("UpdateButton");
+        		setEnabled("TransmissionNumber");
+        	} else {
+        		String tags = eval("getTagsName()");
+            	getDatasetInfo(defaultControlNumber, tags);
+        	}
     	}
+    	
     }
 
     /**
@@ -351,15 +353,22 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
      * select the download directory
      */
     private void chooseDir() {
-        final int result = fileChooser.showOpenDialog(getComponent());
+        int result;
+        File fileTest = fileChooser.getSelectedFile();
+        if (fileTest != null && fileTest.getName().length() > 0) {
+        	result = JFileChooser.APPROVE_OPTION;
+        } else {
+            result = fileChooser.showOpenDialog(getComponent());
+            getComponent().requestFocusInWindow();
+        }
         if (JFileChooser.APPROVE_OPTION == result) {
             File selectedDirectory = fileChooser.getSelectedFile();
             destinationDirectoryField.append(selectedDirectory.getAbsolutePath());
             if (destinationDirectoryField.toString().trim().length() > 0) {
             	enableDownload();
             }
-            getComponent().requestFocusInWindow();
         }
+        
         // clear out the selected files, regardless
         fileChooser.setSelectedFiles(new File[] { new File("") });
     }
@@ -404,8 +413,16 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     	
     	public void run() {
     		defaultControlNumber = testProperties.getProperty("Control Number", "null");
-    		destinationDirectoryField.append(testProperties.getProperty("Destination Directory", "null"));
-        }
+    		TagFilerDownloadApplet.this.eval("setTransmissionNumber", defaultControlNumber);
+    		String tags = eval("getTagsName()");
+        	getDatasetInfo(defaultControlNumber, tags);
+    		fileChooser.setSelectedFile(new File(testProperties.getProperty("Destination Directory", "null")));
+			chooseDir();
+	        int valid = validateFields();
+	        if (valid == 1) {
+                fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
+	        }
+    	}
     }
 
     /**
