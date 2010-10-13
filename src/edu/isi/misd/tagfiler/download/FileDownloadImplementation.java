@@ -321,28 +321,32 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             if (dir.isDirectory() || dir.mkdirs()) {
                 fileDownloadListener.notifyFileTransferStart(baseDirectory + File.separatorChar
                         + localFile);
-                FileOutputStream fos = new FileOutputStream(baseDirectory + File.separatorChar
-                        + localFile);
-                int length = client.getResponseSize();
-                int read = 0;
-                byte ret[] = new byte[1048576];
-                while (read < length) {
-                    int res = in.read(ret);
-                    if (res == -1) {
-                        break;
+                String checksum = null;
+                // synchronized write operation for mutiple tabs opened
+                synchronized (this) {
+                    FileOutputStream fos = new FileOutputStream(baseDirectory + File.separatorChar
+                            + localFile);
+                    int length = client.getResponseSize();
+                    int read = 0;
+                    byte ret[] = new byte[1048576];
+                    while (read < length) {
+                        int res = in.read(ret);
+                        if (res == -1) {
+                            break;
+                        }
+                        read +=res;
+                        fos.write(ret, 0, res);
                     }
-                    read +=res;
-                    fos.write(ret, 0, res);
-                }
-                in.close();
-                fos.close();
-                client.close();
+                    in.close();
+                    fos.close();
+                    client.close();
 
-                // verify checksum
-                File downloadFile = new File(baseDirectory + File.separatorChar + localFile);
-                String checksum = LocalFileChecksum
-                        .computeFileChecksum(downloadFile);
-                if (!checksum.equals(checksumMap.get(file))) {
+                    // verify checksum
+                    File downloadFile = new File(baseDirectory + File.separatorChar + localFile);
+                    checksum = LocalFileChecksum
+                            .computeFileChecksum(downloadFile);
+                }
+                if (checksum == null || !checksum.equals(checksumMap.get(file))) {
                     throw new Exception(
                             "Checksum failed for downloading the file: " + file);
                 }
