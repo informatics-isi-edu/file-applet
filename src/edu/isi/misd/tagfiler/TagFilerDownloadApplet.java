@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -416,7 +417,9 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
     		TagFilerDownloadApplet.this.eval("setTransmissionNumber", defaultControlNumber);
     		String tags = eval("getTagsName()");
         	getDatasetInfo(defaultControlNumber, tags);
-    		fileChooser.setSelectedFile(new File(testProperties.getProperty("Destination Directory", "null")));
+        	File dir = new File(testProperties.getProperty("Destination Directory", "null") + "/" + UUID.randomUUID());
+        	dir.mkdirs();
+    		fileChooser.setSelectedFile(dir);
 			chooseDir();
 	        int valid = validateFields();
 	        if (valid == 1) {
