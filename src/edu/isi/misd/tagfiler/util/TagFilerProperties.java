@@ -29,6 +29,19 @@ public class TagFilerProperties {
     }
 
     /**
+     * Set a property that might come from the applet parameters
+     * 
+     * @param propertyName
+     *            name of the property
+     * @param propertyValue
+     *            value of the property
+     */
+    public static void setProperty(String propertyName, String propertyValue) {
+        assert (propertyName != null && propertyValue != null);
+        properties.put(propertyName, propertyValue);
+    }
+
+    /**
      * 
      * @param propertyName
      *            name of the property

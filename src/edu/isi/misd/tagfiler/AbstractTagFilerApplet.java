@@ -40,6 +40,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     private static final long serialVersionUID = 1L;
 
     // parameter name for applet test file
+    private static final String TAGFILER_CUSTOM_PROPERTIES = "custom.properties";
+
+    // parameter name for applet test file
     private static final String TAGFILER_APPLET_TEST_FILE = "tagfiler.applet.test";
 
     // parameter name for applet log file
@@ -125,6 +128,19 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+        }
+
+        // check for custom properties
+        String customProperties = this.getParameter(TAGFILER_CUSTOM_PROPERTIES);
+        if (customProperties != null) {
+        	String properties[] = customProperties.split(",");
+        	for (int i=0; i < properties.length; i++) {
+        		String property[] = properties[i].split("=");
+        		
+        		if (property.length > 1) {
+        			TagFilerProperties.setProperty(property[0].trim(), property[1].trim());
+        		}
+        	}
         }
     }
     
