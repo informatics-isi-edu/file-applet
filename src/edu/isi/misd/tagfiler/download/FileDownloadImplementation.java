@@ -183,9 +183,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         Set<String> tags = customTagMap.getTagNames();
         StringBuffer buffer = new StringBuffer();
         for (String tag : tags) {
-        	buffer.append(tag).append("<br/>");
             String value = getTagValue("", tag);
-        	buffer.append(value).append("<br/>");
+        	buffer.append(tag).append("<br/>").append(value).append("<br/>");
             customTagMap.setValue(tag, value);
         }
         String values = buffer.toString().replaceAll("'", "\\\\'");
@@ -270,7 +269,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         if (client.getStatus() != 200)
         {
-        	fileDownloadListener.notifyFailure(controlNumber, client.getStatus());
+        	// if status is 404, the tag might have been deleted
+        	if (client.getStatus() != 404) {
+            	fileDownloadListener.notifyFailure(controlNumber, client.getStatus());
+        	}
         	client.close();
         	return "";
         }

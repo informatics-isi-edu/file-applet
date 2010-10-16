@@ -241,9 +241,11 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
      */
     private void setCustomTags() throws Exception {
         String tags = eval("getTags()");
-        String customTag[] = tags.split("<br/>");
-        for (int i=0; i < customTag.length; i+=2) {
-        	customTagMap.setValue(customTag[i], i < customTag.length - 1 ? customTag[i+1] : "");
+        if (tags.length() > 0) {
+            String customTag[] = tags.split("<br/>");
+            for (int i=0; i < customTag.length; i+=2) {
+            	customTagMap.setValue(customTag[i], i < customTag.length - 1 ? customTag[i+1] : "");
+            }
         }
   	  }
 
