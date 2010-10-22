@@ -63,20 +63,24 @@ public class ClientUtils {
             // this typing seems to work on Firefox on Fedora...
             cookie = (String) jsObject;
         }
-
-        if (cookie != null && cookieName.length() > 0) {
-            final String search = cookieName + "=";
-            int offset = cookie.indexOf(search);
-            if (offset >= 0) {
-                offset += search.length();
-                int end = cookie.indexOf(";", offset);
-                if (end < 0) {
-                    end = cookie.length();
+        
+        if (cookie == null) {
+        	cookie = (String) JSObject.getWindow(applet).eval("getCookie('"+cookieName+"')");
+        } else {
+            if (cookie != null && cookieName.length() > 0) {
+                final String search = cookieName + "=";
+                int offset = cookie.indexOf(search);
+                if (offset >= 0) {
+                    offset += search.length();
+                    int end = cookie.indexOf(";", offset);
+                    if (end < 0) {
+                        end = cookie.length();
+                    }
+                    cookie = cookie.substring(offset, end);
                 }
-                cookie = cookie.substring(offset, end);
             }
         }
-
+        
         return cookie;
     }
 
