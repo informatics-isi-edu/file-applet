@@ -67,17 +67,15 @@ public class ClientUtils {
         if (cookie == null) {
         	cookie = (String) JSObject.getWindow(applet).eval("getCookie('"+cookieName+"')");
         } else {
-            if (cookie != null && cookieName.length() > 0) {
-                final String search = cookieName + "=";
-                int offset = cookie.indexOf(search);
-                if (offset >= 0) {
-                    offset += search.length();
-                    int end = cookie.indexOf(";", offset);
-                    if (end < 0) {
-                        end = cookie.length();
-                    }
-                    cookie = cookie.substring(offset, end);
+            final String search = cookieName + "=";
+            int offset = cookie.indexOf(search);
+            if (offset >= 0) {
+                offset += search.length();
+                int end = cookie.indexOf(";", offset);
+                if (end < 0) {
+                    end = cookie.length();
                 }
+                cookie = cookie.substring(offset, end);
             }
         }
         
@@ -93,8 +91,6 @@ public class ClientUtils {
      *            the cookie to set
      */
     public static void setCookieInBrowser(Applet applet, String cookie) {
-        final String cookieStr = cookie.toString();
-
         // TODO: I think this will wipe out any other cookies for this domain.
         // Perhaps we should append/replace.
 	String jstext = "setCookie(\"webauthn\", \"" + cookie + "\")";
