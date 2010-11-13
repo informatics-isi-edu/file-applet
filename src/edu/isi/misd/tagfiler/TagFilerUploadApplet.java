@@ -165,7 +165,8 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
          */
         public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
-            super.notifyFailure(TagFilerUploadApplet.this, "tagfiler.url.UploadFailure", datasetName, code);
+            super.notifyFailure(TagFilerUploadApplet.this, "tagfiler.message.upload.DatasetFailure", 
+            		"tagfiler.url.UploadFailure", datasetName, code);
         }
 
         /**
@@ -173,6 +174,26 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
          */
         public void notifyFailure(String datasetName) {
             notifyFailure(datasetName, -1);
+        }
+
+        public void notifyFailure(String datasetName, String err) {
+            assert (datasetName != null && datasetName.length() > 0);
+            String message = TagFilerProperties
+                    .getProperty("tagfiler.message.upload.DatasetFailure");
+            if (err != null) {
+                message += " (" + err + ").";
+            }
+            try {
+                message = DatasetUtils.urlEncode(message);
+            } catch (UnsupportedEncodingException e) {
+                // just pass the unencoded message
+            }
+            final StringBuffer buff = new StringBuffer(tagFilerServerURL)
+                    .append(TagFilerProperties.getProperty(
+                            "tagfiler.url.UploadFailure", new String[] {
+                                    datasetName, message }));
+            redirect(buff.toString());
+
         }
 
         /**
@@ -205,6 +226,18 @@ public final class TagFilerUploadApplet extends AbstractTagFilerApplet
         	super.notifyFileTransferComplete(TagFilerUploadApplet.this, "tagfiler.message.upload.FileTransferStatus", filename, size);
         }
 
+
+        /**
+         * Called when a file chunk transfer completes
+	     * @param file
+	     *            if true, the file transfer completed
+	     * @param size
+	     *            the chunk size
+         */
+		public void notifyChunkTransfered(boolean file, long size) {
+        	super.notifyChunkTransfered(TagFilerUploadApplet.this, "tagfiler.message.upload.FileTransferStatus", file, size);
+		}
+		
         /**
          * Called when an error occurred
          */

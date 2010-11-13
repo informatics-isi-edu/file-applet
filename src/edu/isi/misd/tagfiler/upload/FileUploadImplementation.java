@@ -6,12 +6,15 @@ import java.util.List;
 import java.util.Map;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.TagFilerUploadApplet;
-import edu.isi.misd.tagfiler.client.ClientURL;
+import edu.isi.misd.tagfiler.client.ClientURLListener;
+import edu.isi.misd.tagfiler.client.ClientURLResponse;
+import edu.isi.misd.tagfiler.client.ConcurrentClientURL;
+import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
-import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -23,7 +26,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * 
  */
 public class FileUploadImplementation extends AbstractFileTransferSession
-        implements FileUpload {
+        implements FileUpload, ClientURLListener {
 
     // tagfiler server URL
     private final String tagFilerServerURL;
@@ -32,7 +35,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     private final FileUploadListener fileUploadListener;
 
     // client used to connect with the tagfiler server
-    private final ClientURL client;
+    private final ConcurrentClientURL client;
 
     // map containing the checksums of all files to be uploaded.
     private final Map<String, String> checksumMap = new HashMap<String, String>();
@@ -51,6 +54,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
     // the applet
     private TagFilerUploadApplet applet = null;
+    
+    private String dataset;
 
     /**
      * Constructs a new file upload
@@ -72,10 +77,13 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
         tagFilerServerURL = url;
         fileUploadListener = l;
-        client = ClientUtils.getClientURL();
         customTagMap = tagMap;
         cookie = c;
 	applet = a;
+	boolean allowChunks = ((AbstractTagFilerApplet) applet).allowChunksTransfering();
+    client = new ConcurrentJakartaClient(allowChunks ? ((AbstractTagFilerApplet) applet).getMaxConnections() : 2, ((AbstractTagFilerApplet) applet).getSocketBufferSize(), this);
+    client.setChunked(allowChunks);
+    client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     }
 
     /**
@@ -135,24 +143,24 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     private String getTransmitNumber() throws FatalException {
         String ret = "";
         String query = tagFilerServerURL + "/transmitnumber";
-        client.getTransmitNumber(query, cookie);
+        ClientURLResponse response = client.getTransmitNumber(query, cookie);
 
         synchronized (this) {
             cookie = client.updateSessionCookie(applet, cookie);
         }
 
-        if (200 == client.getStatus()) {
-            ret = client.getLocationString();
+        if (200 == response.getStatus()) {
+            ret = response.getLocationString();
         } else {
             fileUploadListener
                     .notifyLogMessage("Error getting a transmission number (code="
-                            + client.getStatus() + ")");
+                            + response.getStatus() + ")");
             throw new FatalException(
                     TagFilerProperties
                             .getProperty("tagfiler.message.upload.ControlNumberError"));
         }
 
-        client.close();
+        response.release();
 
         return ret;
     }
@@ -259,8 +267,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     public boolean postFileData(List<String> files, String datasetName) {
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
+        this.dataset = datasetName;
 
         boolean success = false;
+        ClientURLResponse response = null;
 
         // retrieve the amount of total bytes, checksums for each file
         fileUploadListener
@@ -295,13 +305,14 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             // need to capture builder result of cookie() and invoke request on
             // it
             // or cookie is lost!
-            client.postFileData(datasetURLQuery, datasetURLBody, cookie);
+            response = client.postFileData(datasetURLQuery, datasetURLBody, cookie);
+            
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
             }
 
             // successful tagfiler POST issues 303 redirect to result page
-            if (200 == client.getStatus() || 303 == client.getStatus()) {
+            if (200 == response.getStatus() || 303 == response.getStatus()) {
                 try {
                     fileUploadListener
                             .notifyLogMessage("Dataset URL entry created successfully.");
@@ -309,26 +320,20 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 } catch (Exception e) {
                     e.printStackTrace();
                     success = false;
-                } finally {
-                    if (success) {
-                        fileUploadListener.notifySuccess(datasetName);
-                    } else {
-                        fileUploadListener.notifyFailure(datasetName);
-                    }
                 }
             } else {
                 fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
-                                + client.getStatus() + ")");
+                                + response.getStatus() + ")");
                 success = false;
-                fileUploadListener.notifyFailure(datasetName, client.getStatus());
+                fileUploadListener.notifyFailure(datasetName, response.getStatus());
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors
             e.printStackTrace();
             fileUploadListener.notifyError(e);
         } finally {
-        	client.close();
+        	response.release();
         }
         return success;
     }
@@ -349,72 +354,105 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
-        File file = null;
         for (String fileName : files) {
         	buildChecksumHelper(fileName);
-            file = new File(fileName);
-
-            // make sure file exists
-            if (file.exists() && file.canRead()) {
-                if (file.isFile()) {
-                    final String fileUploadQuery = DatasetUtils
-                            .getFileUploadQuery(datasetName, tagFilerServerURL,
-                                    baseDirectory, file,
-                                    checksumMap.get(file.getAbsolutePath()));
-                    fileUploadListener.notifyFileTransferStart(file
-                            .getAbsolutePath());
-                    fileUploadListener.notifyLogMessage("Transferring file '"
-                            + file.getAbsolutePath() + "'");
-                    fileUploadListener.notifyLogMessage("Query: "
-                            + fileUploadQuery);
-
-                    // TODO: get the cookie and pass it to this call
-                    // webResource = ClientUtils.createWebResource(client,
-                    // fileUploadQuery, cookie);
-
-                    // must capture builder result from cookie() and do request
-                    // on it!
-		    
-		    client.setChunkedEncodingSize(16 * 1024 * 1024);
-		    client.postFile(fileUploadQuery, file, cookie);
-
-                    synchronized (this) {
-                        cookie = client.updateSessionCookie(applet, cookie);
-                    }
-
-                    if (201 == client.getStatus()) {
-                        fileUploadListener.notifyFileTransferComplete(
-                                file.getAbsolutePath(), file.length());
-                        fileUploadListener.notifyLogMessage("File '"
-                                + file.getAbsolutePath()
-                                + "' transferred successfully.");
-                    } else {
-                        fileUploadListener
-                                .notifyLogMessage("Error transferring file '"
-                                        + file.getAbsolutePath() + "' (code="
-                                        + client.getStatus() + ")");
-                        return false;
-                    }
-                    client.close();
-                } else if (file.isDirectory()) {
-                    // do nothing -- contents were expanded in the list already
-                    fileUploadListener.notifyFileTransferSkip(file
-                            .getAbsolutePath());
-                } else {
-                    fileUploadListener.notifyFileTransferSkip(file
-                            .getAbsolutePath());
-                    fileUploadListener.notifyLogMessage("File "
-                            + file.getAbsolutePath()
-                            + " is not a regular file -- skipping.");
-                }
-
-            } else {
-                fileUploadListener.notifyLogMessage("File "
-                        + file.getAbsolutePath()
-                        + " is not readible or does not exist.");
-                return false;
-            }
         }
+        client.setBaseURL(DatasetUtils.getBaseUploadQuery(datasetName, tagFilerServerURL));
+        client.upload(files, baseDirectory);
         return true;
     }
+
+    /**
+     * Callback to get the cookie.
+     * 
+     * @return the cookie or null if cookies are not used
+     */
+	public String getCookie() {
+		// TODO Auto-generated method stub
+		return cookie;
+	}
+
+	/**
+	 * Get the URL parameters for uploads/downloads, if any
+	 * In DIRC necessary for Transmission Number and checksum
+	 * 
+	 * @param file
+	 *            the file to be uploaded/downloaded
+	 * @return the URL parameters or null if None
+	 */
+	public String getURLParameters(String file) {
+		// TODO Auto-generated method stub
+		try {
+			return DatasetUtils.getUploadQuerySuffix(dataset, checksumMap.get(file));
+		} catch (FatalException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * Callback to notify a chunk block transfer completion during the upload/download process
+	 * 
+	 * @param size
+	 *            the chunk size
+	 */
+	public void notifyChunkTransfered(long size) {
+		// TODO Auto-generated method stub
+		fileUploadListener.notifyChunkTransfered(false, size);
+	}
+
+	/**
+	 * Callback to notify an error during the upload/download process
+	 * 
+	 * @param err
+	 *            the error message
+	 * @param e
+	 *            the exception
+	 */
+	public void notifyError(String err, Exception e) {
+		// TODO Auto-generated method stub
+		fileUploadListener.notifyFailure(dataset, err);
+	}
+
+	/**
+	 * Callback to notify a failure during the upload/download process
+	 * 
+	 * @param err
+	 *            the error message
+	 */
+	public void notifyFailure(String err) {
+		// TODO Auto-generated method stub
+		fileUploadListener.notifyFailure(dataset, err);
+	}
+
+	/**
+	 * Callback to notify a file transfer completion during the upload/download process
+	 * 
+	 * @param size
+	 *            the chunk size
+	 */
+	public void notifyFileTransfered(long size) {
+		// TODO Auto-generated method stub
+		fileUploadListener.notifyChunkTransfered(true, size);
+	}
+
+	/**
+	 * Callback to notify success for the entire upload/download process
+	 * 
+	 */
+	public void notifySuccess() {
+		// TODO Auto-generated method stub
+		fileUploadListener.notifySuccess(dataset);
+	}
+
+	/**
+	 * Callback to update the session cookie. Should have an empty body if cookies are not used.
+	*/
+	public void updateSessionCookie() {
+		// TODO Auto-generated method stub
+        cookie = client.updateSessionCookie(applet, cookie);
+	}
+
 }
+

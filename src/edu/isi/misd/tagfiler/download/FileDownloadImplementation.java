@@ -1,8 +1,5 @@
 package edu.isi.misd.tagfiler.download;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,12 +9,15 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.TagFilerDownloadApplet;
-import edu.isi.misd.tagfiler.client.ClientURL;
+import edu.isi.misd.tagfiler.client.ClientURLListener;
+import edu.isi.misd.tagfiler.client.ClientURLResponse;
+import edu.isi.misd.tagfiler.client.ConcurrentClientURL;
+import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
-import edu.isi.misd.tagfiler.util.LocalFileChecksum;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
@@ -28,7 +28,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * 
  */
 public class FileDownloadImplementation extends AbstractFileTransferSession
-        implements FileDownload {
+        implements FileDownload, ClientURLListener {
 
     // tagfiler server URL
     private final String tagFilerServerURL;
@@ -37,7 +37,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     private final FileDownloadListener fileDownloadListener;
 
     // client used to connect with the tagfiler server
-    private final ClientURL client;
+    protected ConcurrentClientURL client;
 
     // list containing the files names to be downloaded.
     private List<String> fileNames = new ArrayList<String>();
@@ -53,9 +53,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
     // total amount of bytes to be downloaded
     private long datasetSize = 0;
-
-    // base directory to use
-    private String baseDirectory = "";
 
     // the dataset transmission number
     private String controlNumber;
@@ -87,10 +84,13 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         tagFilerServerURL = url;
         fileDownloadListener = l;
-        client = ClientUtils.getClientURL();
         cookie = c;
         customTagMap = tagMap;
 	applet = a;
+	boolean allowChunks = ((AbstractTagFilerApplet) applet).allowChunksTransfering();
+    client = new ConcurrentJakartaClient(allowChunks ? ((AbstractTagFilerApplet) applet).getMaxConnections() : 2, ((AbstractTagFilerApplet) applet).getSocketBufferSize(), this);
+    client.setChunked(allowChunks);
+    client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     }
 
     /**
@@ -147,29 +147,16 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      */
     public boolean downloadFiles(String destDir) {
         assert (destDir != null && destDir.length() > 0);
-        String errMsg = null;
-        baseDirectory = destDir;
+        try {
+			client.setBaseURL(DatasetUtils.getBaseDownloadUrl(controlNumber, tagFilerServerURL));
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
-        Set<String> files = encodeMap.keySet();
         boolean success = true;
         fileDownloadListener.notifyStart(controlNumber, datasetSize);
-        try {
-            for (String file : files) {
-            	downloadFile(file);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            fileDownloadListener.notifyError(e);
-            errMsg = e.getMessage();
-            success = false;
-        }
-        finally {
-        	if (success) {
-        		fileDownloadListener.notifySuccess(controlNumber);
-        	} else {
-        		fileDownloadListener.notifyFailure(controlNumber, errMsg);
-        	}
-        }
+        client.download(fileNames, destDir, checksumMap, bytesMap);
 
         return success;
     }
@@ -181,14 +168,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      */
     private void setCustomTags() throws UnsupportedEncodingException {
         Set<String> tags = customTagMap.getTagNames();
-        StringBuffer buffer = new StringBuffer();
         for (String tag : tags) {
             String value = getTagValue("", tag);
-        	buffer.append(tag).append("<br/>").append(value).append("<br/>");
             customTagMap.setValue(tag, value);
         }
-        String values = buffer.toString().replaceAll("'", "\\\\'");
-        applet.eval("setTags", values);
     }
 
     /**
@@ -204,19 +187,19 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             String prefix = DatasetUtils.getDatasetUrl(controlNumber,
                     tagFilerServerURL);
 
-            client.getDataSet(url, cookie);
+            ClientURLResponse response = client.getDataSet(url, cookie);
 
 	    cookie = client.updateSessionCookie(applet, cookie);
 
-	    int status = client.getStatus();
+	    int status = response.getStatus();
 	    if (status != 200) {
-	    	client.close();
+	    	response.release();
             fileDownloadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
         	throw new Exception("Status Code: " + status);
 	    }
-            String textEntity = client.getEntityString();
+            String textEntity = response.getEntityString();
             textEntity = textEntity.replace(prefix, "");
-            client.close();
+            response.release();
 
             // get the files maps
             StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
@@ -263,105 +246,21 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             throws UnsupportedEncodingException {
         String query = DatasetUtils.getFileTag(controlNumber,
                 tagFilerServerURL, file, tag);
-        client.getTagValue(query, cookie);
+        ClientURLResponse response = client.getTagValue(query, cookie);
 
 	cookie = client.updateSessionCookie(applet, cookie);
 
-        if (client.getStatus() != 200)
+        if (response.getStatus() != 200)
         {
-        	// if status is 404, the tag might have been deleted
-        	if (client.getStatus() != 404) {
-            	fileDownloadListener.notifyFailure(controlNumber, client.getStatus());
-        	}
-        	client.close();
+        	fileDownloadListener.notifyFailure(controlNumber, response.getStatus());
+        	response.release();
         	return "";
         }
-		String value = client.getEntityString();
+		String value = response.getEntityString();
         value = DatasetUtils.urlDecode(value.substring(value.indexOf('=') + 1));
-        client.close();
+        response.release();
 
         return value;
-    }
-
-    /**
-     * Performs the file download.
-     * 
-     * @param file
-     *            the file name.
-     */
-    private boolean downloadFile(String file) throws Exception{
-        assert (file != null && encodeMap.get(file) != null);
-        boolean result = false;
-        try {
-            // get the file content
-            String encodeName = encodeMap.get(file);
-            String url = DatasetUtils.getFileUrl(controlNumber,
-                    tagFilerServerURL, encodeName);
-
-            client.downloadFile(url, cookie);
-
-	    cookie = client.updateSessionCookie(applet, cookie);
-
-	    int status = client.getStatus();
-	    
-	    if (status != 200) {
-	    	client.close();
-        	throw new Exception("Status Code: " + status);
-	    }
-	    InputStream in = client.getEntityInputStream();
-
-	    // write the file into the destination
-            File dir = new File(baseDirectory);
-
-	    String localFile = file.replace('/', File.separatorChar);
-
-            int index = localFile.lastIndexOf(File.separatorChar);
-            if (index != -1) {
-                dir = new File(baseDirectory + File.separatorChar + localFile.substring(0, index));
-            }
-
-            if (dir.isDirectory() || dir.mkdirs()) {
-                fileDownloadListener.notifyFileTransferStart(baseDirectory + File.separatorChar
-                        + localFile);
-                FileOutputStream fos = new FileOutputStream(baseDirectory + File.separatorChar
-                        + localFile);
-                int length = client.getResponseSize();
-                int read = 0;
-                byte ret[] = new byte[1048576];
-                while (read < length) {
-                    int res = in.read(ret);
-                    if (res == -1) {
-                        break;
-                    }
-                    read +=res;
-                    fos.write(ret, 0, res);
-                }
-                in.close();
-                fos.close();
-                client.close();
-
-                // verify checksum
-                File downloadFile = new File(baseDirectory + File.separatorChar + localFile);
-                String checksum = LocalFileChecksum
-                        .computeFileChecksum(downloadFile);
-                if (!checksum.equals(checksumMap.get(file))) {
-                    throw new Exception(
-                            "Checksum failed for downloading the file: " + file);
-                }
-                fileDownloadListener.notifyFileTransferComplete(baseDirectory
-                        + File.separatorChar + localFile, bytesMap.get(file));
-            } else {
-                in.close();
-                throw new Exception("Can not make directory: "
-                        + dir.getAbsolutePath());
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            fileDownloadListener.notifyError(e);
-            throw e;
-        }
-        return result;
     }
 
     /**
@@ -380,10 +279,11 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     public boolean verifyValidControlNumber(String controlNumber, StringBuffer code, StringBuffer errorMessage) {
         assert (controlNumber != null && controlNumber.length() != 0);
         boolean valid = false;
+        ClientURLResponse response = null;
         try {
-        	client.verifyValidControlNumber(DatasetUtils.getDatasetUrl(controlNumber, tagFilerServerURL), cookie);
-            int status = client.getStatus();
-            if ((status == 200 || status == 303) && client.checkResponseHeaderPattern(
+        	response = client.verifyValidControlNumber(DatasetUtils.getDatasetUrl(controlNumber, tagFilerServerURL), cookie);
+            int status = response.getStatus();
+            if ((status == 200 || status == 303) && response.checkResponseHeaderPattern(
             		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
                             + TagFilerProperties
@@ -395,7 +295,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             }
             else {
                 System.out.println("transmission number verification failed, code="
-                        + client.getStatus());
+                        + response.getStatus());
 
             	code.append("Status ").append(status);
                 switch (status) {
@@ -427,8 +327,95 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             e.printStackTrace();
             fileDownloadListener.notifyError(e);
         } finally {
-        	client.close();
+        	response.release();
         }
         return valid;
     }
+
+    /**
+     * Callback to get the cookie.
+     * 
+     * @return the cookie or null if cookies are not used
+     */
+	public String getCookie() {
+		// TODO Auto-generated method stub
+		return cookie;
+	}
+
+	/**
+	 * Get the URL parameters for uploads/downloads, if any
+	 * In DIRC necessary for Transmission Number and checksum
+	 * 
+	 * @param file
+	 *            the file to be uploaded/downloaded
+	 * @return the URL parameters or null if None
+	 */
+	public String getURLParameters(String file) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * Callback to notify a chunk block transfer completion during the upload/download process
+	 * 
+	 * @param size
+	 *            the chunk size
+	 */
+	public void notifyChunkTransfered(long size) {
+		// TODO Auto-generated method stub
+		fileDownloadListener.notifyChunkTransfered(false, size);
+	}
+
+	/**
+	 * Callback to notify an error during the upload/download process
+	 * 
+	 * @param err
+	 *            the error message
+	 * @param e
+	 *            the exception
+	 */
+	public void notifyError(String err, Exception e) {
+		// TODO Auto-generated method stub
+		fileDownloadListener.notifyFailure(controlNumber, err);
+	}
+
+	/**
+	 * Callback to notify a failure during the upload/download process
+	 * 
+	 * @param err
+	 *            the error message
+	 */
+	public void notifyFailure(String err) {
+		// TODO Auto-generated method stub
+		fileDownloadListener.notifyFailure(controlNumber, err);
+	}
+
+	/**
+	 * Callback to notify a file transfer completion during the upload/download process
+	 * 
+	 * @param size
+	 *            the chunk size
+	 */
+	public void notifyFileTransfered(long size) {
+		// TODO Auto-generated method stub
+		fileDownloadListener.notifyChunkTransfered(true, size);
+	}
+
+	/**
+	 * Callback to notify success for the entire upload/download process
+	 * 
+	 */
+	public void notifySuccess() {
+		// TODO Auto-generated method stub
+		fileDownloadListener.notifySuccess(controlNumber);
+	}
+
+	/**
+	 * Callback to update the session cookie. Should have an empty body if cookies are not used.
+	*/
+	public void updateSessionCookie() {
+		// TODO Auto-generated method stub
+        cookie = client.updateSessionCookie(applet, cookie);
+	}
 }
+

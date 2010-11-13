@@ -19,4 +19,14 @@ public interface FileUploadListener extends FileListener {
      */
     public void notifyFailure(String datasetName);
 
+    /**
+     * Called when a dataset fails to transfer completely.
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param err
+     *            the error message
+     */
+    public void notifyFailure(String datasetName, String err);
+
 }

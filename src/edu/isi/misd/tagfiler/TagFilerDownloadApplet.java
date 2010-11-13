@@ -199,7 +199,8 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
          */
         public void notifyFailure(String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
-        	super.notifyFailure(TagFilerDownloadApplet.this, "tagfiler.url.DownloadFailure", datasetName, code);
+        	super.notifyFailure(TagFilerDownloadApplet.this, "tagfiler.message.download.DatasetFailure", 
+        			"tagfiler.url.DownloadFailure", datasetName, code);
         }
 
         /**
@@ -288,6 +289,17 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
 
         /**
+         * Called when a file chunk transfer completes
+	     * @param file
+	     *            if true, the file transfer completed
+	     * @param size
+	     *            the chunk size
+         */
+		public void notifyChunkTransfered(boolean file, long size) {
+        	super.notifyChunkTransfered(TagFilerDownloadApplet.this, "tagfiler.message.download.FileTransferStatus", file, size);
+		}
+		
+        /**
          * Called when an error occurred
          */
         public void notifyError(Throwable e) {
@@ -364,6 +376,7 @@ public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
         }
         if (JFileChooser.APPROVE_OPTION == result) {
             File selectedDirectory = fileChooser.getSelectedFile();
+            destinationDirectoryField.setLength(0);
             destinationDirectoryField.append(selectedDirectory.getAbsolutePath());
             if (destinationDirectoryField.toString().trim().length() > 0) {
             	enableDownload();

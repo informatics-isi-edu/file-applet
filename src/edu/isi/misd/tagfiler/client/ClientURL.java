@@ -18,8 +18,9 @@ public interface ClientURL {
      *            the query url
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void getDataSet(String url, String cookie);
+    public ClientURLResponse getDataSet(String url, String cookie);
     
     /**
      * Get the value of a tag
@@ -28,8 +29,9 @@ public interface ClientURL {
      *            the query url
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void getTagValue(String url, String cookie);
+    public ClientURLResponse getTagValue(String url, String cookie);
     
     /**
      * Get the content of a file to be downloaded
@@ -38,8 +40,38 @@ public interface ClientURL {
      *            the query url
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void downloadFile(String url, String cookie);
+    public ClientURLResponse downloadFile(String url, String cookie);
+    
+    /**
+     * Get the content of a file to be downloaded
+     * 
+     * @param url
+     *            the query url
+     * @param length
+     *            the number of bytes to read
+     * @param first
+     *            the first byte to read
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse downloadFile(String url,  long length, long first, String cookie);
+    
+    /**
+     * Execute a login request.
+     * If success, it will get a cookie
+     * 
+     * @param url
+     *            the query url
+     * @param user
+     *            the userid
+     * @param password
+     *            the password
+     * @return the HTTP Response
+     */
+    public ClientURLResponse login(String url, String user, String password);
     
     /**
      * Verify that we have a valid control number
@@ -48,22 +80,20 @@ public interface ClientURL {
      *            the query url
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void verifyValidControlNumber(String url, String cookie);
+    public ClientURLResponse verifyValidControlNumber(String url, String cookie);
     
     /**
-     * checks a particular header in the response to see if it matches an
-     * expected regular expression pattern
+     * Get the length of a file to be downloaded
      * 
-     * @param response
-     *            the client response
-     * @param headerName
-     *            name of the header to check
-     * @param expectedPattern
-     *            regular expression pattern to check
-     * @return true if the header exists and matches the regular expression
+     * @param url
+     *            the query url
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public boolean checkResponseHeaderPattern(String headerName, String expectedPattern);
+    public ClientURLResponse getFileLength(String url, String cookie);
     
     /**
      * Get a new control number
@@ -72,8 +102,9 @@ public interface ClientURL {
      *            the query url
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void getTransmitNumber(String url, String cookie);
+    public ClientURLResponse getTransmitNumber(String url, String cookie);
     
     /**
      * Checks for and saves updated session cookie
@@ -106,8 +137,9 @@ public interface ClientURL {
      *            the body of the dataset
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void postFileData(String url, String datasetURLBody, String cookie);
+    public ClientURLResponse postFileData(String url, String datasetURLBody, String cookie);
     
     /**
      * Uploads a set of given files with a specified dataset name.
@@ -118,49 +150,33 @@ public interface ClientURL {
      *            the file to be abloaded
      * @param cookie
      *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public void postFile(String url, File file, String cookie);
+    public ClientURLResponse postFile(String url, File file, String cookie);
     
     /**
-     * Return the status code
+     * Uploads a file block.
      * 
+     * @param url
+     *            the query url
+     * @param inputStream
+     *            the InputStream where to read from
+     * @param length
+     *            the number of bytes to read
+     * @param first
+     *            the first byte to read
+     * @param fileLength
+     *            the file length
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
      */
-    public int getStatus();
-
-    /**
-     * Return the body as a string
-     * 
-     */
-    public String getEntityString();
-
-    /**
-     * Return the location as a string
-     * 
-     */
-    public String getLocationString();
+    public ClientURLResponse postFile(String url, InputStream inputStream, long length, long first, long fileLength, String cookie);
     
-    /**
-     * Return the InputStream from where the body can be read
-     * 
-     */
-    public InputStream getEntityInputStream();
-
     /**
      * Set the chunked encoding size
      * 
      */
     public void setChunkedEncodingSize(int size);
     
-    /**
-     * Get the response size
-     * 
-     */
-    public int getResponseSize();
-    
-    /**
-     * Release the responses
-     * 
-     */
-    public void close();
-
 }

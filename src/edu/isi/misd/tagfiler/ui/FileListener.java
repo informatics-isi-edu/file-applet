@@ -1,5 +1,7 @@
 package edu.isi.misd.tagfiler.ui;
 
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
+
 /**
  * Listener interface for a class that wants to be notified of events from the
  * {@link edu.isi.misd.tagfiler.upload.FileUpload} class.
@@ -55,6 +57,15 @@ public interface FileListener {
      */
     public void notifyFileTransferComplete(String filename, long totalBytes);
 
+    /**
+     * Called when a chunk file transfer completes
+     * @param file
+     *            if true, a file transfer completed
+     * @param size
+     *            size of the chunk that was transferred.
+     */
+    public void notifyChunkTransfered(boolean file, long size);
+    
     /**
      * Called before a dataset transfer starts.
      * 

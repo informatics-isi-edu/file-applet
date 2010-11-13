@@ -27,9 +27,9 @@ public class ClientUtils {
      * 
      * @return a new instance of a Jersey client
      */
-    public static ClientURL getClientURL() {
+    public static ClientURL getClientURL(int maxConnections, int socketBufferSize) {
 
-    	JakartaClient client = new JakartaClient();
+    	JakartaClient client = new JakartaClient(maxConnections, socketBufferSize);
     	
     	if (client.isValid()) {
     		return client;

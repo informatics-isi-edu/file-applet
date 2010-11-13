@@ -236,6 +236,70 @@ public class DatasetUtils {
      * 
      * @param datasetName
      *            name of the dataset
+     * @param checksum
+     *            checksum computed for the file
+     * @return URL suffix for uploading a file
+     * @throws FatalException if the URL cannot be constructed
+     */
+    public static final String getUploadQuerySuffix(String datasetName,
+            String checksum) throws FatalException {
+
+    	assert (datasetName != null && datasetName.length() > 0);
+        assert (checksum != null);
+
+        final StringBuffer restURL = new StringBuffer();
+        
+        try {
+
+            restURL.append("?")
+                    .append(DatasetUtils.urlEncode(TagFilerProperties
+                            .getProperty("tagfiler.tag.containment")))
+                    .append("=")
+                    .append(DatasetUtils.urlEncode(datasetName))
+                    .append("&")
+                    .append(TagFilerProperties
+                            .getProperty("tagfiler.tag.checksum")).append("=")
+                    .append(checksum);
+        } catch (UnsupportedEncodingException e) {
+            throw new FatalException(e);
+        }
+
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server url
+     * @return the Base URL for uploading a dataset
+     * @throws FatalException if the URL cannot be constructed
+     */
+    public static final String getBaseUploadQuery(String datasetName,
+            String tagFilerServer) throws FatalException {
+
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"));
+        try {
+
+            restURL.append(
+                    DatasetUtils.urlEncode(datasetName));
+
+        } catch (UnsupportedEncodingException e) {
+            throw new FatalException(e);
+        }
+
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
      * @param tagFilerServer
      *            tagfiler server URL
      * @return URL for querying for all the files in a dataset
@@ -314,6 +378,27 @@ public class DatasetUtils {
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
                 .append(DatasetUtils.urlEncode(datasetName)).append(file);
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @return the encoded URL for file
+     * @throws UnsupportedEncodingException
+     */
+    public static final String getBaseDownloadUrl(String datasetName,
+            String tagFilerServer)
+            throws UnsupportedEncodingException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
+                .append(DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
 

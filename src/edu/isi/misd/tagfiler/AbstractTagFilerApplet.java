@@ -39,6 +39,18 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     private static final long serialVersionUID = 1L;
 
+    // parameter name for the chunk size
+    private static final String CHUNK_SIZE = "tagfiler.chunkbytes";
+
+    // parameter name for the socket buffer size
+    private static final String SOCKET_BUFFER_SIZE = "tagfiler.socket.buffer.size";
+
+    // parameter name for transfering the file in chunks
+    private static final String TAGFILER_ALLOW_CHUNKS = "tagfiler.allow.chunks";
+
+    // parameter name for the connection numbers
+    private static final String TAGFILER_APPLET_MAX_CONNECTIONS = "tagfiler.connections";
+
     // parameter name for applet test file
     private static final String TAGFILER_CUSTOM_PROPERTIES = "custom.properties";
 
@@ -83,6 +95,16 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     // timer to schedule tasks
     protected Timer filesTimer;
 
+    
+    protected int maxConnections = 2;
+
+    protected int socketBufferSize = 8192;
+
+    protected int chunkSize = 4194304;
+
+    // the mode for transfering the file
+    protected boolean allowChunks;
+
     /**
      * Loads security settings, common parameters, session cookie
      */
@@ -99,6 +121,30 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
         if (tagFilerServerURL == null || tagFilerServerURL.length() == 0) {
             throw new IllegalArgumentException(TAGFILER_SERVER_URL_PARAM
                     + " must be" + " specified as a parameter to the applet.");
+        }
+
+        // arguments
+        String maxConn = this.getParameter(TAGFILER_APPLET_MAX_CONNECTIONS);
+        if (maxConn != null) {
+        	maxConnections = Integer.parseInt(maxConn);
+        }
+
+        // arguments
+        String socketBuffSize = this.getParameter(SOCKET_BUFFER_SIZE);
+        if (socketBuffSize != null) {
+        	socketBufferSize = Integer.parseInt(socketBuffSize);
+        }
+
+        // arguments
+        String value = this.getParameter(TAGFILER_ALLOW_CHUNKS);
+        if (value != null) {
+        	allowChunks = Boolean.parseBoolean(value);
+        }
+
+        // arguments
+        value = this.getParameter(CHUNK_SIZE);
+        if (value != null) {
+        	chunkSize = Integer.parseInt(value);
         }
 
         // arguments
@@ -309,4 +355,40 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
         }
     }
 
+    /**
+     * Get the maximum number of HTTP connections
+     * 
+     * @return the maximum number of HTTP connections
+     */
+    public int getMaxConnections() {
+    	return maxConnections;
+    }
+    
+    /**
+     * Get the socket buffer size
+     * 
+     * @return the socket buffer size
+     */
+    public int getSocketBufferSize() {
+    	return socketBufferSize;
+    }
+    
+    /**
+     * Get the chunk size
+     * 
+     * @return the chunk size
+     */
+    public int getChunkSize() {
+    	return chunkSize;
+    }
+    
+    /**
+     * Get the mode for transferring the file
+     * 
+     * @return the mode for transferring the file
+     */
+    public boolean allowChunksTransfering() {
+    	return allowChunks;
+    }
+    
 }

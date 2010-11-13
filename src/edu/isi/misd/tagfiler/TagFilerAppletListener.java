@@ -25,10 +25,10 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
         /**
          * Called when a failure occurred.
          */
-        public void notifyFailure(AbstractTagFilerApplet applet, String property, String datasetName, int code) {
+        public void notifyFailure(AbstractTagFilerApplet applet, String datasetFailure, String property, String datasetName, int code) {
             assert (datasetName != null && datasetName.length() > 0);
             String message = TagFilerProperties
-                    .getProperty("tagfiler.message.upload.DatasetFailure");
+                    .getProperty(datasetFailure);
             if (code != -1) {
                 message += " (Status Code: " + code + ").";
             }
@@ -71,6 +71,26 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
             filesCompleted++;
             
             bytesTransferred += size + 1;
+            long percent = bytesTransferred * 100 / totalBytes;
+            applet.drawProgressBar(percent);
+
+            if (filesCompleted < totalFiles) {
+                applet.updateStatus(TagFilerProperties.getProperty(
+                		property,
+                        new String[] { Integer.toString(filesCompleted + 1),
+                                Integer.toString(totalFiles) }));
+            }
+        }
+
+        /**
+         * Called when a chunk file transfer completes
+         */
+        public void notifyChunkTransfered(AbstractTagFilerApplet applet, String property, boolean file, long size) {
+            bytesTransferred += size;
+            if (file) {
+                filesCompleted++;
+                 bytesTransferred++;
+            }
             long percent = bytesTransferred * 100 / totalBytes;
             applet.drawProgressBar(percent);
 
