@@ -168,10 +168,14 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      */
     private void setCustomTags() throws UnsupportedEncodingException {
         Set<String> tags = customTagMap.getTagNames();
+	StringBuffer buffer = new StringBuffer();
         for (String tag : tags) {
             String value = getTagValue("", tag);
+	    buffer.append(tag).append("<br/>").append(value).append("<br/>");
             customTagMap.setValue(tag, value);
         }
+	String values = buffer.toString().replaceAll("'", "\\\\'");
+	applet.eval("setTags", values);
     }
 
     /**
