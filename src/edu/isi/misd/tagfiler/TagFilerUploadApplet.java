@@ -41,7 +41,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author David Smith
  * 
  */
-public final class TagFilerUploadApplet extends AbstractTagFilerApplet
+public class TagFilerUploadApplet extends AbstractTagFilerApplet
         implements FileUploadUI {
 
     private static final long serialVersionUID = 2134123;

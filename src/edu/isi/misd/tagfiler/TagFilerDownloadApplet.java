@@ -34,7 +34,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author David Smith
  * 
  */
-public final class TagFilerDownloadApplet extends AbstractTagFilerApplet
+public class TagFilerDownloadApplet extends AbstractTagFilerApplet
         implements
         FileDownloadUI {
 

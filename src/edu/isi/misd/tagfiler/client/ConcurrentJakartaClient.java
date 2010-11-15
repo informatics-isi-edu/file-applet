@@ -48,8 +48,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
     // the queue for the HTTP requests
 	private LinkedBlockingQueue<FileChunk> WorkerQueue = new LinkedBlockingQueue<FileChunk>();
 	
-    // the queue for processing the HTTP responses
-	private LinkedBlockingQueue<FileChunk> CompletionQueue = new LinkedBlockingQueue<FileChunk>();
+    // the queue for passing elements to the Worker Queue
+	private LinkedBlockingQueue<FileChunk> TransmissionQueue = new LinkedBlockingQueue<FileChunk>();
 	
     // the map with the files transfer in progress
 	private HashMap<String, FileItem> filesCompletion = new HashMap<String, FileItem>();
@@ -73,10 +73,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	private boolean verifyTransfer;
 	
     // wrapper for WorkerQueue
-	private QueueWrapper workerWrapper = new QueueWrapper(WorkerQueue, "WorkerThread");
-	
-    // wrapper for WorkerQueue
-	private QueueWrapper completionWrapper = new QueueWrapper(CompletionQueue, "CompletionThread");
+	private QueueWrapper workerWrapper = new QueueWrapper();
 	
     /**
      * Excludes "." and ".." from directory lists in case the client is
@@ -101,7 +98,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		assert(connections >= 2);
 		this.connections = connections;
 		this.listener = listener;
-		workerWrapper.maxThreads = completionWrapper.maxThreads = this.connections / 2;
+		workerWrapper.maxThreads = this.connections;
 	}
 	
     /**
@@ -163,6 +160,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public void upload(List<String> files) {
 		totalFiles = files.size();
+		Thread thread = new DispatcherThread();
+		thread.start();
 		for (String file : files) {
 			uploadFile(file);
 		}
@@ -190,6 +189,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public void upload(String filename) {
 		totalFiles = 1;
+		Thread thread = new DispatcherThread();
+		thread.start();
 		uploadFile(filename);
 	}
 	
@@ -276,7 +277,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// a single chunk - put it directly into the Completion Queue
 			FileChunk fc = new FileChunk(filename, 0, length, length);
 			fc.setLastChunk(true);
-			completionWrapper.put(fc);
+			workerWrapper.put(fc);
 		} else {
 			// the files will be sent in chunks
 			// put the first chunk into Worker Queue
@@ -383,7 +384,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			System.out.print("\nHTTP Connections: " + connections);
 		}
  		workerWrapper.terminateThreads();
-		completionWrapper.terminateThreads();
+		try {
+			TransmissionQueue.put(new FileChunk("", 0, 0, 0));
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if (!browser) {
 			System.out.println(".");
 		}
@@ -555,7 +561,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					fc.setLastChunk(true);
 					if (file.getOffset() == 0) {
 						// the file consists only of 2 chunks
-						completionWrapper.put(fc);
+						try {
+							TransmissionQueue.put(fc);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					} else {
 						// the file consists of more than 2 chunks
 						// the request comes from the Completion Queue
@@ -567,7 +578,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					long position = chunkSize;
 					long filesize = file.getTotalLength();
 					while (position + chunkSize < filesize) {
-						completionWrapper.put(new FileChunk(file.getName(), position, chunkSize, filesize));
+						try {
+							TransmissionQueue.put(new FileChunk(file.getName(), position, chunkSize, filesize));
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						position += chunkSize;
 					}
 				}
@@ -588,7 +604,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * @param file
      *            the file to be uploaded
      */
-	private void sendDownload(FileChunk file) {
+	private void sendDownload(FileChunk file, WorkerThread thread) {
 		// check if the request will be cancelled due to a previous failure
 		boolean cancel = false;
 		synchronized (this) {
@@ -633,7 +649,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		if (200 == status || 206 == status) {
 			// place response into the post request processing queue
 			file.setResponse(response);
-			completionWrapper.put(file);
+			processDownloadResult(file, thread);
 		} else {
 			notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response.getStatus()) +" in downloading file " + file);
 		}
@@ -645,7 +661,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * @param file
      *            the file to be uploaded
      */
-	private void processDownloadResult(FileChunk file, CompletionThread thread) {
+	private void processDownloadResult(FileChunk file, WorkerThread thread) {
 		try {
 		    String localFile = file.getName().replace('/', File.separatorChar);
 		    
@@ -1020,24 +1036,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	}
 	
 	/**
-	 * Class to handle HTTP requests
-	 * Gets an element from the HTTP requests Queue and sends an upload or download request
+	 * This thread passes the elements from to the Transmission Queue to the Worker Queue
 	 * 
 	 */
-	private class WorkerThread extends Thread {
-		
-	    // the queue on which the thread is working on
-		private QueueWrapper queue;
-		
-	    /**
-	     * Constructor
-	     * 
-	     * @param queue
-	     *            the queue wrapper
-	     */
-		WorkerThread(QueueWrapper queue) {
-			this.queue = queue;
-		}
+	private class DispatcherThread extends Thread {
 		
 	    /**
 	     * Thread execution
@@ -1046,15 +1048,17 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		public void run() {
 			boolean ready = false;
 			while (!ready) {
-				FileChunk file = queue.get();
+				FileChunk file = null;
+				try {
+					file = TransmissionQueue.take();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				if (file == null || file.getName().length() == 0) {
 					break;
 				}
-				if (file.getDownloadDir() == null) {
-					sendUpload(file);
-				} else {
-					sendDownload(file);
-				}
+				workerWrapper.put(file);
 			}
 		}
 	}
@@ -1064,10 +1068,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	 * Gets an element from the post processing Queue and processes it
 	 * 
 	 */
-	private class CompletionThread extends Thread {
-		
-	    // the queue on which the thread is working on
-		private QueueWrapper queue;
+	private class WorkerThread extends Thread {
 		
 		// files handles map
 		private HashMap<String, RandomAccessFile> filesHandle = new HashMap<String, RandomAccessFile>();
@@ -1078,15 +1079,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		// files dowunload directory map
 		private HashMap<String, String> downloadDir = new HashMap<String, String>();
 		
-	    /**
-	     * Constructor
-	     * 
-	     * @param queue
-	     *            the queue wrapper
-	     */
-		CompletionThread(QueueWrapper queue) {
-			this.queue = queue;
-		}
 		
 	    /**
 	     * Thread execution
@@ -1095,14 +1087,14 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		public void run() {
 			boolean ready = false;
 			while (!ready) {
-				FileChunk file = queue.get();
+				FileChunk file = workerWrapper.get();
 				if (file == null || file.getName().length() == 0) {
 					break;
 				}
 				if (file.getDownloadDir() == null) {
 					sendUpload(file);
 				} else {
-					processDownloadResult(file, this);
+					sendDownload(file, this);
 				}
 				if (verifyTransfer) {
 					checkEOF();
@@ -1110,7 +1102,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 			if (verifyTransfer) {
 				checkEOF();
-				queue.deregisterThread();
+				workerWrapper.deregisterThread();
 			}
 		}
 		
@@ -1129,7 +1121,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			filesHandle.put(name, handle);
 			checksum.put(name, checkSum);
 			downloadDir.put(name, outputDir);
-			queue.addActiveFile(name);
+			workerWrapper.addActiveFile(name);
 		}
 		
 	    /**
@@ -1149,7 +1141,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			boolean isEOF = queue.setEOF(name);
+			boolean isEOF = workerWrapper.setEOF(name);
 			if (isEOF && cksum != null) {
 				// checksum is needed
 				verifyCheckSum(name, dir, cksum);
@@ -1163,8 +1155,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			if (filesHandle.size() == 0) {
 				return;
 			}
-			synchronized (queue) {
-				Set<String> files = queue.getEOF();
+			synchronized (workerWrapper) {
+				Set<String> files = workerWrapper.getEOF();
 				Set<String> openFiles = filesHandle.keySet();
 				files.retainAll(openFiles);
 				for (String file : files) {
@@ -1179,7 +1171,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	     *            the file name
 	     */
 		private void checkEOF(String file) {
-			synchronized (queue) {
+			synchronized (workerWrapper) {
 				setEOF(file);
 			}
 		}
@@ -1200,9 +1192,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	 * 
 	 */
 	private class QueueWrapper {
-	    // the queue that is wrapped
-		private LinkedBlockingQueue<FileChunk> queue;
-		
 	    // the number of active threads 
 		private int activeThreads = 0; 
 		
@@ -1212,27 +1201,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	    // the total number of threads
 		private int maxThreads; 
 		
-	    // the thread name performing HTTP requests
-		private String name;
-		
 	    // the list of threads performing HTTP requests
 		private ArrayList<Thread> threads = new ArrayList<Thread>();
 		
 		// map for the active files
 		private HashMap<String, Integer> activeFiles = new HashMap<String, Integer>();
-		
-	    /**
-	     * Constructor
-	     * 
-	     * @param queue
-	     *            the queue to be monirored
-	     * @param name
-	     *            the thread name
-	     */
-		QueueWrapper(LinkedBlockingQueue<FileChunk> queue, String name) {
-			this.queue = queue;
-			this.name = name;
-		}
 		
 	    /**
 	     * Mark a new thread that handles the download of a file
@@ -1295,7 +1268,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	     */
 		void put(FileChunk fc) {
 			try {
-				queue.put(fc);
+				WorkerQueue.put(fc);
 			} catch (InterruptedException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -1304,12 +1277,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// create a new HTTP request thread if all others are busy and the threads pool is not full
 			synchronized (this) {
 				if (waitingThreads == 0 && activeThreads < maxThreads) {
-					Thread thread = null;
-					if (name.equals("WorkerThread")) {
-						thread = new WorkerThread(this);
-					} else if (name.equals("CompletionThread")) {
-						thread = new CompletionThread(this);
-					}
+					Thread thread = new WorkerThread();
 					threads.add(thread);
 					activeThreads++;
 					thread.start();
@@ -1342,7 +1310,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				synchronized (this) {
 					waitingThreads++;
 				}
-				fc = queue.take();
+				fc = WorkerQueue.take();
 				synchronized (this) {
 					waitingThreads--;
 				}
@@ -1365,11 +1333,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	     */
 		private void terminateThreads() {
 			if (!browser) {
-				System.out.print(", Total " + name + ": " + threads.size());
+				System.out.print(", Total threads: " + threads.size());
 			}
 			for (int i=0; i<threads.size(); i++) {
 				try {
-					queue.put(new FileChunk("", 0, 0, 0));
+					WorkerQueue.put(new FileChunk("", 0, 0, 0));
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
