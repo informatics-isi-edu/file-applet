@@ -57,6 +57,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     
     private String dataset;
 
+    private Object lock = new Object();
+
     /**
      * Constructs a new file upload
      * 
@@ -287,7 +289,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                             + datasetName + "'...");
 
 	    // upload all the files
-	    success = postFileDataHelper(files, datasetName);
+            synchronized (lock) {
+        	    success = postFileDataHelper(files, datasetName);
+        	    lock.wait();
+            }
 
             // then create and tag the dataset url entry
             final String datasetURLQuery = DatasetUtils
@@ -323,6 +328,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     e.printStackTrace();
                     success = false;
                 }
+        		fileUploadListener.notifySuccess(dataset);
             } else {
                 fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
@@ -445,7 +451,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifySuccess() {
 		// TODO Auto-generated method stub
-		fileUploadListener.notifySuccess(dataset);
+		synchronized (lock) {
+			lock.notifyAll();
+		}
 	}
 
 	/**
