@@ -256,7 +256,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         if (response.getStatus() != 200)
         {
-        	fileDownloadListener.notifyFailure(controlNumber, response.getStatus());
+        	// if status is 404, the tag might have been deleted
+        	if (response.getStatus() != 404) {
+            	fileDownloadListener.notifyFailure(controlNumber, response.getStatus());
+        	}
         	response.release();
         	return "";
         }
