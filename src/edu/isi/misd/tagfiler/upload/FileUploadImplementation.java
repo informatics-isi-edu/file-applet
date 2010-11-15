@@ -286,7 +286,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     .notifyLogMessage("Beginning transfer of dataset '"
                             + datasetName + "'...");
 
-            // first create the dataset url entry
+	    // upload all the files
+	    success = postFileDataHelper(files, datasetName);
+
+            // then create and tag the dataset url entry
             final String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
                             customTagMap);
@@ -316,7 +319,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 try {
                     fileUploadListener
                             .notifyLogMessage("Dataset URL entry created successfully.");
-                    success = postFileDataHelper(files, datasetName);
                 } catch (Exception e) {
                     e.printStackTrace();
                     success = false;
