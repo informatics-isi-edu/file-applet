@@ -25,12 +25,16 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
         /**
          * Called when a failure occurred.
          */
-        public void notifyFailure(AbstractTagFilerApplet applet, String datasetFailure, String property, String datasetName, int code) {
+        public void notifyFailure(AbstractTagFilerApplet applet, String datasetFailure, String property, String datasetName, int code, String errorMessage) {
             assert (datasetName != null && datasetName.length() > 0);
             String message = TagFilerProperties
                     .getProperty(datasetFailure);
             if (code != -1) {
-                message += " (Status Code: " + code + ").";
+                message += " (Status Code: " + code;
+                if (errorMessage != null && errorMessage.trim().length() > 0) {
+                    message += " - " + errorMessage;
+                }
+                message +=  ")";
             }
             try {
                 message = DatasetUtils.urlEncode(message);

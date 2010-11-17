@@ -163,17 +163,17 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
         /**
          * Called when a failure occurred.
          */
-        public void notifyFailure(String datasetName, int code) {
+        public void notifyFailure(String datasetName, int code, String errorMessage) {
             assert (datasetName != null && datasetName.length() > 0);
             super.notifyFailure(TagFilerUploadApplet.this, "tagfiler.message.upload.DatasetFailure", 
-            		"tagfiler.url.UploadFailure", datasetName, code);
+            		"tagfiler.url.UploadFailure", datasetName, code, errorMessage);
         }
 
         /**
          * Called when a failure occurred.
          */
         public void notifyFailure(String datasetName) {
-            notifyFailure(datasetName, -1);
+            notifyFailure(datasetName, -1, null);
         }
 
         public void notifyFailure(String datasetName, String err) {

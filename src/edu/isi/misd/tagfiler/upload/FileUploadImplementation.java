@@ -334,7 +334,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         .notifyLogMessage("Error creating the dataset URL entry (code="
                                 + response.getStatus() + ")");
                 success = false;
-                fileUploadListener.notifyFailure(datasetName, response.getStatus());
+                fileUploadListener.notifyFailure(datasetName, response.getStatus(), response.getErrorMessage());
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors

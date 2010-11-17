@@ -326,7 +326,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			if (200 == response.getStatus()) {
 				totalLength = response.getResponseSize();
 			} else {
-				notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response.getStatus()) +" in getting the length of the file '" + file + "'");
+				notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response) +" in getting the length of the file '" + file + "'");
 			}
 		}
 		
@@ -588,7 +588,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					}
 				}
 			} else {
-				notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response.getStatus()) +" in uploading file " + file);
+				notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response) +" in uploading file " + file);
 			}
 			response.release();
 		} catch (FileNotFoundException e) {
@@ -651,7 +651,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			file.setResponse(response);
 			processDownloadResult(file, thread);
 		} else {
-			notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response.getStatus()) +" in downloading file " + file);
+			notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response) +" in downloading file " + file);
 		}
 	}
 	
@@ -783,7 +783,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the status code
      * @return a message containing the code error followed by the reason
      */
-	public static String getStatusMessage(int code) {
+	public static String getStatusMessage(ClientURLResponse response) {
+		int code = response.getStatus();
 		StringBuffer buffer = (new StringBuffer()).append(code).append(" (");
 		switch (code) {
 		case 400:
@@ -878,6 +879,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			buffer.append("HTTP Version Not Supported");
 			break;
 			
+		}
+		
+		String err = response.getErrorMessage();
+		if (err != null && err.trim().length() > 0) {
+			buffer.append(" - " + err);
 		}
 		
 		buffer.append(")");

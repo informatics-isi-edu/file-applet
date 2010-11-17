@@ -27,7 +27,7 @@ public interface FileListener {
      * @param message
      *            the failure message
      */
-    public void notifyFailure(String datasetName, int code);
+    public void notifyFailure(String datasetName, int code, String error);
 
     /**
      * Called when the FileUpload logs a message that could be displayed in a

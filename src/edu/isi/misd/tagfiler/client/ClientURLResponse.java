@@ -48,6 +48,12 @@ public interface ClientURLResponse {
     public InputStream getEntityInputStream();
 
     /**
+     * Return the error message of an HTTP Response
+     * 
+     */
+    public String getErrorMessage();
+    
+    /**
      * Get the response size
      * 
      */

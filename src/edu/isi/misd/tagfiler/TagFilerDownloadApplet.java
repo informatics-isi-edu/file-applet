@@ -197,10 +197,10 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
         /**
          * Called when a failure occurred.
          */
-        public void notifyFailure(String datasetName, int code) {
+        public void notifyFailure(String datasetName, int code, String errorMessage) {
             assert (datasetName != null && datasetName.length() > 0);
         	super.notifyFailure(TagFilerDownloadApplet.this, "tagfiler.message.download.DatasetFailure", 
-        			"tagfiler.url.DownloadFailure", datasetName, code);
+        			"tagfiler.url.DownloadFailure", datasetName, code, errorMessage);
         }
 
         /**

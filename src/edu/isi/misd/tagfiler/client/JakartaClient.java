@@ -665,6 +665,24 @@ public class JakartaClient  implements ClientURL {
     	}
 
         /**
+         * Return the error message of an HTTP Request
+         * 
+         */
+        public String getErrorMessage() {
+        	String errormessage = "";
+        	Header header = response.getFirstHeader("Error-Description");
+        	if (header != null) {
+        		try {
+					errormessage = URLDecoder.decode(header.getValue(),  "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        	}
+    		return errormessage;
+    	}
+
+        /**
          * Get the response size
          * 
          */
