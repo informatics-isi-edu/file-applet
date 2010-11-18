@@ -7,7 +7,6 @@
 	<property name="signedjar.name" value="signed-${jar.name}-applet"/>
 	<property name="singlejar.name" value="consolidated-${jar.name}"/>
 	<property name="http.dir" value="/var/www/html/tagfiler/static"/>
-	<property name="js.file" value="tagfiler_functions.js"/>
 	<property name="keystore.alias" value=""/>
 	<property name="keystore.location" value="/root/.keystore"/>
 	<property name="keystore.password" value=""/>
@@ -79,7 +78,6 @@
 	<target name="deploy" depends="signjar">
 		<echo>Deploying to webserver...</echo>
 		<mkdir dir="${http.dir}"/>
-		<copy file="${js.file}" todir="${http.dir}" />
 		<copy todir="${http.dir}">
 			<fileset dir="${lib.dir}" includes="*.jar"/>
 		</copy>

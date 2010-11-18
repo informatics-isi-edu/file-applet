@@ -553,38 +553,32 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			updateSessionCookie();
 			if (201 == status || 204 == status) {
 				long size = fi.update(file.getLength());
-				
-				if (size > 0 && size <= chunkSize) {
-					// put the last chunk into the HTTP request queue
+				if (size > 0) {
 					long position = file.getTotalLength() - size;
-					FileChunk fc = new FileChunk(file.getName(), position, size, file.getTotalLength());
-					fc.setLastChunk(true);
-					if (file.getOffset() == 0) {
-						// the file consists only of 2 chunks
+					if (size <= chunkSize) {
+						// put the last chunk into the Transmission queue
+						FileChunk fc = new FileChunk(file.getName(), position, size, file.getTotalLength());
+						fc.setLastChunk(true);
 						try {
 							TransmissionQueue.put(fc);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					} else {
-						// the file consists of more than 2 chunks
-						// the request comes from the Completion Queue
-						workerWrapper.put(fc);
-					}
-				} else if (file.getOffset() == 0) {
-					// first chunk was completed
-					// put the rest of chunks but the last into the Completion Queue
-					long position = chunkSize;
-					long filesize = file.getTotalLength();
-					while (position + chunkSize < filesize) {
-						try {
-							TransmissionQueue.put(new FileChunk(file.getName(), position, chunkSize, filesize));
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+					} else if (file.getOffset() == 0) {
+						// first chunk was completed
+						// put the rest of chunks but the last into the Transmission Queue
+						position = chunkSize;
+						long filesize = file.getTotalLength();
+						while (position + chunkSize < filesize) {
+							try {
+								TransmissionQueue.put(new FileChunk(file.getName(), position, chunkSize, filesize));
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							position += chunkSize;
 						}
-						position += chunkSize;
 					}
 				}
 			} else {
