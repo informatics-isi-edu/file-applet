@@ -291,6 +291,33 @@ public class JakartaClient  implements ClientURL {
 	}
     
     /**
+     * Get the values of a dataset tags
+     * 
+     * @param url
+     *            the query url
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse getTagsValues(String url, String cookie) {
+    	ClientURLResponse response = null;
+		HttpGet httpget = new HttpGet(url);
+    	setCookie(cookie, httpget);
+    	httpget.setHeader("Accept", "application/json");
+		try {
+			response = new JakartaClientResponse(httpclient.execute(httpget));
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return response;
+	}
+    
+    /**
      * Get the content of a file to be downloaded
      * 
      * @param url

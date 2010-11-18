@@ -6,7 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
@@ -44,9 +47,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
     // map containing the checksums of all files to be downloaded.
     private Map<String, String> checksumMap = new HashMap<String, String>();
-
-    // map containing the encoded files names to be downloaded.
-    private Map<String, String> encodeMap = new HashMap<String, String>();
 
     // map containing the bytes of all files to be downloaded.
     private Map<String, Long> bytesMap = new HashMap<String, Long>();
@@ -116,7 +116,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         try {
             fileNames = new ArrayList<String>();
             checksumMap = new HashMap<String, String>();
-            encodeMap = new HashMap<String, String>();
             bytesMap = new HashMap<String, Long>();
             datasetSize = 0;
 
@@ -167,10 +166,17 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * @throws UnsupportedEncodingException
      */
     private void setCustomTags() throws UnsupportedEncodingException {
+    	JSONObject tagsValues = getDatasetTagValues();
         Set<String> tags = customTagMap.getTagNames();
 	StringBuffer buffer = new StringBuffer();
         for (String tag : tags) {
-            String value = getTagValue("", tag);
+            String value = "";
+			try {
+				value = tagsValues.getString(tag);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	    buffer.append(tag).append("<br/>").append(value).append("<br/>");
             customTagMap.setValue(tag, value);
         }
@@ -185,48 +191,28 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         boolean result = false;
 
         try {
-            // get the files list
-            String url = DatasetUtils.getDatasetQueryUrl(controlNumber,
-                    tagFilerServerURL);
-            String prefix = DatasetUtils.getDatasetUrl(controlNumber,
-                    tagFilerServerURL);
+        	// get the "bytes" and "sha256sum" tags of the files
+        	JSONArray tagsValues = getFilesTagValues();
+        	if (tagsValues != null) {
+                fileDownloadListener.notifyRetrieveStart(tagsValues.length());
+        		for (int i=0; i < tagsValues.length(); i++) {
+        			JSONObject fileTags = tagsValues.getJSONObject(i);
+        			
+                    // get the file name
+                    String file = fileTags.getString("name").substring(controlNumber.length()+1);
+                    fileNames.add(file);
 
-            ClientURLResponse response = client.getDataSet(url, cookie);
+                    // get the bytes
+                    long bytes = fileTags.getLong("bytes");
+                    datasetSize += bytes;
+                    bytesMap.put(file, bytes);
 
-	    cookie = client.updateSessionCookie(applet, cookie);
-
-	    int status = response.getStatus();
-	    if (status != 200) {
-	    	response.release();
-            fileDownloadListener.notifyFailure(controlNumber, "Get Files List returned status " + status);
-        	throw new Exception("Status Code: " + status);
-	    }
-            String textEntity = response.getEntityString();
-            textEntity = textEntity.replace(prefix, "");
-            response.release();
-
-            // get the files maps
-            StringTokenizer tokenizer = new StringTokenizer(textEntity, "\n");
-            fileDownloadListener.notifyRetrieveStart(tokenizer.countTokens());
-            while (tokenizer.hasMoreTokens()) {
-                // get the file name
-                String file = tokenizer.nextToken();
-                String name = DatasetUtils.urlDecode(file).substring(1);
-                fileDownloadListener.notifyFileRetrieveComplete(name);
-                fileNames.add(name);
-                encodeMap.put(name, file);
-
-                // get the bytes
-                long bytes = Long.parseLong(getTagValue(file, "bytes"));
-                datasetSize += bytes;
-                bytesMap.put(name, bytes);
-
-                // get the checksum
-                String checksum = getTagValue(file,
-                        TagFilerProperties.getProperty("tagfiler.tag.checksum"));
-                checksumMap.put(name, checksum);
-            }
-
+                    // get the checksum
+                    String checksum = fileTags.getString("sha256sum");
+                    checksumMap.put(file, checksum);
+                    fileDownloadListener.notifyFileRetrieveComplete(file);
+        		}
+        	}
             result = true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -235,39 +221,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         }
 
         return result;
-    }
-
-    /**
-     * Get the value of a file tag.
-     * 
-     * @param file
-     *            the file name as received from the FileList.
-     * @param tag
-     *            the tag name.
-     * @throws UnsupportedEncodingException
-     */
-    private String getTagValue(String file, String tag)
-            throws UnsupportedEncodingException {
-        String query = DatasetUtils.getFileTag(controlNumber,
-                tagFilerServerURL, file, tag);
-        ClientURLResponse response = client.getTagValue(query, cookie);
-
-	cookie = client.updateSessionCookie(applet, cookie);
-
-        if (response.getStatus() != 200)
-        {
-        	// if status is 404, the tag might have been deleted
-        	if (response.getStatus() != 404) {
-            	fileDownloadListener.notifyFailure(controlNumber, response.getStatus(), response.getErrorMessage());
-        	}
-        	response.release();
-        	return "";
-        }
-		String value = response.getEntityString();
-        value = DatasetUtils.urlDecode(value.substring(value.indexOf('=') + 1));
-        response.release();
-
-        return value;
     }
 
     /**
@@ -337,6 +290,112 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	response.release();
         }
         return valid;
+    }
+    
+    /**
+     * Get the values for the custom tags of the dataset
+     * @return the JSON Object with the tags values
+     */
+    private JSONObject getDatasetTagValues() {
+    	String tags = DatasetUtils.joinEncode(customTagMap.getTagNames(), ",");
+        String query = null;
+		try {
+			query = DatasetUtils.getDatasetTags(controlNumber,
+			        tagFilerServerURL, tags);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Dataset Query: "+query);
+        ClientURLResponse response = client.getTagsValues(query, cookie);
+
+	cookie = client.updateSessionCookie(applet, cookie);
+
+        if (response.getStatus() != 200)
+        {
+        	// if status is 404, the tag might have been deleted
+        	if (response.getStatus() != 404) {
+            	fileDownloadListener.notifyFailure(controlNumber, response.getStatus(), response.getErrorMessage());
+        	}
+        	response.release();
+        	return null;
+        }
+		String values = null;
+		try {
+			values = DatasetUtils.urlDecode(response.getEntityString());
+			System.out.println("Dataset Response: "+values);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		JSONArray array = null;
+		try {
+			array = new JSONArray(values);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (array.length() != 1) {
+			return null;
+		}
+		JSONObject obj = null;
+		try {
+			obj = array.getJSONObject(0);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        response.release();
+        
+        return obj;
+    }
+
+    /**
+     * Get the values for the "bytes" and "sha256sum" tags of the dataset files
+     * @return the JSON Array with the tags values
+     */
+    private JSONArray getFilesTagValues() {
+    	String tags = "bytes,sha256sum";
+        String query = null;
+		try {
+			query = DatasetUtils.getFilesTags(controlNumber,
+			        tagFilerServerURL, tags);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Files Query: "+query);
+        ClientURLResponse response = client.getTagsValues(query, cookie);
+
+	cookie = client.updateSessionCookie(applet, cookie);
+
+        if (response.getStatus() != 200)
+        {
+        	// if status is 404, the tag might have been deleted
+        	if (response.getStatus() != 404) {
+            	fileDownloadListener.notifyFailure(controlNumber, response.getStatus(), response.getErrorMessage());
+        	}
+        	response.release();
+        	return null;
+        }
+		String values = null;
+		try {
+			values = DatasetUtils.urlDecode(response.getEntityString());
+			System.out.println("Files Response: "+values);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		JSONArray array = null;
+		try {
+			array = new JSONArray(values);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        response.release();
+        
+        return array;
     }
 
     /**

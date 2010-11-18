@@ -428,4 +428,118 @@ public class DatasetUtils {
         return restURL.toString();
     }
 
+    /**
+     * Get the URL for the dataset tags
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @param tags
+     *            the list of tags separated by comma
+     * @return the encoded URL for dataset tags
+     * @throws UnsupportedEncodingException
+     */
+    public static final String getDatasetTags(String datasetName,
+            String tagFilerServer, String tags)
+            throws UnsupportedEncodingException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
+                .append(datasetName).append("?list=")
+                .append(tags);
+        return restURL.toString();
+    }
+
+    /**
+     * Get the URL for the files tags
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @param tags
+     *            the list of tags separated by comma
+     * @return the encoded URL for files tags
+     * @throws UnsupportedEncodingException
+     */
+    public static final String getFilesTags(String datasetName,
+            String tagFilerServer, String tags)
+            throws UnsupportedEncodingException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.queryuri"))
+                .append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.containment")))
+                .append("=")
+                .append(datasetName)
+                .append("?list=")
+                .append(tags);
+        return restURL.toString();
+    }
+
+    /**
+     * Join the elements of the set
+     * 
+     * @param strings
+     *            the set of elements
+     * @param delimiter
+     *            the delimiter
+     * @return the join string of the set elements
+     */
+	public static String join(Set<String> strings, String delimiter){
+		  if(strings==null || delimiter == null) {
+		    return "";
+		  }
+		 
+		  StringBuffer buf = new StringBuffer();
+		  boolean first = true;
+		  
+		  for (String value : strings) {
+			  if (first) {
+				  first = false;
+			  } else {
+			      buf.append(delimiter);
+			  }
+			  buf.append(value);
+		  }
+		 
+		  return buf.toString();
+		}
+
+    /**
+     * Join the encoded elements of the set
+     * 
+     * @param strings
+     *            the set of elements
+     * @param delimiter
+     *            the delimiter
+     * @return the join string of the set elements
+     */
+	public static String joinEncode(Set<String> strings, String delimiter){
+		  if(strings==null || delimiter == null) {
+		    return "";
+		  }
+		 
+		  StringBuffer buf = new StringBuffer();
+		  boolean first = true;
+		  
+		  for (String value : strings) {
+			  if (first) {
+				  first = false;
+			  } else {
+			      buf.append(delimiter);
+			  }
+			  try {
+				buf.append(DatasetUtils.urlEncode(value));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		  }
+		 
+		  return buf.toString();
+		}
+
 }

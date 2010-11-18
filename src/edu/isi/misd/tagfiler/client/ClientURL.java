@@ -34,6 +34,17 @@ public interface ClientURL {
     public ClientURLResponse getTagValue(String url, String cookie);
     
     /**
+     * Get the values of a dataset tags
+     * 
+     * @param url
+     *            the query url
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse getTagsValues(String url, String cookie);
+    
+    /**
      * Get the content of a file to be downloaded
      * 
      * @param url
