@@ -64,6 +64,9 @@ public class JakartaClient  implements ClientURL {
     // client used to connect with the tagfiler server
 	protected boolean browser = true;
 	
+	// error description header
+	private static final String error_description_header = "X-Error-Description";
+	
     /**
      * Constructor
      * 
@@ -697,7 +700,7 @@ public class JakartaClient  implements ClientURL {
          */
         public String getErrorMessage() {
         	String errormessage = "";
-        	Header header = response.getFirstHeader("Error-Description");
+        	Header header = response.getFirstHeader(error_description_header);
         	if (header != null) {
         		try {
 					errormessage = URLDecoder.decode(header.getValue(),  "UTF-8");
