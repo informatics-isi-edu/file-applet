@@ -288,59 +288,50 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     .notifyLogMessage("Beginning transfer of dataset '"
                             + datasetName + "'...");
 
-	    // upload all the files
+            // upload all the files
             synchronized (lock) {
         	    success = postFileDataHelper(files, datasetName);
         	    lock.wait();
             }
 
             // then create and tag the dataset url entry
-            final String datasetURLQuery = DatasetUtils
+            String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
                             customTagMap);
-            final String datasetURLFileBody = DatasetUtils.getDatasetURLUploadTagsBody(
+            String datasetBody = DatasetUtils.getDatasetURLUploadBody(
                     datasetName, tagFilerServerURL);
             
-            System.out.println("\ndatasetURLQuery: "+datasetURLQuery);
-            System.out.println("datasetURLFileBody: "+datasetURLFileBody);
+            fileUploadListener.notifyLogMessage("Creating dataset URL entry.");
+            fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
+                    + "\nBody:" + datasetBody);
             
-            response = client.postFileData(datasetURLQuery, datasetURLFileBody, cookie);
+            response = client.postFileData(datasetURLQuery, datasetBody, cookie);
             
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
             }
 
-            // successful tagfiler POST issues 303 redirect to result page
+            // check result
             if (200 != response.getStatus() && 303 != response.getStatus()) {
                 fileUploadListener
                 .notifyLogMessage("Error creating the dataset URL entry (code="
                         + response.getStatus() + ")");
 		        success = false;
 		        fileUploadListener.notifyFailure(datasetName, response.getStatus(), response.getErrorMessage());
+		        return false;
             }
             
-            final String datasetURLRegisterQuery = DatasetUtils
-            .getDatasetURLRegisterQuery(datasetName, tagFilerServerURL);
-            final String datasetURLBody = DatasetUtils.getDatasetTagsQuery(
+            // Register the dataset files
+            datasetURLQuery = DatasetUtils
+            	.getDatasetURLUploadQuery(datasetName, tagFilerServerURL);
+            datasetBody = DatasetUtils.getDatasetURLUploadBody(
                     datasetName, tagFilerServerURL, files, baseDirectory);
-            //System.out.println("datasetURLBody: "+datasetURLBody);
-            fileUploadListener.notifyLogMessage("Creating dataset URL entry");
-            //fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
-            //        + " Body:" + datasetURLBody);
             
+            fileUploadListener.notifyLogMessage("Registering dataset files.");
+            fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
+                    + "\nBody:" + datasetBody);
             
-            System.out.println("\ndatasetURLRegisterQuery: "+datasetURLRegisterQuery);
-            System.out.println("datasetURLBody: "+datasetURLBody);
-            // TODO: get the cookie and pass it here to the call
-
-            // WebResource webResource =
-            // ClientUtils.createWebResource(client,
-            // datasetURLQuery, null);
-
-            // need to capture builder result of cookie() and invoke request on
-            // it
-            // or cookie is lost!
-            response = client.putFileData(datasetURLRegisterQuery, datasetURLBody, cookie);
+            response = client.putFileData(datasetURLQuery, datasetBody, cookie);
             
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
@@ -348,13 +339,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
             // successful tagfiler POST issues 303 redirect to result page
             if (200 == response.getStatus() || 303 == response.getStatus()) {
-                try {
-                    fileUploadListener
-                            .notifyLogMessage("Dataset URL entry created successfully.");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    success = false;
-                }
+                fileUploadListener.notifyLogMessage("Dataset URL entry created successfully.");
         		fileUploadListener.notifySuccess(dataset);
             } else {
                 fileUploadListener

@@ -21,7 +21,6 @@ import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
-import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
  * Default implementation of the
@@ -246,8 +245,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             if ((status == 200 || status == 303) && response.checkResponseHeaderPattern(
             		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
-                            + TagFilerProperties
-                                    .getProperty("tagfiler.url.taguri")
+                            + DatasetUtils.TAGS_URI
                             + controlNumber + "/contains")) {
                 valid = true;
             }

@@ -24,18 +24,22 @@ public class DatasetUtils {
 
     private static final String DATASET_PATH_SEPARATOR = "/";
 
-    private static final String readACL_PROPERTY = "tagfiler.readacl";
+    private static final String FILE_URI = "/file/";
 
-    private static final String writeACL_PROPERTY = "tagfiler.writeacl";
+    private static final String QUERY_URI = "/query/";
 
-    private static final String readACL_tag_PROPERTY = "tagfiler.tag.readacl";
+    public static final String TAGS_URI = "/tags/";
 
-    private static final String writeACL_tag_PROPERTY = "tagfiler.tag.writeacl";
+    private static final String STUDY = "Transmission Number";
+
+    private static final String IMAGE_SET = "Image Set";
 
     /**
      * 
      * @param datasetName
      *            common dataset name
+     * @param baseDirectory
+     *            the base directory of the file
      * @param fileName
      *            name of the file in the dataset
      * @return a dataset name based on a common name, followed by a file path
@@ -99,24 +103,16 @@ public class DatasetUtils {
     public static final String getDatasetURLUploadQuery(String datasetName,
             String tagFilerServer, CustomTagMap customTagMap)
             throws FatalException {
-        String readACL_value = TagFilerProperties.getProperty(readACL_PROPERTY);
-        String readACL_tag = TagFilerProperties
-                .getProperty(readACL_tag_PROPERTY);
-        String writeACL_value = TagFilerProperties
-                .getProperty(writeACL_PROPERTY);
-        String writeACL_tag = TagFilerProperties
-                .getProperty(writeACL_tag_PROPERTY);
 
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
         assert (customTagMap != null);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"));
+                .append(FILE_URI);
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
                     .append("?")
-                    .append(DatasetUtils.urlEncode(TagFilerProperties
-                            .getProperty("tagfiler.tag.imageset")));
+                    .append(DatasetUtils.urlEncode(IMAGE_SET));
 
             Set<String> tagNames = customTagMap.getTagNames();
             for (String tagName : tagNames) {
@@ -125,17 +121,6 @@ public class DatasetUtils {
                         .append("=")
                         .append(DatasetUtils.urlEncode(customTagMap
                                 .getValue(tagName)));
-            }
-            if (readACL_tag != null && readACL_value != null && readACL_value != "") {
-                restURL.append("&").append(DatasetUtils.urlEncode(readACL_tag))
-                        .append("=")
-                        .append(DatasetUtils.urlEncode(readACL_value));
-            }
-            if (writeACL_tag != null && writeACL_value != null && writeACL_value != "") {
-                restURL.append("&")
-                        .append(DatasetUtils.urlEncode(writeACL_tag))
-                        .append("=")
-                        .append(DatasetUtils.urlEncode(writeACL_value));
             }
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
@@ -152,13 +137,13 @@ public class DatasetUtils {
      * @return the REST URL to create a tagfiler URL upload for the dataset.
      * @thows FatalException if the URL cannot be constructed
      */
-    public static final String getDatasetURLRegisterQuery(String datasetName,
+    public static final String getDatasetURLUploadQuery(String datasetName,
             String tagFilerServer)
             throws FatalException {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"));
+                .append(TAGS_URI);
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
                     .append("/contains");
@@ -178,30 +163,6 @@ public class DatasetUtils {
      * @thows FatalException if the URL cannot be constructed
      */
     public static final String getDatasetURLUploadBody(String datasetName,
-            String tagFilerServer) throws FatalException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-        final StringBuffer body = new StringBuffer("action=put&url=");
-        try {
-            body.append(DatasetUtils.urlEncode(getDatasetQuery(datasetName,
-                    tagFilerServer)));
-        } catch (UnsupportedEncodingException e) {
-            throw new FatalException(e);
-        }
-
-        return body.toString();
-    }
-
-    /**
-     * 
-     * @param datasetName
-     *            name of the dataset
-     * @param tagFilerServer
-     *            tagfiler server url
-     * @return the message body to use for the file URL creation.
-     * @thows FatalException if the URL cannot be constructed
-     */
-    public static final String getDatasetURLUploadTagsBody(String datasetName,
             String tagFilerServer) throws FatalException {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
@@ -234,13 +195,6 @@ public class DatasetUtils {
     public static final String getFileUploadQuery(String datasetName,
             String tagFilerServer, String baseDirectory, File file,
             String checksum) throws FatalException {
-        String readACL_value = TagFilerProperties.getProperty(readACL_PROPERTY);
-        String readACL_tag = TagFilerProperties
-                .getProperty(readACL_tag_PROPERTY);
-        String writeACL_value = TagFilerProperties
-                .getProperty(writeACL_PROPERTY);
-        String writeACL_tag = TagFilerProperties
-                .getProperty(writeACL_tag_PROPERTY);
 
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
@@ -249,15 +203,14 @@ public class DatasetUtils {
         assert (checksum != null);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"));
+                .append(FILE_URI);
         try {
 
             restURL.append(
                     DatasetUtils.urlEncode(DatasetUtils.generateDatasetPath(
                             datasetName, baseDirectory, file.getAbsolutePath())))
                     .append("?")
-                    .append(DatasetUtils.urlEncode(TagFilerProperties
-                            .getProperty("tagfiler.tag.containment")))
+                    .append(DatasetUtils.urlEncode(STUDY))
                     .append("=")
                     .append(DatasetUtils.urlEncode(datasetName))
                     .append("&")
@@ -265,17 +218,6 @@ public class DatasetUtils {
                             .getProperty("tagfiler.tag.checksum")).append("=")
                     .append(checksum);
 
-            if (readACL_tag != null && readACL_value != null && readACL_value != "") {
-                restURL.append("&").append(DatasetUtils.urlEncode(readACL_tag))
-                        .append("=")
-                        .append(DatasetUtils.urlEncode(readACL_value));
-            }
-            if (writeACL_tag != null && writeACL_value != null && writeACL_value != "") {
-                restURL.append("&")
-                        .append(DatasetUtils.urlEncode(writeACL_tag))
-                        .append("=")
-                        .append(DatasetUtils.urlEncode(writeACL_value));
-            }
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
@@ -303,8 +245,7 @@ public class DatasetUtils {
         try {
 
             restURL.append("?")
-                    .append(DatasetUtils.urlEncode(TagFilerProperties
-                            .getProperty("tagfiler.tag.containment")))
+                    .append(DatasetUtils.urlEncode(STUDY))
                     .append("=")
                     .append(DatasetUtils.urlEncode(datasetName))
                     .append("&")
@@ -334,7 +275,7 @@ public class DatasetUtils {
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"));
+                .append(FILE_URI);
         try {
 
             restURL.append(
@@ -355,34 +296,13 @@ public class DatasetUtils {
      *            tagfiler server URL
      * @return URL for querying for all the files in a dataset
      */
-    public static final String getDatasetQuery(String datasetName,
-            String tagFilerServer) {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-
-        final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.queryuri"))
-                .append(TagFilerProperties
-                        .getProperty("tagfiler.tag.containment")).append("=")
-                .append(datasetName);
-        return restURL.toString();
-    }
-
-    /**
-     * 
-     * @param datasetName
-     *            name of the dataset
-     * @param tagFilerServer
-     *            tagfiler server URL
-     * @return URL for querying for all the files in a dataset
-     */
     public static final String getDatasetTagsQuery(String datasetName,
             String tagFilerServer) {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
+                .append(TAGS_URI)
                 .append(datasetName)
                 .append("/contains");
         return restURL.toString();
@@ -394,9 +314,13 @@ public class DatasetUtils {
      *            name of the dataset
      * @param tagFilerServer
      *            tagfiler server URL
+     * @param files
+     *            the list of files to be registered
+     * @param baseDirectory
+     *            the base directory of the files
      * @return URL for querying for all the files in a dataset
      */
-    public static final String getDatasetTagsQuery(String datasetName,
+    public static final String getDatasetURLUploadBody(String datasetName,
             String tagFilerServer, List<String> files, String baseDirectory) {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
@@ -425,28 +349,6 @@ public class DatasetUtils {
         	restURL.append("contains=");
         }
         restURL.append(tags);
-        System.out.println("\nEncoded: "+restURL.toString());
-        return restURL.toString();
-    }
-
-    /**
-     * 
-     * @param datasetName
-     *            name of the dataset
-     * @param tagFilerServer
-     *            tagfiler server URL
-     * @return URL for querying for all the files in a dataset
-     */
-    public static final String getDatasetQueryUrl(String datasetName,
-            String tagFilerServer) throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-
-        final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.queryuri"))
-                .append(DatasetUtils.urlEncode(TagFilerProperties
-                        .getProperty("tagfiler.tag.containment"))).append("=")
-                .append(DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
 
@@ -464,32 +366,9 @@ public class DatasetUtils {
         assert (datasetName != null && datasetName.length() > 0);
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
-        final StringBuffer restURL = new StringBuffer(tagFilerServer).append(
-                TagFilerProperties.getProperty("tagfiler.url.fileuri")).append(
-                DatasetUtils.urlEncode(datasetName));
-        return restURL.toString();
-    }
-
-    /**
-     * 
-     * @param datasetName
-     *            name of the dataset
-     * @param tagFilerServer
-     *            tagfiler server URL
-     * @param file
-     *            the URL encoded file name
-     * @return the encoded URL for file
-     * @throws UnsupportedEncodingException
-     */
-    public static final String getFileUrl(String datasetName,
-            String tagFilerServer, String file)
-            throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
-                .append(DatasetUtils.urlEncode(datasetName)).append(file);
+        								.append(FILE_URI)
+        								.append(DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
 
@@ -509,34 +388,8 @@ public class DatasetUtils {
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.fileuri"))
+                .append(FILE_URI)
                 .append(DatasetUtils.urlEncode(datasetName));
-        return restURL.toString();
-    }
-
-    /**
-     * 
-     * @param datasetName
-     *            name of the dataset
-     * @param tagFilerServer
-     *            tagfiler server URL
-     * @param file
-     *            the URL encoded file name
-     * @param tag
-     *            the tag name
-     * @return the encoded URL for file tag
-     * @throws UnsupportedEncodingException
-     */
-    public static final String getFileTag(String datasetName,
-            String tagFilerServer, String file, String tag)
-            throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-
-        final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
-                .append(datasetName).append(file).append("/")
-                .append(DatasetUtils.urlEncode(tag));
         return restURL.toString();
     }
 
@@ -558,7 +411,7 @@ public class DatasetUtils {
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
+                .append(TAGS_URI)
                 .append(datasetName).append("?list=")
                 .append(tags);
         return restURL.toString();
@@ -582,8 +435,8 @@ public class DatasetUtils {
         assert (tagFilerServer != null && tagFilerServer.length() > 0);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TagFilerProperties.getProperty("tagfiler.url.queryuri"))
-                .append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.containment")))
+                .append(QUERY_URI)
+                .append(DatasetUtils.urlEncode(STUDY))
                 .append("=")
                 .append(datasetName)
                 .append("?list=")
