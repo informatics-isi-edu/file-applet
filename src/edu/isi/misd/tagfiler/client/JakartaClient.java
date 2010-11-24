@@ -488,6 +488,41 @@ public class JakartaClient  implements ClientURL {
      * 
      * @param url
      *            the query url
+     * @param datasetURLBody
+     *            the body of the dataset
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse putFileData(String url, String datasetURLBody, String cookie) {
+    	ClientURLResponse response = null;
+		HttpPut httpput = new HttpPut(url);
+    	setCookie(cookie, httpput);
+    	httpput.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		try {
+			httpput.setEntity(new StringEntity(datasetURLBody));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			response = new JakartaClientResponse(httpclient.execute(httpput));
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return response;
+	}
+    
+    /**
+     * Uploads a set of given files with a specified dataset name.
+     * 
+     * @param url
+     *            the query url
      * @param file
      *            the file to be uploaded
      * @param cookie

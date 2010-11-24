@@ -298,12 +298,39 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             final String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
                             customTagMap);
-            final String datasetURLBody = DatasetUtils.getDatasetURLUploadBody(
+            final String datasetURLFileBody = DatasetUtils.getDatasetURLUploadTagsBody(
                     datasetName, tagFilerServerURL);
-            fileUploadListener.notifyLogMessage("Creating dataset URL entry");
-            fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
-                    + " Body:" + datasetURLBody);
+            
+            System.out.println("\ndatasetURLQuery: "+datasetURLQuery);
+            System.out.println("datasetURLFileBody: "+datasetURLFileBody);
+            
+            response = client.postFileData(datasetURLQuery, datasetURLFileBody, cookie);
+            
+            synchronized (this) {
+                cookie = client.updateSessionCookie(applet, cookie);
+            }
 
+            // successful tagfiler POST issues 303 redirect to result page
+            if (200 != response.getStatus() && 303 != response.getStatus()) {
+                fileUploadListener
+                .notifyLogMessage("Error creating the dataset URL entry (code="
+                        + response.getStatus() + ")");
+		        success = false;
+		        fileUploadListener.notifyFailure(datasetName, response.getStatus(), response.getErrorMessage());
+            }
+            
+            final String datasetURLRegisterQuery = DatasetUtils
+            .getDatasetURLRegisterQuery(datasetName, tagFilerServerURL);
+            final String datasetURLBody = DatasetUtils.getDatasetTagsQuery(
+                    datasetName, tagFilerServerURL, files, baseDirectory);
+            //System.out.println("datasetURLBody: "+datasetURLBody);
+            fileUploadListener.notifyLogMessage("Creating dataset URL entry");
+            //fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
+            //        + " Body:" + datasetURLBody);
+            
+            
+            System.out.println("\ndatasetURLRegisterQuery: "+datasetURLRegisterQuery);
+            System.out.println("datasetURLBody: "+datasetURLBody);
             // TODO: get the cookie and pass it here to the call
 
             // WebResource webResource =
@@ -313,7 +340,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             // need to capture builder result of cookie() and invoke request on
             // it
             // or cookie is lost!
-            response = client.postFileData(datasetURLQuery, datasetURLBody, cookie);
+            response = client.putFileData(datasetURLRegisterQuery, datasetURLBody, cookie);
             
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);

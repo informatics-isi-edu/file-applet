@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import edu.isi.misd.tagfiler.exception.FatalException;
@@ -146,6 +148,31 @@ public class DatasetUtils {
      * @param datasetName
      *            name of the dataset
      * @param tagFilerServer
+     *            URL of the tagfiler server
+     * @return the REST URL to create a tagfiler URL upload for the dataset.
+     * @thows FatalException if the URL cannot be constructed
+     */
+    public static final String getDatasetURLRegisterQuery(String datasetName,
+            String tagFilerServer)
+            throws FatalException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"));
+        try {
+            restURL.append(DatasetUtils.urlEncode(datasetName))
+                    .append("/contains");
+        } catch (UnsupportedEncodingException e) {
+            throw new FatalException(e);
+        }
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
      *            tagfiler server url
      * @return the message body to use for the file URL creation.
      * @thows FatalException if the URL cannot be constructed
@@ -157,6 +184,30 @@ public class DatasetUtils {
         final StringBuffer body = new StringBuffer("action=put&url=");
         try {
             body.append(DatasetUtils.urlEncode(getDatasetQuery(datasetName,
+                    tagFilerServer)));
+        } catch (UnsupportedEncodingException e) {
+            throw new FatalException(e);
+        }
+
+        return body.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server url
+     * @return the message body to use for the file URL creation.
+     * @thows FatalException if the URL cannot be constructed
+     */
+    public static final String getDatasetURLUploadTagsBody(String datasetName,
+            String tagFilerServer) throws FatalException {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        final StringBuffer body = new StringBuffer("action=put&url=");
+        try {
+            body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetName,
                     tagFilerServer)));
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
@@ -314,6 +365,67 @@ public class DatasetUtils {
                 .append(TagFilerProperties
                         .getProperty("tagfiler.tag.containment")).append("=")
                 .append(datasetName);
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @return URL for querying for all the files in a dataset
+     */
+    public static final String getDatasetTagsQuery(String datasetName,
+            String tagFilerServer) {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(TagFilerProperties.getProperty("tagfiler.url.taguri"))
+                .append(datasetName)
+                .append("/contains");
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @return URL for querying for all the files in a dataset
+     */
+    public static final String getDatasetTagsQuery(String datasetName,
+            String tagFilerServer, List<String> files, String baseDirectory) {
+        assert (datasetName != null && datasetName.length() > 0);
+        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+
+        final StringBuffer restURL = new StringBuffer();
+        HashSet <String> array = new HashSet <String>();
+        for (String file : files) {
+        	StringBuffer buff = new StringBuffer();
+			try {
+				buff.append(tagFilerServer)
+					.append("/file/")
+					.append(DatasetUtils.urlEncode(generateDatasetPath(datasetName, baseDirectory, file)));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	try {
+				array.add(DatasetUtils.urlEncode(buff.toString()));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        String tags = DatasetUtils.join(array, "&contains=");
+        if (tags.trim().length() > 0) {
+        	restURL.append("contains=");
+        }
+        restURL.append(tags);
+        System.out.println("\nEncoded: "+restURL.toString());
         return restURL.toString();
     }
 

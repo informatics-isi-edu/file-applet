@@ -157,6 +157,19 @@ public interface ClientURL {
      * 
      * @param url
      *            the query url
+     * @param datasetURLBody
+     *            the body of the dataset
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse putFileData(String url, String datasetURLBody, String cookie);
+    
+    /**
+     * Uploads a set of given files with a specified dataset name.
+     * 
+     * @param url
+     *            the query url
      * @param file
      *            the file to be abloaded
      * @param cookie
