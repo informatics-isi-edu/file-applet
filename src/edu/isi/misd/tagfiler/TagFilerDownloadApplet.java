@@ -2,8 +2,9 @@ package edu.isi.misd.tagfiler;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -49,7 +50,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
     private String defaultControlNumber = null;
 
     // download files
-    private List<String> filesToDownload = new ArrayList<String>();
+    private Set<String> filesToDownload = new HashSet<String>();
 
     // does the work of the file download
     private FileDownload fileDownload = null;
@@ -254,12 +255,14 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
         	filesCompleted++;
             long percent = filesCompleted * 100 / totalFiles;
             drawProgressBar(percent);
-            eval(filesCompleted == 1 ? "setFiles" : "addFile", filename);
             if (filesCompleted < totalFiles) {
                 updateStatus(TagFilerProperties.getProperty(
                         "tagfiler.message.download.FileRetrieveStatus",
                         new String[] { Integer.toString(filesCompleted + 1),
                                 Integer.toString(totalFiles) }));
+            } else {
+            	String fileList = DatasetUtils.join(filesToDownload, "<br/>");
+                eval("setFiles", fileList);
             }
         }
 

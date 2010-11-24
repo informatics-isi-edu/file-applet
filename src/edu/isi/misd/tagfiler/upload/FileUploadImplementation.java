@@ -305,6 +305,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
                     + "\nBody:" + datasetBody);
             
+            applet.updateStatus(TagFilerProperties.getProperty("tagfiler.label.CompleteUploadStatus"));
             response = client.postFileData(datasetURLQuery, datasetBody, cookie);
             
             synchronized (this) {
