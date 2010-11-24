@@ -247,10 +247,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
                             + TagFilerProperties
-                                    .getProperty("tagfiler.url.queryuri")
-                            + TagFilerProperties
-                                    .getProperty("tagfiler.tag.containment")
-                            + "=" + controlNumber)) {
+                                    .getProperty("tagfiler.url.taguri")
+                            + controlNumber + "/contains")) {
                 valid = true;
             }
             else {

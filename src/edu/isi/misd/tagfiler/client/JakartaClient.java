@@ -672,6 +672,9 @@ public class JakartaClient  implements ClientURL {
             String headerValue = response.getFirstHeader(headerName).getValue();
             if (headerValue != null && headerValue.matches(expectedPattern)) {
                 matches = true;
+            } else {
+                System.out.println("headerValue: " + headerValue);
+                System.out.println("expectedPattern: " + expectedPattern);
             }
             return matches;
     	}
