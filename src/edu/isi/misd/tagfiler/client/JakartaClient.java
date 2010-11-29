@@ -572,7 +572,9 @@ public class JakartaClient  implements ClientURL {
 		HttpPut httpput = new HttpPut(url);
     	setCookie(cookie, httpput);
     	httpput.setHeader("Content-Type", "application/octet-stream");
-    	httpput.setHeader("Content-Range",  "bytes "+first+"-"+(first+length-1)+"/"+fileLength);
+    	if (first != 0) {
+        	httpput.setHeader("Content-Range",  "bytes "+first+"-"+(first+length-1)+"/"+fileLength);
+    	}
     	InputStreamEntity inputStreamEntity = new InputStreamEntity(inputStream, length);
     	inputStreamEntity.setChunked(true);
     	httpput.setEntity(inputStreamEntity);
