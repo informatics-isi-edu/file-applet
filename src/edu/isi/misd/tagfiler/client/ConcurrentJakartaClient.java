@@ -1119,7 +1119,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	     */
 		private void addFile(String name, RandomAccessFile handle, String checkSum, String outputDir) {
 			filesHandle.put(name, handle);
-			checksum.put(name, checkSum);
+			if (checkSum != null) {
+				checksum.put(name, checkSum);
+			}
 			downloadDir.put(name, outputDir);
 			workerWrapper.addActiveFile(name);
 		}

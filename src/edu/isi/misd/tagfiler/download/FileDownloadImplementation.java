@@ -207,8 +207,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                     bytesMap.put(file, bytes);
 
                     // get the checksum
-                    String checksum = fileTags.getString("sha256sum");
-                    checksumMap.put(file, checksum);
+                    if (!fileTags.isNull("sha256sum")) {
+                        String checksum = fileTags.getString("sha256sum");
+                        checksumMap.put(file, checksum);
+                    }
                     fileDownloadListener.notifyFileRetrieveComplete(file);
         		}
         	}
