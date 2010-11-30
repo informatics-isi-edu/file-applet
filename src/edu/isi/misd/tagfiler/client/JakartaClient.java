@@ -671,12 +671,17 @@ public class JakartaClient  implements ClientURL {
 
             boolean matches = false;
 
-            String headerValue = response.getFirstHeader(headerName).getValue();
-            if (headerValue != null && headerValue.matches(expectedPattern)) {
-                matches = true;
+            Header header = response.getFirstHeader(headerName);
+            if (header != null) {
+                String headerValue = response.getFirstHeader(headerName).getValue();
+                if (headerValue.matches(expectedPattern)) {
+                    matches = true;
+                } else {
+                    System.out.println("headerValue: " + headerValue);
+                    System.out.println("expectedPattern: " + expectedPattern);
+                }
             } else {
-                System.out.println("headerValue: " + headerValue);
-                System.out.println("expectedPattern: " + expectedPattern);
+                System.out.println("The HttpResponse does not contain the header \"" + headerName + "\".");
             }
             return matches;
     	}
