@@ -169,7 +169,8 @@ public class DatasetUtils {
         final StringBuffer body = new StringBuffer("action=put&url=");
         try {
             body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetName,
-                    tagFilerServer)));
+                    tagFilerServer)))
+                    .append("&versioned=False");
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
