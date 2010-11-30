@@ -330,9 +330,7 @@ public class DatasetUtils {
         for (String file : files) {
         	StringBuffer buff = new StringBuffer();
 			try {
-				buff.append(tagFilerServer)
-					.append("/file/")
-					.append(DatasetUtils.urlEncode(generateDatasetPath(datasetName, baseDirectory, file)));
+				buff.append(DatasetUtils.urlEncode(generateDatasetPath(datasetName, baseDirectory, file)));
 			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
