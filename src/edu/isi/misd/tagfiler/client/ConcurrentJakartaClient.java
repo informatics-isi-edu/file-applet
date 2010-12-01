@@ -66,8 +66,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
     // object used for threads synchronization on listener actions
 	private Object listenerLock = new Object();
 	
-    // flag to cancel the requests in case of a failure
+    // flag to cancel the requests
 	private boolean cancel;
+	
+    // true if a failure occurred
+	private boolean failure;
 	
     // flag to verify the checksum of a file transfer
 	private boolean verifyTransfer;
@@ -414,6 +417,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * Notify listener about failure
      */
 	private void notifyFailure(String err) {
+		failure = true;
 		terminateThreads();
 		
 		synchronized (listenerLock) {
@@ -1293,7 +1297,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	     *            the file name
 	     */
 		synchronized private void deregisterThread() {
-			if (--activeThreads == 0) {
+			if (--activeThreads == 0 && !failure) {
 				synchronized (listenerLock) {
 					listener.notifySuccess();
 				}

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -501,4 +502,14 @@ public class DatasetUtils {
 		  return buf.toString();
 		}
 
-}
+    /**
+     * Round a double to 2 decimals
+     * 
+     * @param d
+     *            the double
+     * @return the double rounded to 2 decimals
+     */
+	public static double roundTwoDecimals(double d) {
+    	DecimalFormat twoDForm = new DecimalFormat("#.##");
+	return Double.valueOf(twoDForm.format(d));
+}}

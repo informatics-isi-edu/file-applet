@@ -1,16 +1,13 @@
 package edu.isi.misd.tagfiler.upload;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.TagFilerUploadApplet;
 import edu.isi.misd.tagfiler.client.ClientURLListener;
 import edu.isi.misd.tagfiler.client.ClientURLResponse;
-import edu.isi.misd.tagfiler.client.ConcurrentClientURL;
 import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -28,38 +25,17 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
 public class FileUploadImplementation extends AbstractFileTransferSession
         implements FileUpload, ClientURLListener {
 
-    // tagfiler server URL
-    private final String tagFilerServerURL;
-
     // listener for file upload progress
     private final FileUploadListener fileUploadListener;
-
-    // client used to connect with the tagfiler server
-    private final ConcurrentClientURL client;
-
-    // map containing the checksums of all files to be uploaded.
-    private final Map<String, String> checksumMap = new HashMap<String, String>();
-
-    // total amount of bytes to be transferred
-    private long datasetSize = 0;
 
     // base directory to use
     private String baseDirectory = "";
 
-    // custom tags that are used
-    private final CustomTagMap customTagMap;
-
-    // the session cookie
-    private String cookie = null;
-
     // the applet
     private TagFilerUploadApplet applet = null;
     
-    private String dataset;
-
+    // mutex to block thread execution until all files were uploaded
     private Object lock = new Object();
-
-    private boolean cancel;
 
     /**
      * Constructs a new file upload
@@ -149,6 +125,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         String query = tagFilerServerURL + "/transmitnumber";
         ClientURLResponse response = client.getTransmitNumber(query, cookie);
 
+        if (response == null) {
+        	notifyFailure("Error: NULL response in getting a transmission number for the study.");
+        	return null;
+        }
         synchronized (this) {
             cookie = client.updateSessionCookie(applet, cookie);
         }
@@ -307,6 +287,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
             t1 = System.currentTimeMillis();
             System.out.println("Upload time: " + (t1-t2) + " ms.");
+            System.out.println("Upload rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-t2)) + " MB/s.");
             // then create and tag the dataset url entry
             String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
@@ -324,6 +305,11 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             t2 = System.currentTimeMillis();
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
+            if (response == null) {
+            	notifyFailure("Error: NULL response in creating dataset URL entry.");
+            	success = false;
+            	return success;
+            }
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
             }
@@ -335,8 +321,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         + response.getStatus() + ")");
 		        success = false;
 		        fileUploadListener.notifyFailure(datasetName, response.getStatus(), response.getErrorMessage());
-		        return false;
+		        return success;
             }
+            
+            response.release();
             
             // Register the dataset files
             datasetURLQuery = DatasetUtils
@@ -352,6 +340,11 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             response = client.putFileData(datasetURLQuery, datasetBody, cookie);
             t2 = System.currentTimeMillis();
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
+            if (response == null) {
+            	notifyFailure("Error: NULL response in registering dataset files.");
+            	success = false;
+            	return success;
+            }
             
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);

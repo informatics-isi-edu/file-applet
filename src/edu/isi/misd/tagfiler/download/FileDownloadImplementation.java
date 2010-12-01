@@ -16,7 +16,6 @@ import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.TagFilerDownloadApplet;
 import edu.isi.misd.tagfiler.client.ClientURLListener;
 import edu.isi.misd.tagfiler.client.ClientURLResponse;
-import edu.isi.misd.tagfiler.client.ConcurrentClientURL;
 import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
@@ -32,32 +31,17 @@ import edu.isi.misd.tagfiler.util.ClientUtils;
 public class FileDownloadImplementation extends AbstractFileTransferSession
         implements FileDownload, ClientURLListener {
 
-    // tagfiler server URL
-    private final String tagFilerServerURL;
-
     // listener for file download progress
     private final FileDownloadListener fileDownloadListener;
-
-    // client used to connect with the tagfiler server
-    protected ConcurrentClientURL client;
 
     // list containing the files names to be downloaded.
     private List<String> fileNames = new ArrayList<String>();
 
-    // map containing the checksums of all files to be downloaded.
-    private Map<String, String> checksumMap = new HashMap<String, String>();
-
     // map containing the bytes of all files to be downloaded.
     private Map<String, Long> bytesMap = new HashMap<String, Long>();
 
-    // total amount of bytes to be downloaded
-    private long datasetSize = 0;
-
-    // the dataset transmission number
-    private String controlNumber;
-
-    // custom tags that are used
-    private final CustomTagMap customTagMap;
+    // the download start time
+    private long start;
 
     // the applet
     private TagFilerDownloadApplet applet = null;
@@ -102,13 +86,13 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     /**
      * Returns the list of the file names to be downloaded.
      * 
-     * @param dataset
-     *            the dataset of the files
+     * @param controlNumber
+     *            the controlNumber of the dataset
      */
-    public List<String> getFiles(String dataset) {
-        assert (dataset != null && dataset.length() > 0);
-        controlNumber = dataset;
-    	fileDownloadListener.notifyUpdateStart(controlNumber);
+    public List<String> getFiles(String controlNumber) {
+        assert (controlNumber != null && controlNumber.length() > 0);
+        dataset = controlNumber;
+    	fileDownloadListener.notifyUpdateStart(dataset);
     	boolean success = false;
         String errMsg = null;
 
@@ -128,9 +112,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         }
         finally {
         	if (success) {
-            	fileDownloadListener.notifyUpdateComplete(controlNumber);
+            	fileDownloadListener.notifyUpdateComplete(dataset);
         	} else {
-        		fileDownloadListener.notifyFailure(controlNumber, errMsg);
+        		fileDownloadListener.notifyFailure(dataset, errMsg);
         	}
         }
     	
@@ -146,14 +130,15 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     public boolean downloadFiles(String destDir) {
         assert (destDir != null && destDir.length() > 0);
         try {
-			client.setBaseURL(DatasetUtils.getBaseDownloadUrl(controlNumber, tagFilerServerURL));
+			client.setBaseURL(DatasetUtils.getBaseDownloadUrl(dataset, tagFilerServerURL));
 		} catch (UnsupportedEncodingException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
         boolean success = true;
-        fileDownloadListener.notifyStart(controlNumber, datasetSize);
+        fileDownloadListener.notifyStart(dataset, datasetSize);
+        start = System.currentTimeMillis();
         client.download(fileNames, destDir, checksumMap, bytesMap);
 
         return success;
@@ -198,7 +183,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         			JSONObject fileTags = tagsValues.getJSONObject(i);
         			
                     // get the file name
-                    String file = fileTags.getString("name").substring(controlNumber.length()+1);
+                    String file = fileTags.getString("name").substring(dataset.length()+1);
                     fileNames.add(file);
 
                     // get the bytes
@@ -243,7 +228,12 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = null;
         try {
         	response = client.verifyValidControlNumber(DatasetUtils.getDatasetUrl(controlNumber, tagFilerServerURL), cookie);
-            int status = response.getStatus();
+            if (response == null) {
+            	dataset = controlNumber;
+            	notifyFailure("Error: NULL response in retrieving study " + controlNumber);
+            	return valid;
+            }
+        	int status = response.getStatus();
             if ((status == 200 || status == 303) && response.checkResponseHeaderPattern(
             		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
@@ -285,7 +275,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             e.printStackTrace();
             fileDownloadListener.notifyError(e);
         } finally {
-        	response.release();
+        	if (response != null) {
+            	response.release();
+        	}
         }
         return valid;
     }
@@ -298,7 +290,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     	String tags = DatasetUtils.joinEncode(customTagMap.getTagNames(), ",");
         String query = null;
 		try {
-			query = DatasetUtils.getDatasetTags(controlNumber,
+			query = DatasetUtils.getDatasetTags(dataset,
 			        tagFilerServerURL, tags);
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -306,6 +298,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		}
 		System.out.println("Dataset Query: "+query);
         ClientURLResponse response = client.getTagsValues(query, cookie);
+        if (response == null) {
+        	notifyFailure("Error: NULL response in getting the tag values for the study " + dataset);
+        	return null;
+        }
 
 	cookie = client.updateSessionCookie(applet, cookie);
 
@@ -313,7 +309,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         {
         	// if status is 404, the tag might have been deleted
         	if (response.getStatus() != 404) {
-            	fileDownloadListener.notifyFailure(controlNumber, response.getStatus(), response.getErrorMessage());
+            	fileDownloadListener.notifyFailure(dataset, response.getStatus(), response.getErrorMessage());
         	}
         	response.release();
         	return null;
@@ -334,6 +330,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 			e.printStackTrace();
 		}
 		if (array.length() != 1) {
+        	response.release();
 			return null;
 		}
 		JSONObject obj = null;
@@ -356,7 +353,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     	String tags = "bytes,sha256sum";
         String query = null;
 		try {
-			query = DatasetUtils.getFilesTags(controlNumber,
+			query = DatasetUtils.getFilesTags(dataset,
 			        tagFilerServerURL, tags);
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -365,13 +362,17 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		System.out.println("Files Query: "+query);
         ClientURLResponse response = client.getTagsValues(query, cookie);
 
+        if (response == null) {
+        	notifyFailure("Error: NULL response in getting the files tag values for the study " + dataset);
+        	return null;
+        }
 	cookie = client.updateSessionCookie(applet, cookie);
 
         if (response.getStatus() != 200)
         {
         	// if status is 404, the tag might have been deleted
         	if (response.getStatus() != 404) {
-            	fileDownloadListener.notifyFailure(controlNumber, response.getStatus(), response.getErrorMessage());
+            	fileDownloadListener.notifyFailure(dataset, response.getStatus(), response.getErrorMessage());
         	}
         	response.release();
         	return null;
@@ -440,7 +441,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifyError(String err, Exception e) {
 		// TODO Auto-generated method stub
-		fileDownloadListener.notifyFailure(controlNumber, err);
+		fileDownloadListener.notifyFailure(dataset, err);
 	}
 
 	/**
@@ -451,7 +452,16 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifyFailure(String err) {
 		// TODO Auto-generated method stub
-		fileDownloadListener.notifyFailure(controlNumber, err);
+		boolean notify = false;
+		synchronized (this) {
+			if (!cancel) {
+				cancel = true;
+				notify = true;
+			}
+		}
+		if (notify) {
+			fileDownloadListener.notifyFailure(dataset, err);
+		}
 	}
 
 	/**
@@ -471,7 +481,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifySuccess() {
 		// TODO Auto-generated method stub
-		fileDownloadListener.notifySuccess(controlNumber);
+        long t1 = System.currentTimeMillis();
+        System.out.println("Download time: " + (t1-start) + " ms.");
+        System.out.println("Download rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-start)) + " MB/s.");
+		fileDownloadListener.notifySuccess(dataset);
 	}
 
 	/**
