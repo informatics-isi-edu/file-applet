@@ -59,6 +59,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
     private Object lock = new Object();
 
+    private boolean cancel;
+
     /**
      * Constructs a new file upload
      * 
@@ -289,11 +291,22 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                             + datasetName + "'...");
 
             // upload all the files
+            long t1 = System.currentTimeMillis();
+            long t2 = 0;
             synchronized (lock) {
         	    success = postFileDataHelper(files, datasetName);
+                t2 = System.currentTimeMillis();
+                System.out.println("Checksum time: " + (t2-t1) + " ms.");
         	    lock.wait();
             }
+            
+            if (cancel) {
+            	success = false;
+            	return success;
+            }
 
+            t1 = System.currentTimeMillis();
+            System.out.println("Upload time: " + (t1-t2) + " ms.");
             // then create and tag the dataset url entry
             String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
@@ -306,7 +319,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     + "\nBody:" + datasetBody);
             
             applet.updateStatus(TagFilerProperties.getProperty("tagfiler.label.CompleteUploadStatus"));
+            t1 = System.currentTimeMillis();
             response = client.postFileData(datasetURLQuery, datasetBody, cookie);
+            t2 = System.currentTimeMillis();
+            System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
@@ -332,7 +348,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
                     + "\nBody:" + datasetBody);
             
+            t1 = System.currentTimeMillis();
             response = client.putFileData(datasetURLQuery, datasetBody, cookie);
+            t2 = System.currentTimeMillis();
+            System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
@@ -354,7 +373,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             e.printStackTrace();
             fileUploadListener.notifyError(e);
         } finally {
-        	response.release();
+        	if (response != null) {
+            	response.release();
+        	}
         }
         return success;
     }
@@ -444,7 +465,17 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifyFailure(String err) {
 		// TODO Auto-generated method stub
-		fileUploadListener.notifyFailure(dataset, err);
+		boolean notify = false;
+		synchronized (lock) {
+			if (!cancel) {
+				cancel = true;
+				notify = true;
+				lock.notifyAll();
+			}
+		}
+		if (notify) {
+			fileUploadListener.notifyFailure(dataset, err);
+		}
 	}
 
 	/**
