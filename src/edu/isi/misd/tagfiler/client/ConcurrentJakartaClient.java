@@ -668,7 +668,13 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
             int index = localFile.lastIndexOf(File.separatorChar);
             if (index != -1) {
                 dir = new File(file.getDownloadDir() + File.separatorChar + localFile.substring(0, index));
-                if (!dir.isDirectory() && !dir.mkdirs()) {
+                boolean OK = true;
+                synchronized (this) {
+                    if (!dir.isDirectory() && !dir.mkdirs()) {
+                    	OK = false;
+                    }
+                }
+                if (!OK) {
                 	notifyFailure("Can not make directory \"" + dir + "\".");
                 	return;
                 }

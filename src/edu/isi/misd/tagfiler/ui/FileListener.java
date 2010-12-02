@@ -1,7 +1,5 @@
 package edu.isi.misd.tagfiler.ui;
 
-import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
-
 /**
  * Listener interface for a class that wants to be notified of events from the
  * {@link edu.isi.misd.tagfiler.upload.FileUpload} class.
@@ -95,4 +93,9 @@ public interface FileListener {
      */
     public void notifyFatal(Throwable e);
     
+    
+    /**
+     * Get the number of uploaded/downloaded files
+     */
+    public int getFilesCompleted();
 }

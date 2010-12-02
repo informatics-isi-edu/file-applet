@@ -104,14 +104,23 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     // the mode for transfering the file
     protected boolean allowChunks;
+    
+    // Window for JavaScript calls
+    protected JSObject window;
 
     /**
      * Loads security settings, common parameters, session cookie
      */
-    public void init() {
+	public void init() {
 
     	// load any security settings
         TagFilerSecurity.loadSecuritySettings();
+        
+        window = (JSObject) JSObject.getWindow(this);
+        if (window == null) {
+            throw new IllegalArgumentException("NULL JavaScript window");
+        }
+
 
         sessionCookie = ClientUtils.getCookieFromBrowser(this,
                 TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
@@ -230,8 +239,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public void updateStatus(String status) {
         try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
-
             window.eval("setStatus('" + status + "')");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
@@ -247,7 +254,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     protected void drawProgressBar(long percent) {
         try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
             window.eval("drawProgressBar(" + percent + ")");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
@@ -264,7 +270,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     public String eval(String function) {
     	String res = "";
         try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
             res = (String) window.eval(function);
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
@@ -284,7 +289,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     public void eval(String function, String arg) {
         try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
             window.eval(function + "('" + arg + "')");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
@@ -300,7 +304,6 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
     protected void setEnabled(String button) {
         try {
-            JSObject window = (JSObject) JSObject.getWindow(this);
             window.eval("setEnabled('" + button + "')");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
@@ -342,11 +345,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
         this.destroy();
 
         try {
-            JSObject window = (JSObject) JSObject.getWindow(
-                    AbstractTagFilerApplet.this).getMember("location");
-
-            window.call("reload", new Boolean[] { true });
-
+            ((JSObject) window.getMember("location")).call("reload", new Boolean[] { true });
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
             JOptionPane.showMessageDialog(this.getComponent(), e.getMessage(),
@@ -390,5 +389,14 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     public boolean allowChunksTransfering() {
     	return allowChunks;
     }
-    
+
+    /**
+     * Getter method
+     * 
+     * @return the mode for transferring the file
+     */
+	public JSObject getWindow() {
+		return window;
+	}
+
 }

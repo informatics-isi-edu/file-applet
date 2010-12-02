@@ -1,6 +1,5 @@
 package edu.isi.misd.tagfiler.client;
 
-import java.applet.Applet;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +45,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.util.EntityUtils;
 
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 
 /**
@@ -318,7 +318,7 @@ public class JakartaClient  implements ClientURL {
      *            the current cookie
      * @return the curernt cookie or a new replacement
      */
-    public String updateSessionCookie(Applet applet, String cookie) {
+    public String updateSessionCookie(AbstractTagFilerApplet applet, String cookie) {
     	for (Cookie candidate : httpclient.getCookieStore().getCookies()) {
         	if (candidate.getName().equals("webauthn")) {
         		String value = getCookieValue(candidate);

@@ -274,6 +274,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             long t1 = System.currentTimeMillis();
             long t2 = 0;
             synchronized (lock) {
+            	lastCookieUpdate = System.currentTimeMillis();
         	    success = postFileDataHelper(files, datasetName);
                 t2 = System.currentTimeMillis();
                 System.out.println("Checksum time: " + (t2-t1) + " ms.");
@@ -498,7 +499,11 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	*/
 	public void updateSessionCookie() {
 		// TODO Auto-generated method stub
-        cookie = client.updateSessionCookie(applet, cookie);
+		long t = System.currentTimeMillis();
+		if ((t - lastCookieUpdate) >= cookieUpdatePeriod) {
+			lastCookieUpdate = t;
+	        cookie = client.updateSessionCookie(applet, cookie);
+		}
 	}
 
 }

@@ -16,11 +16,13 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
         protected int filesCompleted = 0;
 
-        protected int totalFiles = 0;
+		protected int totalFiles = 0;
 
         protected long totalBytes = 0;
 
         protected long bytesTransferred = 0;
+        
+        protected long lastPercent;
 
         /**
          * Called when a failure occurred.
@@ -96,13 +98,16 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
                  bytesTransferred++;
             }
             long percent = bytesTransferred * 100 / totalBytes;
-            applet.drawProgressBar(percent);
+            if (percent > lastPercent) {
+            	lastPercent = percent;
+                applet.drawProgressBar(percent);
 
-            if (filesCompleted < totalFiles) {
-                applet.updateStatus(TagFilerProperties.getProperty(
-                		property,
-                        new String[] { Integer.toString(filesCompleted + 1),
-                                Integer.toString(totalFiles) }));
+                if (filesCompleted < totalFiles) {
+                    applet.updateStatus(TagFilerProperties.getProperty(
+                    		property,
+                            new String[] { Integer.toString(filesCompleted + 1),
+                                    Integer.toString(totalFiles) }));
+                }
             }
         }
 
@@ -135,4 +140,18 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
         }
         
+        /**
+         * Called to update a status message
+         */
+        public void notifyStatus(AbstractTagFilerApplet applet, String message) {
+        	applet.updateStatus(message);
+        }
+
+        /**
+         * Getter method
+         */
+        public int getFilesCompleted() {
+			return filesCompleted;
+		}
+
 }

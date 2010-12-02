@@ -1,9 +1,8 @@
 package edu.isi.misd.tagfiler.util;
 
-import java.applet.Applet;
-
 import netscape.javascript.JSObject;
 
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.client.ClientURL;
 import edu.isi.misd.tagfiler.client.JakartaClient;
 
@@ -47,14 +46,14 @@ public class ClientUtils {
      *            name of the cookie to retrieve
      * @return the cookie if it was found, or null if it doesn't exist
      */
-    public static String getCookieFromBrowser(Applet applet, String cookieName) {
+    public static String getCookieFromBrowser(AbstractTagFilerApplet applet, String cookieName) {
         assert (applet != null);
         assert (cookieName != null && cookieName.length() > 0);
 
         String cookie = null;
 
         // this will retrieve all the cookies, or possibly null if none exist
-        Object jsObject = ((JSObject) ((JSObject) JSObject.getWindow(applet))
+        Object jsObject = ((JSObject) applet.getWindow()
                 .getMember(DOCUMENT_MEMBER_NAME)).getMember(COOKIE_MEMBER_NAME);
         if (jsObject instanceof JSObject) {
             // this typing seems to work on Firefox on Fedora...
@@ -65,7 +64,7 @@ public class ClientUtils {
         }
         
         if (cookie == null) {
-        	cookie = (String) JSObject.getWindow(applet).eval("getCookie('"+cookieName+"')");
+        	cookie = (String) applet.getWindow().eval("getCookie('"+cookieName+"')");
         } else {
             final String search = cookieName + "=";
             int offset = cookie.indexOf(search);
@@ -90,11 +89,11 @@ public class ClientUtils {
      * @param cookie
      *            the cookie to set
      */
-    public static void setCookieInBrowser(Applet applet, String cookie) {
+    public static void setCookieInBrowser(AbstractTagFilerApplet applet, String cookie) {
         // TODO: I think this will wipe out any other cookies for this domain.
         // Perhaps we should append/replace.
 	String jstext = "setCookie(\"webauthn\", \"" + cookie + "\")";
-        JSObject.getWindow(applet).eval(jstext);
+	applet.getWindow().eval(jstext);
     }
 
 }

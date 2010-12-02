@@ -138,7 +138,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         boolean success = true;
         fileDownloadListener.notifyStart(dataset, datasetSize);
-        start = System.currentTimeMillis();
+        lastCookieUpdate = start = System.currentTimeMillis();
         client.download(fileNames, destDir, checksumMap, bytesMap);
 
         return success;
@@ -473,6 +473,12 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	public void notifyFileTransfered(long size) {
 		// TODO Auto-generated method stub
 		fileDownloadListener.notifyChunkTransfered(true, size);
+		if (fileDownloadListener.getFilesCompleted() == fileNames.size()) {
+	        long t1 = System.currentTimeMillis();
+	        System.out.println("Download time: " + (t1-start) + " ms.");
+	        System.out.println("Download rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-start)) + " MB/s.");
+	        fileDownloadListener.notifyChecksumProcessing();
+		}
 	}
 
 	/**
@@ -481,9 +487,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifySuccess() {
 		// TODO Auto-generated method stub
-        long t1 = System.currentTimeMillis();
-        System.out.println("Download time: " + (t1-start) + " ms.");
-        System.out.println("Download rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-start)) + " MB/s.");
 		fileDownloadListener.notifySuccess(dataset);
 	}
 
@@ -492,7 +495,11 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	*/
 	public void updateSessionCookie() {
 		// TODO Auto-generated method stub
-        cookie = client.updateSessionCookie(applet, cookie);
+		long t = System.currentTimeMillis();
+		if ((t - lastCookieUpdate) >= cookieUpdatePeriod) {
+			lastCookieUpdate = t;
+	        cookie = client.updateSessionCookie(applet, cookie);
+		}
 	}
 }
 

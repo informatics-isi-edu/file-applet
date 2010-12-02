@@ -1,8 +1,9 @@
 package edu.isi.misd.tagfiler.client;
 
-import java.applet.Applet;
 import java.io.File;
 import java.io.InputStream;
+
+import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 
 /**
  * Client Interface to handle Web Services
@@ -128,7 +129,7 @@ public interface ClientURL {
      *            the current cookie
      * @return the curernt cookie or a new replacement
      */
-    public String updateSessionCookie(Applet applet, String cookie);
+    public String updateSessionCookie(AbstractTagFilerApplet applet, String cookie);
     
     /**
      * Retrieves a given cookie from a client response

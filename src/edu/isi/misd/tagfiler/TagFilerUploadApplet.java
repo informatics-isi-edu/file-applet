@@ -204,6 +204,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
             totalFiles = filesList.size();
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
+            lastPercent = 0;
 
             updateStatus(TagFilerProperties
                     .getProperty(

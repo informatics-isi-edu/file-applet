@@ -36,6 +36,12 @@ public class AbstractFileTransferSession implements FileTransfer {
     // flag to mark a failure
     protected boolean cancel;
 
+    // the time when the last cookie was updated
+    protected long lastCookieUpdate;
+
+    // the time when the last cookie was updated
+    protected long cookieUpdatePeriod = 1*60*1000;
+
     /**
      * Updates the session cookie
      */
