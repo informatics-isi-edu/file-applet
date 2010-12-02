@@ -98,7 +98,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
                  bytesTransferred++;
             }
             long percent = bytesTransferred * 100 / totalBytes;
-            if (percent > lastPercent) {
+            if (percent > lastPercent || file) {
             	lastPercent = percent;
                 applet.drawProgressBar(percent);
 
