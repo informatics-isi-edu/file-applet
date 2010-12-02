@@ -274,7 +274,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             long t1 = System.currentTimeMillis();
             long t2 = 0;
             synchronized (lock) {
-            	lastCookieUpdate = System.currentTimeMillis();
         	    success = postFileDataHelper(files, datasetName);
                 t2 = System.currentTimeMillis();
                 System.out.println("Checksum time: " + (t2-t1) + " ms.");

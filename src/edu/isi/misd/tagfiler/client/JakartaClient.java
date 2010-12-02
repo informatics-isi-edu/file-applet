@@ -140,6 +140,8 @@ public class JakartaClient  implements ClientURL {
         ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
 
         httpclient = new DefaultHttpClient(cm, params);
+    	BasicCookieStore cookieStore = new BasicCookieStore();
+    	httpclient.setCookieStore(cookieStore);
 	}
 
     /**
@@ -481,8 +483,7 @@ public class JakartaClient  implements ClientURL {
      */
     private void setCookie(String cookie, AbstractHttpMessage request) {
     	if (cookie != null) {
-        	BasicCookieStore cookieStore = new BasicCookieStore();
-        	httpclient.setCookieStore(cookieStore);
+    		httpclient.getCookieStore().clear();
         	request.setHeader("Cookie", "webauthn="+cookie);
     	}
     }

@@ -138,7 +138,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         boolean success = true;
         fileDownloadListener.notifyStart(dataset, datasetSize);
-        lastCookieUpdate = start = System.currentTimeMillis();
+        start = System.currentTimeMillis();
         client.download(fileNames, destDir, checksumMap, bytesMap);
 
         return success;
