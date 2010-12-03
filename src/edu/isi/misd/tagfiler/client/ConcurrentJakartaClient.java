@@ -15,10 +15,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.isi.misd.tagfiler.exception.FatalException;
@@ -718,7 +716,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				
                 // verify checksum if download file completed
 				if (fi.update(file.getLength()) == 0) {
-					thread.checkEOF(file.getName());
+					thread.setEOF(file.getName());
 					synchronized (ConcurrentJakartaClient.this) {
 						if (totalFiles == 0) {
 							terminateThreads();
@@ -1106,12 +1104,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				} else {
 					sendDownload(file, this);
 				}
-				if (verifyTransfer) {
-					checkEOF();
-				}
 			}
 			if (verifyTransfer) {
-				checkEOF();
 				workerWrapper.deregisterThread();
 			}
 		}
@@ -1133,7 +1127,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				checksum.put(name, checkSum);
 			}
 			downloadDir.put(name, outputDir);
-			workerWrapper.addActiveFile(name);
 		}
 		
 	    /**
@@ -1149,42 +1142,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				filesHandle.remove(name);
 				cksum = checksum.remove(name);
 				dir = downloadDir.remove(name);
+				if (cksum != null) {
+					verifyCheckSum(name, dir, cksum);
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-			boolean isEOF = workerWrapper.setEOF(name);
-			if (isEOF && cksum != null) {
-				// checksum is needed
-				verifyCheckSum(name, dir, cksum);
-			}
-		}
-		
-	    /**
-	     * Check the termination of the download process
-	     */
-		private void checkEOF() {
-			if (filesHandle.size() == 0) {
-				return;
-			}
-			synchronized (workerWrapper) {
-				Set<String> files = workerWrapper.getEOF();
-				Set<String> openFiles = filesHandle.keySet();
-				files.retainAll(openFiles);
-				for (String file : files) {
-					setEOF(file);
-				}
-			}
-		}
-		
-	    /**
-	     * Check the termination of downloading a file
-	     * @param file
-	     *            the file name
-	     */
-		private void checkEOF(String file) {
-			synchronized (workerWrapper) {
-				setEOF(file);
 			}
 		}
 		
@@ -1215,62 +1178,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		
 	    // the list of threads performing HTTP requests
 		private ArrayList<Thread> threads = new ArrayList<Thread>();
-		
-		// map for the active files
-		private HashMap<String, Integer> activeFiles = new HashMap<String, Integer>();
-		
-	    /**
-	     * Mark a new thread that handles the download of a file
-	     * @param name
-	     *            the file name
-	     */
-		synchronized private void addActiveFile(String name) {
-			Integer value = activeFiles.get(name);
-			if (value != null) {
-				if (value != -1) {
-					activeFiles.put(name, value+1);
-				} else {
-					activeFiles.remove(name);
-				}
-			} else {
-				activeFiles.put(name, 1);
-			}
-		}
-		
-	    /**
-	     * Mark the termination of downloading a file
-	     * @param name
-	     *            the file name
-	     */
-		private boolean setEOF(String name) {
-			Integer value = activeFiles.get(name);
-			if (value > 1) {
-				activeFiles.put(name, -value+1);
-				return false;
-			} else if (value == 1 || value == -1) {
-				activeFiles.remove(name);
-				return true;
-			} else {
-				activeFiles.put(name, value+1);
-				return false;
-			}
-		}
-		
-	    /**
-	     * Get the files that terminate the download process
-	     * @param name
-	     *            the file name
-	     */
-		private Set<String> getEOF() {
-			HashSet<String> ret = new HashSet<String>();
-			for (String name : activeFiles.keySet()) {
-				if (activeFiles.get(name) < 0) {
-					ret.add(name);
-				}
-			}
-			
-			return ret;
-		}
 		
 	    /**
 	     * Put a FileChunk to be processed

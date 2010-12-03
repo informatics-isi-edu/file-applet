@@ -132,15 +132,6 @@ public interface ClientURL {
     public String updateSessionCookie(AbstractTagFilerApplet applet, String cookie);
     
     /**
-     * Retrieves a given cookie from a client response
-     * 
-     * @param cookieName
-     *            name of the cookie
-     * @return the new cookie of the same name, or null if it wasn't found
-     */
-    public String getCookieFromClientResponse(String cookieName);
-    
-    /**
      * Uploads a set of given files with a specified dataset name.
      * 
      * @param url
@@ -197,11 +188,5 @@ public interface ClientURL {
      * @return the HTTP Response
      */
     public ClientURLResponse postFile(String url, InputStream inputStream, long length, long first, long fileLength, String cookie);
-    
-    /**
-     * Set the chunked encoding size
-     * 
-     */
-    public void setChunkedEncodingSize(int size);
     
 }

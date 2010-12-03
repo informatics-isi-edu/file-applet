@@ -170,7 +170,7 @@ public class JakartaClient  implements ClientURL {
 			e1.printStackTrace();
 		}
 		httppost.setEntity(entity);
-		return execute(httppost);
+		return execute(httppost, null);
     }
     
     /**
@@ -184,10 +184,9 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse verifyValidControlNumber(String url, String cookie) {
     	HttpHead httphead = new HttpHead(url);
-    	setCookie(cookie, httphead);
         httphead.setHeader("Accept", "text/uri-list");
         httphead.setHeader("Content-Type", "application/octet-stream");
-		return execute(httphead);
+		return execute(httphead, cookie);
     }
     
     /**
@@ -201,10 +200,9 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse getFileLength(String url, String cookie) {
     	HttpHead httphead = new HttpHead(url);
-    	setCookie(cookie, httphead);
         httphead.setHeader("Accept", "text/uri-list");
         httphead.setHeader("Content-Type", "application/octet-stream");
-		return execute(httphead);
+		return execute(httphead, cookie);
     }
     
     /**
@@ -218,10 +216,9 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse getDataSet(String url, String cookie) {
 		HttpGet httpget = new HttpGet(url);
-    	setCookie(cookie, httpget);
     	httpget.setHeader("Accept", "text/uri-list");
     	httpget.setHeader("Content-Type", "application/octet-stream");
-		return execute(httpget);
+		return execute(httpget, cookie);
 	}
     
     /**
@@ -235,9 +232,8 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse getTagValue(String url, String cookie) {
 		HttpGet httpget = new HttpGet(url);
-    	setCookie(cookie, httpget);
     	httpget.setHeader("Content-Type", "application/octet-stream");
-		return execute(httpget);
+		return execute(httpget, cookie);
 	}
     
     /**
@@ -251,9 +247,8 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse getTagsValues(String url, String cookie) {
 		HttpGet httpget = new HttpGet(url);
-    	setCookie(cookie, httpget);
     	httpget.setHeader("Accept", "application/json");
-		return execute(httpget);
+		return execute(httpget, cookie);
 	}
     
     /**
@@ -267,9 +262,8 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse downloadFile(String url, String cookie) {
 		HttpGet httpget = new HttpGet(url);
-    	setCookie(cookie, httpget);
     	httpget.setHeader("Content-Type", "application/octet-stream");
-		return execute(httpget);
+		return execute(httpget, cookie);
 	}
     
     /**
@@ -287,10 +281,9 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse downloadFile(String url,  long length, long first, String cookie) {
 		HttpGet httpget = new HttpGet(url);
-    	setCookie(cookie, httpget);
     	httpget.setHeader("Content-Type", "application/octet-stream");
     	httpget.setHeader("Range", "bytes="+first+"-"+(first+length-1));
-		return execute(httpget);
+		return execute(httpget, cookie);
 	}
     
     /**
@@ -304,9 +297,8 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse getTransmitNumber(String url, String cookie) {
 		HttpPost httppost = new HttpPost(url);
-    	setCookie(cookie, httppost);
 		httppost.setHeader("Content-Type", "application/octet-stream");
-		return execute(httppost);
+		return execute(httppost, cookie);
 	}
     
     /**
@@ -336,22 +328,6 @@ public class JakartaClient  implements ClientURL {
 	}
     
     /**
-     * Retrieves a given cookie from a client response
-     * 
-     * @param cookieName
-     *            name of the cookie
-     * @return the new cookie of the same name, or null if it wasn't found
-     */
-    public String getCookieFromClientResponse(String cookieName) {
-        for (Cookie cookie : httpclient.getCookieStore().getCookies()) {
-        	if (cookie.getName().equals(cookieName)) {
-        		return getCookieValue(cookie);
-        	}
-        }
-		return null;
-	}
-    
-    /**
      * Uploads a set of given files with a specified dataset name.
      * 
      * @param url
@@ -364,7 +340,6 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse postFileData(String url, String datasetURLBody, String cookie) {
 		HttpPost httppost = new HttpPost(url);
-    	setCookie(cookie, httppost);
 		httppost.setHeader("Content-Type", "application/x-www-form-urlencoded");
 		try {
 			httppost.setEntity(new StringEntity(datasetURLBody));
@@ -372,7 +347,7 @@ public class JakartaClient  implements ClientURL {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return execute(httppost);
+		return execute(httppost, cookie);
 	}
     
     /**
@@ -388,7 +363,6 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse putFileData(String url, String datasetURLBody, String cookie) {
 		HttpPut httpput = new HttpPut(url);
-    	setCookie(cookie, httpput);
     	httpput.setHeader("Content-Type", "application/x-www-form-urlencoded");
 		try {
 			httpput.setEntity(new StringEntity(datasetURLBody));
@@ -396,7 +370,7 @@ public class JakartaClient  implements ClientURL {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return execute(httpput);
+		return execute(httpput, cookie);
 	}
     
     /**
@@ -412,12 +386,11 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse postFile(String url, File file, String cookie) {
 		HttpPut httpput = new HttpPut(url);
-    	setCookie(cookie, httpput);
     	httpput.setHeader("Content-Type", "application/octet-stream");
     	FileEntity fileEntity = new FileEntity(file, "binary/octet-stream");
     	fileEntity.setChunked(false);
     	httpput.setEntity(fileEntity);
-		return execute(httpput);
+		return execute(httpput, cookie);
 	}
     
     /**
@@ -439,7 +412,6 @@ public class JakartaClient  implements ClientURL {
      */
     public ClientURLResponse postFile(String url, InputStream inputStream, long length, long first, long fileLength, String cookie) {
 		HttpPut httpput = new HttpPut(url);
-    	setCookie(cookie, httpput);
     	httpput.setHeader("Content-Type", "application/octet-stream");
     	if (first != 0) {
         	httpput.setHeader("Content-Range",  "bytes "+first+"-"+(first+length-1)+"/"+fileLength);
@@ -447,10 +419,11 @@ public class JakartaClient  implements ClientURL {
     	InputStreamEntity inputStreamEntity = new InputStreamEntity(inputStream, length);
     	inputStreamEntity.setChunked(false);
     	httpput.setEntity(inputStreamEntity);
-		return execute(httpput);
+		return execute(httpput, cookie);
 	}
     
-    private ClientURLResponse execute(HttpUriRequest request) {
+    private ClientURLResponse execute(HttpUriRequest request, String cookie) {
+    	setCookie(cookie, request);
     	ClientURLResponse response = null;
 		try {
 			response = new JakartaClientResponse(httpclient.execute(request));
@@ -466,14 +439,6 @@ public class JakartaClient  implements ClientURL {
     }
     
     /**
-     * Set the chunked encoding size
-     * It is set in PostFile through the FileEntity
-     * 
-     */
-    public void setChunkedEncodingSize(int size) {
-	}
-    
-    /**
      * Set the cookie for the request
      * 
      * @param cookie
@@ -481,7 +446,7 @@ public class JakartaClient  implements ClientURL {
      * @param request
      *            the request to be sent
      */
-    private void setCookie(String cookie, AbstractHttpMessage request) {
+    private void setCookie(String cookie, HttpUriRequest request) {
     	if (cookie != null) {
     		httpclient.getCookieStore().clear();
         	request.setHeader("Cookie", "webauthn="+cookie);
