@@ -33,6 +33,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
@@ -417,6 +418,35 @@ public class JakartaClient  implements ClientURL {
         	httpput.setHeader("Content-Range",  "bytes "+first+"-"+(first+length-1)+"/"+fileLength);
     	}
     	InputStreamEntity inputStreamEntity = new InputStreamEntity(inputStream, length);
+    	inputStreamEntity.setChunked(false);
+    	httpput.setEntity(inputStreamEntity);
+		return execute(httpput, cookie);
+	}
+    
+    /**
+     * Uploads a file block.
+     * 
+     * @param url
+     *            the query url
+     * @param inputStream
+     *            the InputStream where to read from
+     * @param length
+     *            the number of bytes to read
+     * @param first
+     *            the first byte to read
+     * @param fileLength
+     *            the file length
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse postFile(String url, byte[] entity, long length, long first, long fileLength, String cookie) {
+		HttpPut httpput = new HttpPut(url);
+    	httpput.setHeader("Content-Type", "application/octet-stream");
+    	if (first != 0) {
+        	httpput.setHeader("Content-Range",  "bytes "+first+"-"+(first+length-1)+"/"+fileLength);
+    	}
+    	ByteArrayEntity inputStreamEntity = new ByteArrayEntity(entity);
     	inputStreamEntity.setChunked(false);
     	httpput.setEntity(inputStreamEntity);
 		return execute(httpput, cookie);

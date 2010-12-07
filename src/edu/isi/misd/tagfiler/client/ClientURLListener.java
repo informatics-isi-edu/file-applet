@@ -62,14 +62,9 @@ public interface ClientURLListener {
 	public void updateSessionCookie();
 	
     /**
-     * Get the URL parameters for uploads/downloads, if any
-     * In DIRC necessary for Transmission Number and checksum
-     * 
-     * @param file
-     *            the file to be uploaded/downloaded
-     * @return the URL parameters or null if None
+     * Get the dataset name
+     * @return the dataset name
      */
-	public String getURLParameters(String file);
-	
+	public String getDataset();
 
 }

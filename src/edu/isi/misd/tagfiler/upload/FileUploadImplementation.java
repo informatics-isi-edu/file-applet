@@ -12,7 +12,6 @@ import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
-import edu.isi.misd.tagfiler.util.LocalFileChecksum;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
@@ -186,60 +185,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     }
 
     /**
-     * Convenience method for computing checksums and totaling the file transfer
-     * size.
-     * 
-     * @param files
-     *            list of the files to transfer.
-     * @throws FatalException
-     *             if a fatal exception occurs when computing checksums
-     */
-    private void buildTotalAndChecksum(List<String> files)
-            throws FatalException {
-        assert (files != null);
-
-        checksumMap.clear();
-    }
-
-    /**
-     * Helper method for computing checksums and totaling the file transfer
-     * size.
-     * 
-     * @param files
-     *            list of the files to transfer.
-     * @throws FatalException
-     *             if a fatal error occurs when computing the checksums.
-     */
-    private void buildChecksumHelper(String filename)
-            throws FatalException {
-        assert (filename != null);
-
-        File file = null;
-        String checksum = null;
-        long fileSize = 0;
-
-        file = new File(filename);
-        if (file.exists() && file.canRead()) {
-
-            if (file.isFile()) {
-                fileSize = file.length();
-                checksum = LocalFileChecksum.computeFileChecksum(file);
-                checksumMap.put(filename, checksum);
-                fileUploadListener.notifyLogMessage("File=" + filename
-                        + ", size=" + fileSize + ", checksum=" + checksum);
-            } else if (file.isDirectory()) {
-                // do nothing
-            } else {
-                fileUploadListener.notifyLogMessage("File '" + filename
-                        + "' is not a regular file -- skipping.");
-            }
-        } else {
-            fileUploadListener.notifyLogMessage("File '" + filename
-                    + "' is not readible or does not exist.");
-        }
-    }
-
-    /**
      * Uploads a set of given files with a specified dataset name.
      * 
      * @param files
@@ -261,8 +206,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 .notifyLogMessage("Computing size and checksum of files...");
         try {
         	buildTotalSize(files);
-            fileUploadListener.notifyStart(datasetName, datasetSize);
-        	buildTotalAndChecksum(files);
+            fileUploadListener.notifyStart(datasetName, 2*datasetSize);
             fileUploadListener.notifyLogMessage(datasetSize
                     + " total bytes will be transferred");
 
@@ -389,9 +333,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         assert (files != null);
         assert (datasetName != null && datasetName.length() > 0);
 
-        for (String fileName : files) {
-        	buildChecksumHelper(fileName);
-        }
         client.setBaseURL(DatasetUtils.getBaseUploadQuery(datasetName, tagFilerServerURL));
         client.upload(files, baseDirectory);
         return true;
@@ -405,25 +346,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	public String getCookie() {
 		// TODO Auto-generated method stub
 		return cookie;
-	}
-
-	/**
-	 * Get the URL parameters for uploads/downloads, if any
-	 * In DIRC necessary for Transmission Number and checksum
-	 * 
-	 * @param file
-	 *            the file to be uploaded/downloaded
-	 * @return the URL parameters or null if None
-	 */
-	public String getURLParameters(String file) {
-		// TODO Auto-generated method stub
-		try {
-			return DatasetUtils.getUploadQuerySuffix(dataset, checksumMap.get(file));
-		} catch (FatalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
 	}
 
 	/**

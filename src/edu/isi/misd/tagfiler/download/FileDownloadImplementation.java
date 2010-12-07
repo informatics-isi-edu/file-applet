@@ -40,6 +40,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     // map containing the bytes of all files to be downloaded.
     private Map<String, Long> bytesMap = new HashMap<String, Long>();
 
+    // map containing the checksums of all files to be uploaded/downloaded.
+    protected Map<String, String> checksumMap = new HashMap<String, String>();
+
     // the download start time
     private long start;
 
@@ -137,7 +140,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		}
 
         boolean success = true;
-        fileDownloadListener.notifyStart(dataset, datasetSize);
+        fileDownloadListener.notifyStart(dataset, 2*datasetSize);
         start = System.currentTimeMillis();
         client.download(fileNames, destDir, checksumMap, bytesMap);
 
@@ -408,19 +411,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	}
 
 	/**
-	 * Get the URL parameters for uploads/downloads, if any
-	 * In DIRC necessary for Transmission Number and checksum
-	 * 
-	 * @param file
-	 *            the file to be uploaded/downloaded
-	 * @return the URL parameters or null if None
-	 */
-	public String getURLParameters(String file) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
 	 * Callback to notify a chunk block transfer completion during the upload/download process
 	 * 
 	 * @param size
@@ -477,7 +467,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	        long t1 = System.currentTimeMillis();
 	        System.out.println("Download time: " + (t1-start) + " ms.");
 	        System.out.println("Download rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-start)) + " MB/s.");
-	        fileDownloadListener.notifyChecksumProcessing();
 		}
 	}
 

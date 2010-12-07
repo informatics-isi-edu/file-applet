@@ -511,5 +511,22 @@ public class DatasetUtils {
      */
 	public static double roundTwoDecimals(double d) {
     	DecimalFormat twoDForm = new DecimalFormat("#.##");
-	return Double.valueOf(twoDForm.format(d));
-}}
+    	return Double.valueOf(twoDForm.format(d));
+	}
+	
+    /**
+     * Convert a digest value to a hexa string
+     * 
+     * @param cksum
+     *            the byte array of the digest value
+     * @return the hexa string of the digest value
+     */
+	public static String hexChecksum(byte[] cksum) {
+	     String result = "";
+	     for (int i=0; i < cksum.length; i++) {
+	       result +=
+	          Integer.toString( ( cksum[i] & 0xff ) + 0x100, 16).substring( 1 );
+	      }
+	     return result;
+	}
+}

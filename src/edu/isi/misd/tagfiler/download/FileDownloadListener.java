@@ -47,8 +47,4 @@ public interface FileDownloadListener extends FileListener {
      */
     public void notifyFileRetrieveComplete(String filename);
 
-    /**
-     * Called when a fatal error occurred
-     */
-	public void notifyChecksumProcessing();
 }

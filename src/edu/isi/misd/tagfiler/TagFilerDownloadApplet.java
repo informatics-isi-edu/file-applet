@@ -319,14 +319,6 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
         public void notifyFatal(Throwable e) {
         	super.notifyFatal(TagFilerDownloadApplet.this, "tagfiler.message.download.Error", e);
         }
-        
-        /**
-         * Called when a fatal error occurred
-         */
-        public void notifyChecksumProcessing() {
-        	super.notifyStatus(TagFilerDownloadApplet.this, 
-        			TagFilerProperties.getProperty("tagfiler.label.CompleteDownloadStatus"));
-        }
     }
 
     /**

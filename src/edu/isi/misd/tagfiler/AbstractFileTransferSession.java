@@ -1,8 +1,5 @@
 package edu.isi.misd.tagfiler;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import edu.isi.misd.tagfiler.client.ConcurrentClientURL;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 
@@ -20,9 +17,6 @@ public class AbstractFileTransferSession implements FileTransfer {
 
     // client used to connect with the tagfiler server
     protected ConcurrentClientURL client;
-
-    // map containing the checksums of all files to be uploaded/downloaded.
-    protected Map<String, String> checksumMap = new HashMap<String, String>();
 
     // total amount of bytes to be uploaded/downloaded
     protected long datasetSize = 0;
@@ -55,4 +49,9 @@ public class AbstractFileTransferSession implements FileTransfer {
     public synchronized String getSessionCookie() {
         return cookie;
     }
+
+	public String getDataset() {
+		return dataset;
+	}
+
 }
