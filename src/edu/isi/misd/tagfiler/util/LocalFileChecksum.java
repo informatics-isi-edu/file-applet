@@ -33,7 +33,7 @@ public final class LocalFileChecksum {
      * @thows FatalException if the checksum cannot be constructed.
      */
     public static String computeFileChecksum(File file) throws FatalException {
-        assert (file != null);
+        if (file == null) throw new IllegalArgumentException("file");
 
         String checksum = null;
 

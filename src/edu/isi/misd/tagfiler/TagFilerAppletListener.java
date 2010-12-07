@@ -28,7 +28,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
          * Called when a failure occurred.
          */
         public void notifyFailure(AbstractTagFilerApplet applet, String datasetFailure, String property, String datasetName, int code, String errorMessage) {
-            assert (datasetName != null && datasetName.length() > 0);
+            if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
             String message = TagFilerProperties
                     .getProperty(datasetFailure);
             if (code != -1) {
@@ -55,7 +55,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
          * Called to log a message.
          */
         public void notifyLogMessage(String message) {
-            assert (message != null);
+            if (message == null) throw new IllegalArgumentException(message);
             System.out.println(message);
         }
 

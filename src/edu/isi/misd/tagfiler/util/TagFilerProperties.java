@@ -37,7 +37,7 @@ public class TagFilerProperties {
      *            value of the property
      */
     public static void setProperty(String propertyName, String propertyValue) {
-        assert (propertyName != null && propertyValue != null);
+        if (propertyName == null || propertyValue == null) throw new IllegalArgumentException(""+propertyName+", "+propertyValue);
         properties.put(propertyName, propertyValue);
     }
 
@@ -48,7 +48,7 @@ public class TagFilerProperties {
      * @return the value of the property in string format
      */
     public static String getProperty(String propertyName) {
-        assert (propertyName != null);
+        if (propertyName == null) throw new IllegalArgumentException(propertyName);
         return properties.getProperty(propertyName);
     }
 
@@ -61,8 +61,7 @@ public class TagFilerProperties {
      * @return the value of the property with the arguments embedded
      */
     public static String getProperty(String propertyName, String[] args) {
-        assert (propertyName != null);
-        assert (args != null);
+        if (propertyName == null || args == null) throw new IllegalArgumentException(""+propertyName+", "+args);
 
         String value = getProperty(propertyName);
         for (int i = 0; i < args.length; i++) {

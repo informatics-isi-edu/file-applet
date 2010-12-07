@@ -50,9 +50,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      */
     public FileUploadImplementation(String url, FileUploadListener l,
 				    CustomTagMap tagMap, String c, TagFilerUploadApplet a) {
-        assert (url != null && url.length() > 0);
-        assert (l != null);
-        assert (tagMap != null);
+        if (url == null || url.length() == 0 ||
+        		l == null || tagMap == null) 
+        	throw new IllegalArgumentException(""+url+", "+l+", "+tagMap);
 
         tagFilerServerURL = url;
         fileUploadListener = l;
@@ -72,7 +72,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            base directory
      */
     public void setBaseDirectory(String baseDir) {
-        assert (baseDir != null);
+        if (baseDir == null) throw new IllegalArgumentException(baseDir);
         baseDirectory = baseDir;
         applet.eval("setDestinationDirectory", baseDir.replaceAll("\\\\", "\\\\\\\\"));
     }
@@ -84,7 +84,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            the list of files
      */
     public void addFilesToList(List<String> filesList) {
-        assert (filesList != null);
+        if (filesList == null) throw new IllegalArgumentException(""+filesList);
         StringBuffer buffer = new StringBuffer();
         for (String file : filesList) {
         	buffer.append(file).append("<br/>");
@@ -104,7 +104,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            list of absolute file names.
      */
     public boolean postFileData(List<String> files) {
-        assert (files != null);
+        if (files == null) throw new IllegalArgumentException(""+files);
         boolean result = false;
         try {
             result = postFileData(files, getTransmitNumber());
@@ -159,7 +159,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      */
     private void buildTotalSize(List<String> files)
             throws FatalException {
-        assert (files != null);
+        if (files == null) throw new IllegalArgumentException(""+files);
 
         File file = null;
         long fileSize = 0;
@@ -194,8 +194,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      * @return true if the file transfer was a success
      */
     public boolean postFileData(List<String> files, String datasetName) {
-        assert (files != null);
-        assert (datasetName != null && datasetName.length() > 0);
+        if (files == null ||
+        		datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName+", "+files);
         this.dataset = datasetName;
 
         boolean success = false;
@@ -215,12 +215,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                             + datasetName + "'...");
 
             // upload all the files
-            long t1 = System.currentTimeMillis();
             long t2 = 0;
             synchronized (lock) {
         	    success = postFileDataHelper(files, datasetName);
                 t2 = System.currentTimeMillis();
-                System.out.println("Checksum time: " + (t2-t1) + " ms.");
         	    lock.wait();
             }
             
@@ -229,7 +227,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             	return success;
             }
 
-            t1 = System.currentTimeMillis();
+            long t1 = System.currentTimeMillis();
             System.out.println("Upload time: " + (t1-t2) + " ms.");
             System.out.println("Upload rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-t2)) + " MB/s.");
             // then create and tag the dataset url entry
@@ -330,8 +328,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      */
     private boolean postFileDataHelper(List<String> files, String datasetName)
             throws FatalException {
-        assert (files != null);
-        assert (datasetName != null && datasetName.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		files == null) 
+        	throw new IllegalArgumentException(""+datasetName+", "+files);
 
         client.setBaseURL(DatasetUtils.getBaseUploadQuery(datasetName, tagFilerServerURL));
         client.upload(files, baseDirectory);

@@ -149,7 +149,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
          * Called when a dataset is complete.
          */
         public void notifySuccess(String datasetName) {
-            assert (datasetName != null && datasetName.length() > 0);
+            if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
             System.out.println(TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetSuccess"));
 
@@ -164,7 +164,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
          * Called when a failure occurred.
          */
         public void notifyFailure(String datasetName, int code, String errorMessage) {
-            assert (datasetName != null && datasetName.length() > 0);
+            if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
             super.notifyFailure(TagFilerUploadApplet.this, "tagfiler.message.upload.DatasetFailure", 
             		"tagfiler.url.UploadFailure", datasetName, code, errorMessage);
         }
@@ -177,7 +177,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
         }
 
         public void notifyFailure(String datasetName, String err) {
-            assert (datasetName != null && datasetName.length() > 0);
+            if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
             String message = TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetFailure");
             if (err != null) {
@@ -200,7 +200,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
          * Called when upload starts.
          */
         public void notifyStart(String datasetName, long totalSize) {
-            assert (datasetName != null && datasetName.length() > 0);
+            if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
             totalFiles = filesList.size();
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
@@ -334,7 +334,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
      *            the files to add
      */
     private void addFilesToList(File[] files) {
-        assert (files != null);
+        if (files == null) throw new IllegalArgumentException("files");
         final List<File> dirs = new LinkedList<File>();
         for (int i = 0; i < files.length; i++) {
             if (files[i].isDirectory()) {

@@ -47,8 +47,9 @@ public class ClientUtils {
      * @return the cookie if it was found, or null if it doesn't exist
      */
     public static String getCookieFromBrowser(AbstractTagFilerApplet applet, String cookieName) {
-        assert (applet != null);
-        assert (cookieName != null && cookieName.length() > 0);
+        if (applet == null||
+        		cookieName == null || cookieName.length() == 0) 
+        	throw new IllegalArgumentException(""+applet+", "+cookieName);
 
         String cookie = null;
 

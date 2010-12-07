@@ -63,10 +63,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      */
     public FileDownloadImplementation(String url, FileDownloadListener l,
 				      String c, CustomTagMap tagMap, TagFilerDownloadApplet a) {
-        assert (url != null && url.length() > 0);
-        assert (l != null);
-        assert (c != null);
-        assert (tagMap != null);
+        if (url == null || url.length() == 0 ||
+        		l == null || c == null || tagMap == null) 
+        	throw new IllegalArgumentException(""+url+", "+l+", "+c+", "+tagMap);
 
         tagFilerServerURL = url;
         fileDownloadListener = l;
@@ -93,7 +92,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      *            the controlNumber of the dataset
      */
     public List<String> getFiles(String controlNumber) {
-        assert (controlNumber != null && controlNumber.length() > 0);
+        if (controlNumber == null || controlNumber.length() == 0) throw new IllegalArgumentException(controlNumber);
         dataset = controlNumber;
     	fileDownloadListener.notifyUpdateStart(dataset);
     	boolean success = false;
@@ -131,7 +130,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      *            destination directory for the download
      */
     public boolean downloadFiles(String destDir) {
-        assert (destDir != null && destDir.length() > 0);
+        if (destDir == null || destDir.length() == 0) throw new IllegalArgumentException(destDir);
         try {
 			client.setBaseURL(DatasetUtils.getBaseDownloadUrl(dataset, tagFilerServerURL));
 		} catch (UnsupportedEncodingException e1) {
@@ -226,7 +225,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      *         false otherwise
      */
     public boolean verifyValidControlNumber(String controlNumber, StringBuffer code, StringBuffer errorMessage) {
-        assert (controlNumber != null && controlNumber.length() != 0);
+        if (controlNumber == null || controlNumber.length() == 0) throw new IllegalArgumentException(controlNumber);
         boolean valid = false;
         ClientURLResponse response = null;
         try {

@@ -326,7 +326,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * Redirects to an url
      */
     public void redirect(String urlStr) {
-        assert (urlStr != null);
+        if (urlStr == null) throw new IllegalArgumentException(urlStr);
         this.stop();
         System.out.println("redirect: " + urlStr);
         try {

@@ -18,7 +18,7 @@ public class CustomTagMapImplementation implements CustomTagMap {
      * sets the value of the tag
      */
     public void setValue(String key, String value) {
-        assert (key != null);
+        if (key == null) throw new IllegalArgumentException(key);
         synchronized (tagMap) {
             tagMap.put(key, value);
         }
@@ -28,7 +28,7 @@ public class CustomTagMapImplementation implements CustomTagMap {
      * returns the value of the tag
      */
     public String getValue(String key) {
-        assert (key != null);
+        if (key == null) throw new IllegalArgumentException(key);
 
         final String field;
         synchronized (tagMap) {

@@ -99,7 +99,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public ConcurrentJakartaClient (int connections, int socketBufferSize, ClientURLListener listener) {
 		super(connections, socketBufferSize);
-		assert(connections >= 2);
+        if (connections < 2) throw new IllegalArgumentException(""+connections);
 		this.connections = connections;
 		this.listener = listener;
 		workerWrapper.maxThreads = this.connections;
@@ -152,7 +152,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the directory to be uploaded
      */
 	public void uploadDirectory(String dir) {
-        assert (dir != null);
+        if (dir == null) throw new IllegalArgumentException(dir);
 		upload(getFiles(new File(dir)));
 	}
 	
@@ -225,7 +225,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the map containing the bytes of all files to be downloaded
      */
 	public void download(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
-        assert (file != null && outputDir != null);
+        if (file == null || outputDir == null) throw new IllegalArgumentException(file+", "+outputDir);
 		totalFiles = 1;
 		verifyTransfer = true;
         downloadFile(file, outputDir, checksumMap, bytesMap);
@@ -256,7 +256,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the map containing the bytes of all files to be downloaded
      */
 	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
-        assert (files != null && outputDir != null);
+        if (files == null || outputDir == null) throw new IllegalArgumentException(""+files+", "+outputDir);
 		totalFiles = files.size();
 		verifyTransfer = true;
 		for (String file : files) {
@@ -307,7 +307,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the map containing the bytes of all files to be downloaded
      */
 	private void downloadFile(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
-        assert (file != null && outputDir != null);
+        if (file == null || outputDir == null) throw new IllegalArgumentException(file+", "+outputDir);
 		long totalLength = 0;
 		
 		if (bytesMap != null) {
@@ -368,7 +368,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * @return the list with the files names
      */
     private List<String> getFiles(File dir) {
-        assert (dir != null);
+        if (dir == null) throw new IllegalArgumentException(""+dir);
         List<String> files = new ArrayList<String>();
         File[] children = dir.listFiles(excludeDirFilter);
         

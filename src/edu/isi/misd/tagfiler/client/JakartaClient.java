@@ -533,9 +533,10 @@ public class JakartaClient  implements ClientURL {
          * @return true if the header exists and matches the regular expression
          */
         public boolean checkResponseHeaderPattern(String headerName, String expectedPattern) {
-            assert (response != null);
-            assert (headerName != null && headerName.length() != 0);
-            assert (expectedPattern != null);
+            if (response == null ||
+            		headerName == null || headerName.length() == 0 ||
+            		expectedPattern == null) 
+            	throw new IllegalArgumentException(""+response+", "+headerName+", "+expectedPattern);
 
             boolean matches = false;
 

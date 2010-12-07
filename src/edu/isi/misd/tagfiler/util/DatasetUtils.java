@@ -47,9 +47,9 @@ public class DatasetUtils {
      */
     public static String generateDatasetPath(String datasetName,
             String baseDirectory, String fileName) {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (baseDirectory != null);
-        assert (fileName != null && fileName.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 || baseDirectory == null ||
+        		fileName == null || fileName.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+baseDirectory+", "+fileName);
 
         StringBuffer datasetPath = new StringBuffer(datasetName);
         fileName = fileName.replace(baseDirectory, "")
@@ -70,7 +70,7 @@ public class DatasetUtils {
      */
     public static String urlDecode(String url)
             throws UnsupportedEncodingException {
-        assert (url != null && url.length() > 0);
+        if (url == null || url.length() == 0) throw new IllegalArgumentException(url);
         url = URLDecoder.decode(url, UTF_8);
 
         return url;
@@ -84,7 +84,7 @@ public class DatasetUtils {
      */
     public static String urlEncode(String datasetName)
             throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
+        if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
         datasetName = URLEncoder.encode(datasetName, UTF_8);
 
         return datasetName;
@@ -105,9 +105,9 @@ public class DatasetUtils {
             String tagFilerServer, CustomTagMap customTagMap)
             throws FatalException {
 
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-        assert (customTagMap != null);
+        if (datasetName == null || datasetName.length() == 0 || customTagMap == null ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer+", "+customTagMap);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(FILE_URI);
         try {
@@ -141,8 +141,9 @@ public class DatasetUtils {
     public static final String getDatasetURLUploadQuery(String datasetName,
             String tagFilerServer)
             throws FatalException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI);
         try {
@@ -165,8 +166,9 @@ public class DatasetUtils {
      */
     public static final String getDatasetURLUploadBody(String datasetName,
             String tagFilerServer) throws FatalException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
         final StringBuffer body = new StringBuffer("action=put&url=");
         try {
             body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetName,
@@ -198,12 +200,13 @@ public class DatasetUtils {
             String tagFilerServer, String baseDirectory, File file,
             String checksum) throws FatalException {
 
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
-        assert (baseDirectory != null);
-        assert (file != null);
-        assert (checksum != null);
-
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0 ||
+        		baseDirectory == null ||
+        		file == null ||
+        		checksum == null) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer+", "+
+        			baseDirectory+", "+file+", "+checksum);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(FILE_URI);
         try {
@@ -239,8 +242,9 @@ public class DatasetUtils {
     public static final String getUploadQuerySuffix(String datasetName,
             String checksum) throws FatalException {
 
-    	assert (datasetName != null && datasetName.length() > 0);
-        assert (checksum != null);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		checksum == null) 
+        	throw new IllegalArgumentException(""+datasetName+", "+checksum);
 
         final StringBuffer restURL = new StringBuffer();
         
@@ -273,8 +277,9 @@ public class DatasetUtils {
     public static final String getBaseUploadQuery(String datasetName,
             String tagFilerServer) throws FatalException {
 
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(FILE_URI);
@@ -300,8 +305,9 @@ public class DatasetUtils {
      */
     public static final String getDatasetTagsQuery(String datasetName,
             String tagFilerServer) {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
@@ -324,8 +330,9 @@ public class DatasetUtils {
      */
     public static final String getDatasetURLUploadBody(String datasetName,
             String tagFilerServer, List<String> files, String baseDirectory) {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer();
         HashSet <String> array = new HashSet <String>();
@@ -358,8 +365,9 @@ public class DatasetUtils {
      */
     public static final String getDatasetUrl(String datasetName,
             String tagFilerServer) throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
         								.append(FILE_URI)
@@ -379,8 +387,9 @@ public class DatasetUtils {
     public static final String getBaseDownloadUrl(String datasetName,
             String tagFilerServer)
             throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(FILE_URI)
@@ -402,8 +411,9 @@ public class DatasetUtils {
     public static final String getDatasetTags(String datasetName,
             String tagFilerServer, String tags)
             throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
@@ -426,8 +436,9 @@ public class DatasetUtils {
     public static final String getFilesTags(String datasetName,
             String tagFilerServer, String tags)
             throws UnsupportedEncodingException {
-        assert (datasetName != null && datasetName.length() > 0);
-        assert (tagFilerServer != null && tagFilerServer.length() > 0);
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(QUERY_URI)
