@@ -242,22 +242,22 @@ public class DatasetUtils {
     public static final String getUploadQuerySuffix(String datasetName,
             String checksum) throws FatalException {
 
-        if (datasetName == null || datasetName.length() == 0 ||
-        		checksum == null) 
-        	throw new IllegalArgumentException(""+datasetName+", "+checksum);
+        if (datasetName == null || datasetName.length() == 0) 
+        	throw new IllegalArgumentException(datasetName);
 
         final StringBuffer restURL = new StringBuffer();
         
         try {
-
             restURL.append("?")
                     .append(DatasetUtils.urlEncode(STUDY))
                     .append("=")
-                    .append(DatasetUtils.urlEncode(datasetName))
-                    .append("&")
-                    .append(TagFilerProperties
-                            .getProperty("tagfiler.tag.checksum")).append("=")
-                    .append(checksum);
+                    .append(DatasetUtils.urlEncode(datasetName));
+            if (checksum != null) {
+                restURL.append("&")
+	                .append(TagFilerProperties
+	                        .getProperty("tagfiler.tag.checksum")).append("=")
+	                .append(checksum);
+            }
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }

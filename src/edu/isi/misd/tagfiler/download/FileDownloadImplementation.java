@@ -139,7 +139,16 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		}
 
         boolean success = true;
-        fileDownloadListener.notifyStart(dataset, 2*datasetSize);
+        long totalSize = datasetSize;
+        if (enableChecksum) {
+        	Set<String> keys = checksumMap.keySet();
+        	for (String key : keys) {
+        		if (bytesMap.get(key) != null) {
+        			totalSize += bytesMap.get(key);
+        		}
+        	}
+        }
+        fileDownloadListener.notifyStart(dataset, totalSize);
         start = System.currentTimeMillis();
         client.download(fileNames, destDir, checksumMap, bytesMap);
 

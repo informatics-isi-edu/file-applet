@@ -466,6 +466,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
             			download = false;
             	        int valid = validateFields();
             	        if (valid == 1) {
+            	        	fileDownload.setEnableChecksum(getChecksum());
                             fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
             	        } else if (valid == -1) {
             	            JOptionPane.showMessageDialog(getComponent(),

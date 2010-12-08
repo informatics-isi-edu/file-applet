@@ -312,6 +312,21 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     }
 
     /**
+     * Convenience method to check if the the checksum is on
+     * 
+     */
+    protected boolean getChecksum() {
+        boolean value = false;
+    	try {
+            value = Boolean.parseBoolean((String) window.eval("getChecksum()"));
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+        return value;
+    }
+
+    /**
      * @return the component representing this UI
      */
     public Component getComponent() {

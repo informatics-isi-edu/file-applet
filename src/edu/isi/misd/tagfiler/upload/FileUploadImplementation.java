@@ -206,7 +206,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 .notifyLogMessage("Computing size and checksum of files...");
         try {
         	buildTotalSize(files);
-            fileUploadListener.notifyStart(datasetName, 2*datasetSize);
+            fileUploadListener.notifyStart(datasetName, (enableChecksum ? 2 : 1)*datasetSize);
             fileUploadListener.notifyLogMessage(datasetSize
                     + " total bytes will be transferred");
 

@@ -36,7 +36,10 @@ public class AbstractFileTransferSession implements FileTransfer {
     // the time when the last cookie was updated
     protected long cookieUpdatePeriod = 1*60*1000;
 
-    /**
+    // flag to enable/disable the checksum
+    protected boolean enableChecksum;
+
+	/**
      * Updates the session cookie
      */
     public synchronized void updateSessionCookie(String sessionCookie) {
@@ -52,6 +55,14 @@ public class AbstractFileTransferSession implements FileTransfer {
 
 	public String getDataset() {
 		return dataset;
+	}
+
+    public boolean isEnableChecksum() {
+		return enableChecksum;
+	}
+
+	public void setEnableChecksum(boolean enableChecksum) {
+		this.enableChecksum = enableChecksum;
 	}
 
 }

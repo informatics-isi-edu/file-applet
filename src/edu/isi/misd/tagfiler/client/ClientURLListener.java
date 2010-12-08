@@ -67,4 +67,9 @@ public interface ClientURLListener {
      */
 	public String getDataset();
 
+    /**
+     * @return true if the checksum is enabled
+     */
+    public boolean isEnableChecksum();
+
 }

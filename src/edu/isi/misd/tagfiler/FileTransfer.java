@@ -24,4 +24,16 @@ public interface FileTransfer {
      * @return the session cookie
      */
     public String getSessionCookie();
+    
+    /**
+     * @return true if the checksum is enabled
+     */
+    public boolean isEnableChecksum();
+
+    /**
+     * Set the checksum switch
+     * @param enableChecksum
+     *            the checksum switch
+     */
+	public void setEnableChecksum(boolean enableChecksum);
 }

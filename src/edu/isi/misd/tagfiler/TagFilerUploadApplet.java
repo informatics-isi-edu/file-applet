@@ -429,6 +429,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
             		if (upload) {
             			upload = false;
             	        try {
+            	        	fileUpload.setEnableChecksum(getChecksum());
             	        	setCustomTags();
             	            if (filesList.size() > 0) {
             	                fileUpload.postFileData(filesList);
