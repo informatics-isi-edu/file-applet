@@ -533,13 +533,15 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			String params = null;
 			String cksum = null;
 			byte ret[] = null;
-			if (file.getLength() == file.getTotalLength() && enableChecksum) {
-				try {
-					cksum = LocalFileChecksum.computeFileChecksum(new File(file.getName()));
-					notifyChunkTransfered(file.getLength());
-				} catch (FatalException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+			if (file.getLength() == file.getTotalLength()) {
+				if (enableChecksum) {
+					try {
+						cksum = LocalFileChecksum.computeFileChecksum(new File(file.getName()));
+						notifyChunkTransfered(file.getLength());
+					} catch (FatalException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			} else {
 				// Read the chunk to be uploaded
