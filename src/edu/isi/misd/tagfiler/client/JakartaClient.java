@@ -131,7 +131,7 @@ public class JakartaClient  implements ClientURL {
 		
 		// enable parallelism
 		ConnPerRouteBean connPerRoute = new ConnPerRouteBean(maxConnections);
-		ConnManagerParams.setMaxTotalConnections(params, maxConnections);
+		ConnManagerParams.setMaxTotalConnections(params, maxConnections >= 2 ? maxConnections : 2);
 		ConnManagerParams.setMaxConnectionsPerRoute(params, connPerRoute);
 		
         SchemeRegistry schemeRegistry = new SchemeRegistry(); 

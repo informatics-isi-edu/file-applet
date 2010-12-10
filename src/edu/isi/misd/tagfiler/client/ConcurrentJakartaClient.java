@@ -102,7 +102,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public ConcurrentJakartaClient (int connections, int socketBufferSize, ClientURLListener listener) {
 		super(connections, socketBufferSize);
-        if (connections < 2) throw new IllegalArgumentException(""+connections);
 		this.connections = connections;
 		this.listener = listener;
 		workerWrapper.maxThreads = this.connections;
