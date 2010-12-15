@@ -105,8 +105,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             datasetSize = 0;
 
             setCustomTags();
-            getDataSet();
-            success = true;
+            success = getDataSet();
         } catch (Exception e) {
             e.printStackTrace();
             fileDownloadListener.notifyError(e);
@@ -116,7 +115,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	if (success) {
             	fileDownloadListener.notifyUpdateComplete(dataset);
         	} else {
-        		fileDownloadListener.notifyFailure(dataset, errMsg);
+        		fileDownloadListener.notifyFailure(dataset, "Can not retrieve the file(s) to be downloaded");
         	}
         }
     	
