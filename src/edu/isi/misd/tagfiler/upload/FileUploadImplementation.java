@@ -293,15 +293,32 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             }
 
             // successful tagfiler POST issues 303 redirect to result page
-            if (200 == response.getStatus() || 303 == response.getStatus()) {
+            int status = response.getStatus();
+            success = (200 == status || 303 == status);
+            String errMsg = success ? "" : response.getErrorMessage();
+        	response.release();
+            
+            // validate the upload
+            datasetURLQuery = DatasetUtils.getDatasetQuery(datasetName, tagFilerServerURL);
+            response = client.validateAction(datasetURLQuery, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
+            synchronized (this) {
+                cookie = client.updateSessionCookie(applet, cookie);
+            }
+            if (success) {
+            	status = response.getStatus();
+            	errMsg = (status == 200) ? "" : response.getErrorMessage();
+            }
+
+            if (200 == status) {
                 fileUploadListener.notifyLogMessage("Dataset URL entry created successfully.");
+                success = true;
         		fileUploadListener.notifySuccess(dataset);
             } else {
                 fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
                                 + response.getStatus() + ")");
                 success = false;
-                fileUploadListener.notifyFailure(datasetName, response.getStatus(), response.getErrorMessage());
+                fileUploadListener.notifyFailure(datasetName, status, errMsg);
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors
@@ -388,6 +405,14 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 			}
 		}
 		if (notify) {
+            String datasetURLQuery = null;
+			try {
+				datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
+			} catch (FatalException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			client.validateAction(datasetURLQuery, "failure", 0, 0, "upload", cookie);
 			fileUploadListener.notifyFailure(dataset, err);
 		}
 	}

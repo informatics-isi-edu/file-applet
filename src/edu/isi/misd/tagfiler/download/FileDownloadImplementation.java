@@ -17,6 +17,7 @@ import edu.isi.misd.tagfiler.TagFilerDownloadApplet;
 import edu.isi.misd.tagfiler.client.ClientURLListener;
 import edu.isi.misd.tagfiler.client.ClientURLResponse;
 import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
+import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
@@ -457,6 +458,15 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 			}
 		}
 		if (notify) {
+            String datasetURLQuery = null;
+			try {
+				datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
+			} catch (FatalException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// log download failure
+			client.validateAction(datasetURLQuery, "failure", 0, 0, "download", cookie);
 			fileDownloadListener.notifyFailure(dataset, err);
 		}
 	}
@@ -483,6 +493,15 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifySuccess() {
 		// TODO Auto-generated method stub
+        String datasetURLQuery = null;
+		try {
+			datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
+		} catch (FatalException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// log download failure
+		client.validateAction(datasetURLQuery, "success", 0, 0, "download", cookie);
 		fileDownloadListener.notifySuccess(dataset);
 	}
 

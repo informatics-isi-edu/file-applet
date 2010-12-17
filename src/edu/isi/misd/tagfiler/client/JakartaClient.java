@@ -452,6 +452,42 @@ public class JakartaClient  implements ClientURL {
 		return execute(httpput, cookie);
 	}
     
+    /**
+     * Validate an upload/download.
+     * The server will log the action result
+     * 
+     * @param url
+     *            the query url
+     * @param status
+     *            the action status (success or failure)
+     * @param study_size
+     *            the size of the study
+     * @param count
+     *            the number of files of the study
+     * @param direction
+     *            the action direction (upload or download)
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse validateAction(String url, String status, long study_size, int count,  String direction, String cookie) {
+		HttpPut httpput = new HttpPut(url);
+		List<NameValuePair> formparams = new ArrayList<NameValuePair>();
+		formparams.add(new BasicNameValuePair("study_size", ""+study_size));
+		formparams.add(new BasicNameValuePair("status", status));
+		formparams.add(new BasicNameValuePair("direction", direction));
+		formparams.add(new BasicNameValuePair("count", ""+count));
+		UrlEncodedFormEntity entity = null;
+		try {
+			entity = new UrlEncodedFormEntity(formparams, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		httpput.setEntity(entity);
+		return execute(httpput, cookie);
+	}
+    
     private ClientURLResponse execute(HttpUriRequest request, String cookie) {
     	setCookie(cookie, request);
     	ClientURLResponse response = null;

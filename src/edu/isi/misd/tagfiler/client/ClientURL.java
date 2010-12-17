@@ -189,4 +189,23 @@ public interface ClientURL {
      */
     public ClientURLResponse postFile(String url, InputStream inputStream, long length, long first, long fileLength, String cookie);
     
+    /**
+     * Validate an upload/download.
+     * The server will log the action result
+     * 
+     * @param url
+     *            the query url
+     * @param status
+     *            the action status (success or failure)
+     * @param study_size
+     *            the size of the study
+     * @param count
+     *            the number of files of the study
+     * @param direction
+     *            the action direction (upload or download)
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse validateAction(String url, String status, long study_size, int count, String direction, String cookie);
 }

@@ -31,6 +31,8 @@ public class DatasetUtils {
 
     public static final String TAGS_URI = "/tags/";
 
+    public static final String STUDY_URI = "/study/";
+
     private static final String STUDY = "Transmission Number";
 
     private static final String IMAGE_SET = "Image Set";
@@ -149,6 +151,31 @@ public class DatasetUtils {
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
                     .append("/contains");
+        } catch (UnsupportedEncodingException e) {
+            throw new FatalException(e);
+        }
+        return restURL.toString();
+    }
+
+    /**
+     * 
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            URL of the tagfiler server
+     * @return the REST URL for the dataset.
+     * @thows FatalException if the URL cannot be constructed
+     */
+    public static final String getDatasetQuery(String datasetName,
+            String tagFilerServer)
+            throws FatalException {
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(STUDY_URI);
+        try {
+            restURL.append(DatasetUtils.urlEncode(datasetName));
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
