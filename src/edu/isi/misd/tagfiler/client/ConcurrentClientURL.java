@@ -67,8 +67,10 @@ public interface ConcurrentClientURL extends ClientURL{
      *            the files to be uploaded
      * @param baseDirectory
      *            the base directory to be used for the uploaded files
+     * @param checksumMap
+     *            the map containing the checksums of the files 
      */
-	public void upload(List<String> files, String baseDirectory);
+	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap);
 	
     /**
      * Upload a file

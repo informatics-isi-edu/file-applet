@@ -567,4 +567,28 @@ public class DatasetUtils {
 	      }
 	     return result;
 	}
+	
+    /**
+     * Get the file name relative to the base directory
+     * @param fileName
+     *            name of the file relative to the base directory
+     * @param baseDirectory
+     *            the base directory
+     * @return the name of the file 
+     */
+	public static String getBaseName(String filename, String baseDirectory) {
+		String baseName = filename;
+        if (baseDirectory != null) {
+        	baseName = filename.replace(baseDirectory, "");
+        }
+        baseName = baseName.replaceAll("\\\\", "/")
+        .replaceAll(":", "");
+        
+        if (!baseName.startsWith("/")) {
+        	baseName = "/" + baseName;
+        }
+        
+        return baseName;
+	}
+	
 }

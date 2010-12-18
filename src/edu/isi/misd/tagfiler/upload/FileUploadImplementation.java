@@ -1,7 +1,12 @@
 package edu.isi.misd.tagfiler.upload;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
 import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
@@ -164,6 +169,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         File file = null;
         long fileSize = 0;
         datasetSize = 0;
+        checksumMap = new HashMap<String, String>();
+        bytesMap = new HashMap<String, Long>();
+        fileNames = new ArrayList<String>();
         for (String filename : files) {
             file = new File(filename);
             if (file.exists() && file.canRead()) {
@@ -171,6 +179,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 if (file.isFile()) {
                     fileSize = file.length();
                     datasetSize += fileSize;
+                    String basename = DatasetUtils.getBaseName(filename, baseDirectory);
+                    bytesMap.put(basename, fileSize);
+                    fileNames.add(basename);
                 } else if (file.isDirectory()) {
                     // do nothing
                 } else {
@@ -297,6 +308,14 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             success = (200 == status || 303 == status);
             String errMsg = success ? "" : response.getErrorMessage();
         	response.release();
+        	
+        	if (success) {
+            	success = checkDataSet();
+            	if (!success) {
+            		errMsg = "Failure in checking the uploaded files.";
+            		status = -1;
+            	}
+        	}
             
             // validate the upload
             datasetURLQuery = DatasetUtils.getDatasetQuery(datasetName, tagFilerServerURL);
@@ -333,6 +352,58 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     }
 
     /**
+     * Gets the files to be downloaded.
+     */
+    private boolean checkDataSet() throws Exception {
+        boolean result = false;
+
+        try {
+        	// get the "bytes" and "sha256sum" tags of the files
+        	JSONArray tagsValues = getFilesTagValues(applet, fileUploadListener);
+        	if (fileNames.size() != tagsValues.length()) {
+        		return result;
+        	}
+    		for (int i=0; i < tagsValues.length(); i++) {
+    			JSONObject fileTags = tagsValues.getJSONObject(i);
+    			
+                // get the file name
+                String file = fileTags.getString("name").substring(dataset.length());
+                if (!fileNames.remove(file)) {
+                	return result;
+                }
+
+                // get the bytes
+                long bytes = fileTags.getLong("bytes");
+                Long size = bytesMap.remove(file);
+                if (size == null || size != bytes) {
+                	return result;
+                }
+                
+                if (enableChecksum) {
+                	if (fileTags.isNull("sha256sum")) {
+                		return result;
+                	}
+                    String checksum = fileTags.getString("sha256sum");
+                    String cksum = checksumMap.remove(file);
+                    if (!checksum.equals(cksum)) {
+                    	return result;
+                    }
+                }
+    		}
+    		if (fileNames.size() != 0) {
+    			return result;
+    		}
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            fileUploadListener.notifyError(e);
+            result = false;
+        }
+
+        return result;
+    }
+
+    /**
      * Helper method for transferring files.
      * 
      * @param files
@@ -350,7 +421,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         	throw new IllegalArgumentException(""+datasetName+", "+files);
 
         client.setBaseURL(DatasetUtils.getBaseUploadQuery(datasetName, tagFilerServerURL));
-        client.upload(files, baseDirectory);
+        client.upload(files, baseDirectory, checksumMap);
         return true;
     }
 

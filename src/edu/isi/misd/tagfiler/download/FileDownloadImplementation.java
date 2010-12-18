@@ -19,6 +19,7 @@ import edu.isi.misd.tagfiler.client.ClientURLResponse;
 import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
+import edu.isi.misd.tagfiler.ui.FileListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 
@@ -34,15 +35,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
     // listener for file download progress
     private final FileDownloadListener fileDownloadListener;
-
-    // list containing the files names to be downloaded.
-    private List<String> fileNames = new ArrayList<String>();
-
-    // map containing the bytes of all files to be downloaded.
-    private Map<String, Long> bytesMap = new HashMap<String, Long>();
-
-    // map containing the checksums of all files to be uploaded/downloaded.
-    protected Map<String, String> checksumMap = new HashMap<String, String>();
 
     // the download start time
     private long start;
@@ -187,7 +179,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 
         try {
         	// get the "bytes" and "sha256sum" tags of the files
-        	JSONArray tagsValues = getFilesTagValues();
+        	JSONArray tagsValues = getFilesTagValues(applet, fileDownloadListener);
         	if (tagsValues != null) {
                 fileDownloadListener.notifyRetrieveStart(tagsValues.length());
         		for (int i=0; i < tagsValues.length(); i++) {
@@ -354,58 +346,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         response.release();
         
         return obj;
-    }
-
-    /**
-     * Get the values for the "bytes" and "sha256sum" tags of the dataset files
-     * @return the JSON Array with the tags values
-     */
-    private JSONArray getFilesTagValues() {
-    	String tags = "bytes,sha256sum";
-        String query = null;
-		try {
-			query = DatasetUtils.getFilesTags(dataset,
-			        tagFilerServerURL, tags);
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("Files Query: "+query);
-        ClientURLResponse response = client.getTagsValues(query, cookie);
-
-        if (response == null) {
-        	notifyFailure("Error: NULL response in getting the files tag values for the study " + dataset);
-        	return null;
-        }
-	cookie = client.updateSessionCookie(applet, cookie);
-
-        if (response.getStatus() != 200)
-        {
-        	// if status is 404, the tag might have been deleted
-        	if (response.getStatus() != 404) {
-            	fileDownloadListener.notifyFailure(dataset, response.getStatus(), response.getErrorMessage());
-        	}
-        	response.release();
-        	return null;
-        }
-		String values = null;
-		try {
-			values = DatasetUtils.urlDecode(response.getEntityString());
-			System.out.println("Files Response: "+values);
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		JSONArray array = null;
-		try {
-			array = new JSONArray(values);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        response.release();
-        
-        return array;
     }
 
     /**

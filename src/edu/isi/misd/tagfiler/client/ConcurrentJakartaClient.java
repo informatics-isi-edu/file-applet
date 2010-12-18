@@ -82,7 +82,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
     // wrapper for WorkerQueue
 	private QueueWrapper workerWrapper = new QueueWrapper();
 	
-    /**
+    // map containing the checksums of all files to be transferred.
+	private Map<String, String> checksumMap;
+
+	/**
      * Excludes "." and ".." from directory lists in case the client is
      * UNIX-based.
      */
@@ -182,9 +185,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * @param baseDirectory
      *            the base directory to be used for the uploaded files
      */
-	public void upload(List<String> files, String baseDirectory) {
+	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap) {
 		// TODO Auto-generated method stub
 		this.baseDirectory = baseDirectory;
+		this.checksumMap = checksumMap;
 		upload(files);
 	}
 	
@@ -520,7 +524,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				url.append(baseURL);
 			}
 			try {
-				url.append(URLEncoder.encode(getBaseName(file.getName()), "UTF-8"));
+				url.append(URLEncoder.encode(DatasetUtils.getBaseName(file.getName(), baseDirectory), "UTF-8"));
 			} catch (UnsupportedEncodingException e2) {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
@@ -585,6 +589,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 			if (file.getLength() == file.getTotalLength() || file.isLastChunk()) {
 				try {
+					if (enableChecksum) {
+						checksumMap.put(DatasetUtils.getBaseName(file.getName(), baseDirectory), cksum);
+					}
 					params = DatasetUtils.getUploadQuerySuffix(listener.getDataset(), cksum);
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
@@ -815,27 +822,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	}
 	
     /**
-     * Get the file name relative to the base directory
-     * @param fileName
-     *            name of the file relative to the base directory
-     * @return the name of the file 
-     */
-	private String getBaseName(String filename) {
-		String baseName = filename;
-        if (baseDirectory != null) {
-        	baseName = filename.replace(baseDirectory, "");
-        }
-        baseName = baseName.replaceAll("\\\\", "/")
-        .replaceAll(":", "");
-        
-        if (!baseName.startsWith("/")) {
-        	baseName = "/" + baseName;
-        }
-        
-        return baseName;
-	}
-	
-    /**
      * Attached a reason of HTTP status error
      * @param code
      *            the status code
@@ -949,6 +935,14 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		return buffer.toString();
 	}
 	
+	public void setChecksumMap(Map<String, String> checksumMap) {
+		this.checksumMap = checksumMap;
+	}
+
+	public Map<String, String> getChecksumMap() {
+		return checksumMap;
+	}
+
 	/**
 	 * Class to represent the incrementally checksum computation of a file
 	 * 
