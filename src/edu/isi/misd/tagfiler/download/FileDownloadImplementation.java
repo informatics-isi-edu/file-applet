@@ -54,14 +54,14 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * @param tagMap
      *            map of the custom tags
      */
-    public FileDownloadImplementation(String url, FileDownloadListener l,
+    public FileDownloadImplementation(String url, FileListener l,
 				      String c, CustomTagMap tagMap, TagFilerDownloadApplet a) {
         if (url == null || url.length() == 0 ||
         		l == null || c == null || tagMap == null) 
         	throw new IllegalArgumentException(""+url+", "+l+", "+c+", "+tagMap);
 
         tagFilerServerURL = url;
-        fileDownloadListener = l;
+        fileDownloadListener = (FileDownloadListener) l;
         cookie = c;
         customTagMap = tagMap;
 	applet = a;

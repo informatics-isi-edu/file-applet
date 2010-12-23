@@ -124,7 +124,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
         public void notifyFatal(AbstractTagFilerApplet applet, String property, Throwable e) {
             String message = TagFilerProperties.getProperty(
             		property, new String[] { e
-                            .getClass().getCanonicalName() });
+                            .getClass().getCanonicalName() + (e.getMessage() != null ? ". " + e.getMessage() : "") });
             try {
                 message = DatasetUtils.urlEncode(message);
             } catch (UnsupportedEncodingException f) {

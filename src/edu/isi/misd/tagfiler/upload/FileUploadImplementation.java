@@ -16,6 +16,7 @@ import edu.isi.misd.tagfiler.client.ClientURLResponse;
 import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
+import edu.isi.misd.tagfiler.ui.FileListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -53,14 +54,14 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      * @param c
      *            session cookie
      */
-    public FileUploadImplementation(String url, FileUploadListener l,
+    public FileUploadImplementation(String url, FileListener l,
 				    CustomTagMap tagMap, String c, TagFilerUploadApplet a) {
         if (url == null || url.length() == 0 ||
         		l == null || tagMap == null) 
         	throw new IllegalArgumentException(""+url+", "+l+", "+tagMap);
 
         tagFilerServerURL = url;
-        fileUploadListener = l;
+        fileUploadListener = (FileUploadListener) l;
         customTagMap = tagMap;
         cookie = c;
 	applet = a;

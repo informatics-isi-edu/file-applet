@@ -119,8 +119,9 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
                 .getProperty("tagfiler.filedialog.SelectDirectoryToDownload"));
         
         // the file uploader itself
+        fileListener = new TagFilerAppletDownloadListener();
         fileDownload = new FileDownloadImplementation(tagFilerServerURL,
-                new TagFilerAppletDownloadListener(), sessionCookie,
+        		fileListener, sessionCookie,
                 customTagMap, this);
     }
 
@@ -310,7 +311,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet
         public void notifyError(Throwable e) {
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.message.download.Error", new String[] { e
-                            .getClass().getCanonicalName() }));
+                            .getClass().getCanonicalName() + (e.getMessage() != null ? ". " + e.getMessage() : "") }));
         }
         
         /**

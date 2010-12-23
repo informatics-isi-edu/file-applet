@@ -21,9 +21,11 @@ import javax.swing.JPanel;
 
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
+import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
+import edu.isi.misd.tagfiler.ui.FileListener;
 import edu.isi.misd.tagfiler.ui.FileUI;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
@@ -63,7 +65,11 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     // parameter name for the tagserver URL
     private static final String TAGFILER_SERVER_URL_PARAM = "tagfiler.server.url";
 
+    // parameter name for cookie name
     private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
+    
+    // timeout for JavaScript call execution (milliseconds)
+    private static final long JAVASCRIPT_TIMEOUT = 100 * 1000;
     
     // tagfiler server URL specified from the parameter of the applet
     protected String tagFilerServerURL = null;
@@ -107,6 +113,12 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     
     // Window for JavaScript calls
     protected JSObject window;
+    
+    // listener to send notifications
+    protected FileListener fileListener;
+    
+    // thread to execute javaScript calls
+    private JavaScriptThread javaScriptThread;
 
     /**
      * Loads security settings, common parameters, session cookie
@@ -115,6 +127,10 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
 
     	// load any security settings
         TagFilerSecurity.loadSecuritySettings();
+        
+        // start javaScriptThread
+        javaScriptThread = new JavaScriptThread();
+        javaScriptThread.start();
         
         window = (JSObject) JSObject.getWindow(this);
         if (window == null) {
@@ -207,6 +223,9 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
     		stopped = true;
         	lock.notifyAll();
     	}
+    	synchronized (javaScriptThread.getLoadLock()) {
+        	javaScriptThread.setReady(true);
+    	}
     	super.stop();
     }
 
@@ -238,13 +257,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * @param status
      */
     public void updateStatus(String status) {
-        try {
-            window.eval("setStatus('" + status + "')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
-
+    	invoke("setStatus('" + status + "')");
     }
     
     /**
@@ -253,12 +266,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * @param percent
      */
     protected void drawProgressBar(long percent) {
-        try {
-            window.eval("drawProgressBar(" + percent + ")");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	invoke("drawProgressBar(" + percent + ")");
     }
 
     /**
@@ -266,16 +274,10 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * 
      * @param function
      * 			the function to be evaluated
+     * @return the JS function evaluation result
      */
     public String eval(String function) {
-    	String res = "";
-        try {
-            res = (String) window.eval(function);
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
-        
+    	String res = (String) invoke(function);
         return res;
     }
 
@@ -288,12 +290,7 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * 			the function argument
      */
     public void eval(String function, String arg) {
-        try {
-            window.eval(function + "('" + arg + "')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	invoke(function + "('" + arg + "')");
     }
 
     /**
@@ -303,27 +300,63 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      * 			the button to be enabled
      */
     protected void setEnabled(String button) {
-        try {
-            window.eval("setEnabled('" + button + "')");
-        } catch (JSException e) {
-            // don't throw, but make sure the UI is unuseable
-        	e.printStackTrace();
-        }
+    	invoke("setEnabled('" + button + "')");
     }
 
     /**
      * Convenience method to check if the the checksum is on
      * 
+     * @return true if checksum is enabled, false otherwise
      */
     protected boolean getChecksum() {
         boolean value = false;
     	try {
-            value = Boolean.parseBoolean((String) window.eval("getChecksum()"));
+            value = Boolean.parseBoolean((String) invoke("getChecksum()"));
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();
         }
         return value;
+    }
+
+    /**
+     * Convenience method for evaluating a JS function
+     * 
+     * @param function
+     * 			the function to be evaluated
+     * @return the JS function evaluation result
+     */
+    public Object invoke(String function) {
+    	Object res = "";
+    	// set the command to be executed to the JavaScript thread
+    	synchronized (javaScriptThread.getLoadLock()) {
+        	javaScriptThread.setCommand(function);
+        	javaScriptThread.getLoadLock().notifyAll();
+    	}
+    	
+    	long t0, t1;
+    	t0 = t1 = System.currentTimeMillis();
+    	// wait now for the result, but not more than 100 seconds
+    	synchronized (javaScriptThread.getReleaseLock()) {
+    		while (javaScriptThread.getCommand() != null && (t1 - t0) < JAVASCRIPT_TIMEOUT) {
+    			try {
+					javaScriptThread.getReleaseLock().wait(JAVASCRIPT_TIMEOUT - (t1 - t0));
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				t1 = System.currentTimeMillis();
+    		}
+    		if (javaScriptThread.getCommand() == null) {
+    			// success
+    			res = javaScriptThread.getResult();
+    		} else {
+    			// timeout; raise FatalException
+    			FatalException e = new FatalException("The browser is not responding");
+    			fileListener.notifyFatal(e);
+    		}
+    	}
+        return res;
     }
 
     /**
@@ -412,6 +445,71 @@ public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
      */
 	public JSObject getWindow() {
 		return window;
+	}
+	
+	private class JavaScriptThread extends Thread {
+		// the command to be evaluated by the JavaScript
+		String command;
+		
+		// the javaScript evaluation result
+		Object result;
+		
+		// mutex for receiving commands
+		Object loadLock = new Object();
+		
+		// mutex for releasing results
+		Object releaseLock = new Object();
+		
+		// the javaScript evaluation result
+		boolean ready;
+		
+		public void run() {
+			while (true) {
+				synchronized (loadLock) {
+					while (!ready && command == null) {
+						try {
+							loadLock.wait();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+				if (ready) {
+					break;
+				} else {
+					result = window.eval(command);
+					synchronized (releaseLock) {
+						command = null;
+						releaseLock.notifyAll();
+					}
+				}
+			}
+		}
+
+		public void setReady(boolean ready) {
+			this.ready = ready;
+		}
+		
+		public Object getResult() {
+			return result;
+		}
+
+		public String getCommand() {
+			return command;
+		}
+
+		public Object getLoadLock() {
+			return loadLock;
+		}
+
+		public void setCommand(String command) {
+			this.command = command;
+		}
+
+		public Object getReleaseLock() {
+			return releaseLock;
+		}
 	}
 
 }

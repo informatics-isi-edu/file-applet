@@ -114,8 +114,9 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
                 .getProperty("tagfiler.filedialog.SelectDirectoryToUpload"));
         
         // the file uploader itself
+        fileListener = new TagFilerAppletUploadListener();
         fileUpload = new FileUploadImplementation(tagFilerServerURL,
-                new TagFilerAppletUploadListener(), customTagMap,
+        		fileListener, customTagMap,
                 sessionCookie, this);
     }
 
@@ -245,7 +246,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet
         public void notifyError(Throwable e) {
             String message = TagFilerProperties.getProperty(
                     "tagfiler.message.upload.Error", new String[] { e
-                            .getClass().getCanonicalName() });
+                            .getClass().getCanonicalName() + (e.getMessage() != null ? ". " + e.getMessage() : "") });
             try {
                 message = DatasetUtils.urlEncode(message);
             } catch (UnsupportedEncodingException f) {
