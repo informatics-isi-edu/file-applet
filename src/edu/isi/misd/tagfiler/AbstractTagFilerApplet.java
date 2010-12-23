@@ -26,7 +26,6 @@ import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.CustomTagMapImplementation;
 import edu.isi.misd.tagfiler.ui.FileListener;
-import edu.isi.misd.tagfiler.ui.FileUI;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -37,7 +36,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author David Smith
  * 
  */
-public abstract class AbstractTagFilerApplet extends JApplet implements FileUI {
+public abstract class AbstractTagFilerApplet extends JApplet {
 
     private static final long serialVersionUID = 1L;
 

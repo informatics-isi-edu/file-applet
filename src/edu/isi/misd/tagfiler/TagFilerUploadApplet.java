@@ -15,7 +15,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import edu.isi.misd.tagfiler.ui.FileUploadUI;
 import edu.isi.misd.tagfiler.upload.FileUpload;
 import edu.isi.misd.tagfiler.upload.FileUploadImplementation;
 import edu.isi.misd.tagfiler.upload.FileUploadListener;
@@ -41,8 +40,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author David Smith
  * 
  */
-public class TagFilerUploadApplet extends AbstractTagFilerApplet
-        implements FileUploadUI {
+public class TagFilerUploadApplet extends AbstractTagFilerApplet {
 
     private static final long serialVersionUID = 2134123;
 

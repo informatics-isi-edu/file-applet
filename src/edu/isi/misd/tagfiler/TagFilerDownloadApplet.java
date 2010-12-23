@@ -16,7 +16,6 @@ import javax.swing.SwingUtilities;
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.download.FileDownloadListener;
-import edu.isi.misd.tagfiler.ui.FileDownloadUI;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -35,9 +34,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  * @author David Smith
  * 
  */
-public class TagFilerDownloadApplet extends AbstractTagFilerApplet
-        implements
-        FileDownloadUI {
+public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
 
     private static final long serialVersionUID = 2134123;
 
