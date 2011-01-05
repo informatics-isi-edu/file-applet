@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
@@ -89,7 +88,6 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         dataset = controlNumber;
     	fileDownloadListener.notifyUpdateStart(dataset);
     	boolean success = false;
-        String errMsg = null;
 
         try {
             fileNames = new ArrayList<String>();
@@ -97,12 +95,13 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             bytesMap = new HashMap<String, Long>();
             datasetSize = 0;
 
-            setCustomTags();
+            if (customTagMap.getTagNames().size() > 0) {
+                setCustomTags();
+            }
             success = getDataSet();
         } catch (Exception e) {
             e.printStackTrace();
             fileDownloadListener.notifyError(e);
-            errMsg = e.getMessage();
         }
         finally {
         	if (success) {
