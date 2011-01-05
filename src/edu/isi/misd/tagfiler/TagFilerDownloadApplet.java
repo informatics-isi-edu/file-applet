@@ -28,7 +28,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
  *            URL of the tagfiler server and path to connect to (i.e.
  *            https://tagfiler.isi.edu:443/tagfiler)
  * @param tagfiler
- *            .control.number (optional) transmission number used to retrieve the
+ *            .control.number (optional) Dataset Name used to retrieve the
  *            files
  * 
  * @author David Smith
@@ -43,7 +43,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
     // download directory
     private StringBuffer destinationDirectoryField = new StringBuffer();
 
-    // transmission number
+    // Dataset Name
     private String defaultControlNumber = null;
 
     // download files
@@ -217,13 +217,13 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         }
 
         /**
-         * Called when a transmission number update starts
+         * Called when a Dataset Name update starts
          */
         public void notifyUpdateStart(String filename) {
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.UpdateDownloadStatus",
                     new String[] { }));
-            System.out.println("Updating transmission number " + filename + "...");
+            System.out.println("Updating Dataset Name " + filename + "...");
         }
 
         /**
@@ -267,14 +267,14 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         }
 
         /**
-         * Called when a transmission number update completes
+         * Called when a Dataset Name update completes
          */
         public void notifyUpdateComplete(String filename) {
         	drawProgressBar(0);
             updateStatus(TagFilerProperties.getProperty(
                     "tagfiler.label.DefaultDestinationStatus",
                     new String[] { }));
-            System.out.println("Completed updating transmission number " + filename + "...");
+            System.out.println("Completed updating Dataset Name " + filename + "...");
         }
 
         /**
@@ -400,7 +400,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         	customTagMap.setValue(name[i], "");
         }
         
-        // make sure the transmission number exists
+        // make sure the Dataset Name exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
         if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {

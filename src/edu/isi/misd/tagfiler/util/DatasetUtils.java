@@ -33,7 +33,7 @@ public class DatasetUtils {
 
     public static final String STUDY_URI = "/study/";
 
-    private static final String STUDY = "Transmission Number";
+    private static final String STUDY = "Dataset Name";
 
     private static final String IMAGE_SET = "Image Set";
 
@@ -444,7 +444,7 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
-                .append(datasetName).append("?list=")
+                .append(DatasetUtils.urlEncode(datasetName)).append("?list=")
                 .append(tags);
         return restURL.toString();
     }
@@ -471,7 +471,7 @@ public class DatasetUtils {
                 .append(QUERY_URI)
                 .append(DatasetUtils.urlEncode(STUDY))
                 .append("=")
-                .append(datasetName)
+                .append(DatasetUtils.urlEncode(datasetName))
                 .append("?list=")
                 .append(tags);
         return restURL.toString();

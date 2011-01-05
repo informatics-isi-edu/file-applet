@@ -532,7 +532,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			
 			FileItem fi = filesCompletion.get(file.getName());
 
-			// if this is the last chunk, Transmission Number and Checksum parameters will be added
+			// if this is the last chunk, Dataset Name and Checksum parameters will be added
 			String params = null;
 			String cksum = null;
 			byte ret[] = null;

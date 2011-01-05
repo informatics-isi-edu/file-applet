@@ -303,7 +303,7 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     }
 
     /**
-     * Convenience method to check if the the checksum is on
+     * Convenience method to check if the checksum is on
      * 
      * @return true if checksum is enabled, false otherwise
      */
@@ -311,6 +311,22 @@ public abstract class AbstractTagFilerApplet extends JApplet {
         boolean value = false;
     	try {
             value = Boolean.parseBoolean((String) invoke("getChecksum()"));
+        } catch (JSException e) {
+            // don't throw, but make sure the UI is unuseable
+        	e.printStackTrace();
+        }
+        return value;
+    }
+
+    /**
+     * Convenience method to get the dataset name
+     * 
+     * @return the dataset name
+     */
+    protected String getDatasetName() {
+        String value = null;
+    	try {
+            value = (String) invoke("getDatasetName()");
         } catch (JSException e) {
             // don't throw, but make sure the UI is unuseable
         	e.printStackTrace();

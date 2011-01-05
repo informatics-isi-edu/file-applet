@@ -113,7 +113,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         if (files == null) throw new IllegalArgumentException(""+files);
         boolean result = false;
         try {
-            result = postFileData(files, getTransmitNumber());
+        	if (dataset == null || dataset.length() == 0) {
+        		dataset = getTransmitNumber();
+        	}
+            result = postFiles(files);
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
@@ -123,7 +126,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     }
 
     /**
-     * Makes a web server access to get a transmission number.
+     * Makes a web server access to get a Dataset Name.
      */
     private String getTransmitNumber() throws FatalException {
         String ret = "";
@@ -131,7 +134,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = client.getTransmitNumber(query, cookie);
 
         if (response == null) {
-        	notifyFailure("Error: NULL response in getting a transmission number for the study.");
+        	notifyFailure("Error: NULL response in getting a Dataset Name for the study.");
         	return null;
         }
         synchronized (this) {
@@ -142,7 +145,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             ret = response.getLocationString();
         } else {
             fileUploadListener
-                    .notifyLogMessage("Error getting a transmission number (code="
+                    .notifyLogMessage("Error getting a Dataset Name (code="
                             + response.getStatus() + ")");
             throw new FatalException(
                     TagFilerProperties
@@ -205,10 +208,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      *            defined name of the dataset.
      * @return true if the file transfer was a success
      */
-    public boolean postFileData(List<String> files, String datasetName) {
-        if (files == null ||
-        		datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName+", "+files);
-        this.dataset = datasetName;
+    public boolean postFiles(List<String> files) {
+        if (files == null) throw new IllegalArgumentException(""+files);
 
         boolean success = false;
         ClientURLResponse response = null;
@@ -218,18 +219,18 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 .notifyLogMessage("Computing size and checksum of files...");
         try {
         	buildTotalSize(files);
-            fileUploadListener.notifyStart(datasetName, (enableChecksum ? 2 : 1)*datasetSize);
+            fileUploadListener.notifyStart(dataset, (enableChecksum ? 2 : 1)*datasetSize);
             fileUploadListener.notifyLogMessage(datasetSize
                     + " total bytes will be transferred");
 
             fileUploadListener
                     .notifyLogMessage("Beginning transfer of dataset '"
-                            + datasetName + "'...");
+                            + dataset + "'...");
 
             // upload all the files
             long t2 = 0;
             synchronized (lock) {
-        	    success = postFileDataHelper(files, datasetName);
+        	    success = postFileDataHelper(files);
                 t2 = System.currentTimeMillis();
         	    lock.wait();
             }
@@ -244,10 +245,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Upload rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-t2)) + " MB/s.");
             // then create and tag the dataset url entry
             String datasetURLQuery = DatasetUtils
-                    .getDatasetURLUploadQuery(datasetName, tagFilerServerURL,
+                    .getDatasetURLUploadQuery(dataset, tagFilerServerURL,
                             customTagMap);
             String datasetBody = DatasetUtils.getDatasetURLUploadBody(
-                    datasetName, tagFilerServerURL);
+            		dataset, tagFilerServerURL);
             
             fileUploadListener.notifyLogMessage("Creating dataset URL entry.");
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
@@ -274,7 +275,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 .notifyLogMessage("Error creating the dataset URL entry (code="
                         + response.getStatus() + ")");
 		        success = false;
-		        fileUploadListener.notifyFailure(datasetName, response.getStatus(), response.getErrorMessage());
+		        fileUploadListener.notifyFailure(dataset, response.getStatus(), response.getErrorMessage());
 		        return success;
             }
             
@@ -282,9 +283,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             // Register the dataset files
             datasetURLQuery = DatasetUtils
-            	.getDatasetURLUploadQuery(datasetName, tagFilerServerURL);
+            	.getDatasetURLUploadQuery(dataset, tagFilerServerURL);
             datasetBody = DatasetUtils.getDatasetURLUploadBody(
-                    datasetName, tagFilerServerURL, files, baseDirectory);
+            		dataset, tagFilerServerURL, files, baseDirectory);
             
             fileUploadListener.notifyLogMessage("Registering dataset files.");
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
@@ -319,7 +320,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         	}
             
             // validate the upload
-            datasetURLQuery = DatasetUtils.getDatasetQuery(datasetName, tagFilerServerURL);
+            datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
             response = client.validateAction(datasetURLQuery, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
@@ -338,7 +339,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         .notifyLogMessage("Error creating the dataset URL entry (code="
                                 + response.getStatus() + ")");
                 success = false;
-                fileUploadListener.notifyFailure(datasetName, status, errMsg);
+                fileUploadListener.notifyFailure(dataset, status, errMsg);
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors
@@ -409,19 +410,15 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      * 
      * @param files
      *            list of the files
-     * @param datasetName
-     *            name of the dataset
-     * @return true if the file tranfer was a success
+     * @return true if the file transfer was a success
      * @throws FatalException
      *             if an error occurred in one of the file transfers
      */
-    private boolean postFileDataHelper(List<String> files, String datasetName)
+    private boolean postFileDataHelper(List<String> files)
             throws FatalException {
-        if (datasetName == null || datasetName.length() == 0 ||
-        		files == null) 
-        	throw new IllegalArgumentException(""+datasetName+", "+files);
+        if (files == null) throw new IllegalArgumentException(""+files);
 
-        client.setBaseURL(DatasetUtils.getBaseUploadQuery(datasetName, tagFilerServerURL));
+        client.setBaseURL(DatasetUtils.getBaseUploadQuery(dataset, tagFilerServerURL));
         client.upload(files, baseDirectory, checksumMap);
         return true;
     }
@@ -521,6 +518,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 			lastCookieUpdate = t;
 	        cookie = client.updateSessionCookie(applet, cookie);
 		}
+	}
+
+	@Override
+	public void setDatasetName(String name) {
+		dataset = name;
+		
 	}
 
 }

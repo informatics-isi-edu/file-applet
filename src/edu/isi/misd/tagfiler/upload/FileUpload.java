@@ -31,23 +31,19 @@ public interface FileUpload extends FileTransfer {
     public boolean postFileData(List<String> files);
 
     /**
-     * Posts a list of files to the tagfilter server with a specified dataset
-     * name and using the best available MessageDigest available.
-     * 
-     * @param files
-     *            list of file names to upload
-     * @param datasetName
-     *            name of the dataset to assign
-     * @return true if all files were uploaded successfully
-     */
-    public boolean postFileData(List<String> files, String datasetName);
-
-    /**
      * Sets the files to be uploaded on the Web Page.
      * 
      * @param filesList
      *            the list of files
      */
     public void addFilesToList(List<String> filesList);
+
+    /**
+     * Sets the dataset name.
+     * 
+     * @param name
+     *            the dataset name
+     */
+    public void setDatasetName(String name);
 
 }

@@ -20,14 +20,14 @@ public interface FileDownloadListener extends FileListener {
     public void notifyFailure(String datasetName, String message);
 
     /**
-     * Called when a transmission number update starts
+     * Called when a Dataset update starts
      * @param filename
      *            name of the dataset being transferred.
      */
     public void notifyUpdateStart(String filename);
 
     /**
-     * Called when a transmission number update completes
+     * Called when a Dataset update completes
      * @param filename
      *            name of the dataset being transferred.
      */

@@ -36,7 +36,7 @@ public class AbstractFileTransferSession implements FileTransfer {
     // custom tags that are used
     protected CustomTagMap customTagMap;
 
-    // the dataset transmission number
+    // the Dataset Name
     protected String dataset;
 
     // list containing the files names to be downloaded.
