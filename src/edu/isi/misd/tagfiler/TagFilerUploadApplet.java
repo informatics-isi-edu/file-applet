@@ -152,6 +152,12 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
             System.out.println(TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetSuccess"));
 
+            try {
+                datasetName = DatasetUtils.urlEncode(datasetName);
+            } catch (UnsupportedEncodingException e) {
+                // just pass the unencoded message
+            	e.printStackTrace();
+            }
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.UploadSuccess",
@@ -184,8 +190,10 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
             }
             try {
                 message = DatasetUtils.urlEncode(message);
+                datasetName = DatasetUtils.urlEncode(datasetName);
             } catch (UnsupportedEncodingException e) {
                 // just pass the unencoded message
+            	e.printStackTrace();
             }
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(

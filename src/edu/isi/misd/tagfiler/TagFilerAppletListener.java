@@ -40,8 +40,10 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
             }
             try {
                 message = DatasetUtils.urlEncode(message);
+                datasetName = DatasetUtils.urlEncode(datasetName);
             } catch (UnsupportedEncodingException e) {
                 // just pass the unencoded message
+				e.printStackTrace();
             }
             final StringBuffer buff = new StringBuffer(applet.getTagFilerServerURL())
                     .append(TagFilerProperties.getProperty(

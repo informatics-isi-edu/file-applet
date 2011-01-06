@@ -164,6 +164,12 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
                     "tagfiler.message.download.DatasetSuccess",
                     new String[] { datasetName }));
 
+            try {
+                datasetName = DatasetUtils.urlEncode(datasetName);
+            } catch (UnsupportedEncodingException e) {
+                // just pass the unencoded message
+				e.printStackTrace();
+            }
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(
                             "tagfiler.url.DownloadSuccess",
@@ -183,8 +189,10 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
             }
             try {
                 message = DatasetUtils.urlEncode(message);
+                datasetName = DatasetUtils.urlEncode(datasetName);
             } catch (UnsupportedEncodingException e) {
                 // just pass the unencoded message
+            	e.printStackTrace();
             }
             final StringBuffer buff = new StringBuffer(tagFilerServerURL)
                     .append(TagFilerProperties.getProperty(
