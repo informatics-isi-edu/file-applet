@@ -315,6 +315,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             	success = checkDataSet();
             	if (!success) {
             		errMsg = "Failure in checking the uploaded files.";
+            		System.out.println(errMsg);
             		status = -1;
             	}
         	}
@@ -337,7 +338,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             } else {
                 fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
-                                + response.getStatus() + ")");
+                                + status + ")");
                 success = false;
                 fileUploadListener.notifyFailure(dataset, status, errMsg);
             }
