@@ -136,6 +136,7 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
                             "tagfiler.url.GenericFailure",
                             new String[] { message }));
 
+            System.out.println("Fatal error: \"" + e.getMessage() + "\". Redirecting...");
             applet.redirect(buff.toString());
 
         }
