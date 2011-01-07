@@ -591,4 +591,21 @@ public class DatasetUtils {
         return baseName;
 	}
 	
+    /**
+     * Get the file version from the url
+     * @param url
+     *            the url that created the file
+     * @return the file version
+     */
+	public static int getVersion(String url) {
+        if (url == null) throw new IllegalArgumentException("url is NULL");
+		int res = 0;
+		int index = url.lastIndexOf("@");
+		if (index != -1) {
+			res = Integer.parseInt(url.substring(index+1));
+		}
+        
+        return res;
+	}
+	
 }

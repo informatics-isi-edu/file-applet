@@ -525,6 +525,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 			try {
 				url.append(URLEncoder.encode(DatasetUtils.getBaseName(file.getName(), baseDirectory), "UTF-8"));
+				int fileVersion = file.getVersion();
+				if (fileVersion > 0) {
+					url.append("@").append(fileVersion);
+				}
 			} catch (UnsupportedEncodingException e2) {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
@@ -625,6 +629,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				long size = fi.update(file.getLength());
 				if (size > 0) {
 					long position = file.getTotalLength() - size;
+					int version = DatasetUtils.getVersion(response.getLocationString());
 					if (size <= chunkSize) {
 						// put the last chunk into the Transmission queue
 						fc = new FileChunk(file.getName(), position, size, file.getTotalLength());
@@ -632,6 +637,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 							fc.setFileChecksum(file.getFileChecksum());
 						}
 						fc.setLastChunk(true);
+						fc.setVersion(version);
 						synchronized (this) {
 							try {
 								TransmissionQueue.put(fc);
@@ -652,6 +658,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 									if (enableChecksum) {
 										fc.setFileChecksum(file.getFileChecksum());
 									}
+									fc.setVersion(version);
 									TransmissionQueue.put(fc);
 								} catch (InterruptedException e) {
 									// TODO Auto-generated catch block
@@ -1112,7 +1119,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		// the associated object to compute incrementally the file checksum
 		private FileChecksum fileChecksum;
 		
+		// flag to mark the last chunk
 		private boolean lastChunk;
+		
+		// the file version
+		private int version;
 		
 		FileChunk(String fileName, long first, long len, long total) {
 			setName(fileName);
@@ -1186,6 +1197,14 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			return response;
 		}
 		
+		public int getVersion() {
+			return version;
+		}
+
+		public void setVersion(int version) {
+			this.version = version;
+		}
+
 		// String representation
 		public String toString() {
 			return name+"(Offset: "+offset+", Chunk Size: "+length+", File Size: "+totalLength+")";
