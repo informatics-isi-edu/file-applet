@@ -35,6 +35,10 @@ public class DatasetUtils {
 
     private static final String STUDY = "Dataset Name";
 
+    private static final String NAME = "name";
+    
+    private static final String CONTAINS = "(contains)/?list=";
+    
     private static final String IMAGE_SET = "Image Set";
 
     /**
@@ -469,10 +473,10 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(QUERY_URI)
-                .append(DatasetUtils.urlEncode(STUDY))
+                .append(NAME)
                 .append("=")
                 .append(DatasetUtils.urlEncode(datasetName))
-                .append("?list=")
+                .append(CONTAINS)
                 .append(tags);
         return restURL.toString();
     }
