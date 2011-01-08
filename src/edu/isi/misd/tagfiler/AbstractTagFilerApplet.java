@@ -367,6 +367,9 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     			res = javaScriptThread.getResult();
     		} else {
     			// timeout; raise FatalException
+    			System.out.println("OOPS: The browser is not responding.");
+                JOptionPane.showMessageDialog(this.getComponent(), "The browser is not responding.\nIt is recommended to restart the browser.",
+                        "Warning", JOptionPane.WARNING_MESSAGE);
     			FatalException e = new FatalException("The browser is not responding");
     			fileListener.notifyFatal(e);
     		}
