@@ -245,7 +245,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             }
             else {
                 System.out.println("Dataset Name verification failed, code="
-                        + response.getStatus());
+                        + (status != 200 && status != 303 ? response.getStatus() : -1));
 
             	code.append("Status ").append(status);
                 switch (status) {
