@@ -215,9 +215,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                         }
                         fileDownloadListener.notifyFileRetrieveComplete(file);
             		}
-                    result = true;
             	}
         	}
+            result = true;
         } catch (Exception e) {
             e.printStackTrace();
             fileDownloadListener.notifyError(e);
