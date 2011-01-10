@@ -180,28 +180,44 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	// get the "bytes" and "sha256sum" tags of the files
         	JSONArray tagsValues = getFilesTagValues(applet, fileDownloadListener);
         	if (tagsValues != null) {
-                fileDownloadListener.notifyRetrieveStart(tagsValues.length());
+        		// get the number of files to be downloaded
+        		// by replacing a file with an URL, we might have have fewer files to be downloaded
+        		int totalFiles = tagsValues.length();
         		for (int i=0; i < tagsValues.length(); i++) {
-        			JSONObject fileTags = tagsValues.getJSONObject(i);
-        			
-                    // get the file name
-                    String file = fileTags.getString("name").substring(dataset.length()+1);
-                    fileNames.add(file);
-
-                    // get the bytes
-                    long bytes = fileTags.getLong("bytes");
-                    datasetSize += bytes;
-                    bytesMap.put(file, bytes);
-
-                    // get the checksum
-                    if (!fileTags.isNull("sha256sum")) {
-                        String checksum = fileTags.getString("sha256sum");
-                        checksumMap.put(file, checksum);
-                    }
-                    fileDownloadListener.notifyFileRetrieveComplete(file);
+        			if (tagsValues.getJSONObject(i).isNull("bytes")) {
+        				totalFiles--;
+        			}
         		}
+        		if (totalFiles > 0) {
+                    fileDownloadListener.notifyRetrieveStart(totalFiles);
+                    
+            		for (int i=0; i < tagsValues.length(); i++) {
+            			JSONObject fileTags = tagsValues.getJSONObject(i);
+            			
+            			// make sure we have a file
+            			if (fileTags.isNull("bytes")) {
+            				continue;
+            			}
+            			
+            			// get the file name
+                        String file = fileTags.getString("name").substring(dataset.length()+1);
+                        fileNames.add(file);
+
+                        // get the bytes
+                        long bytes = fileTags.getLong("bytes");
+                        datasetSize += bytes;
+                        bytesMap.put(file, bytes);
+
+                        // get the checksum
+                        if (!fileTags.isNull("sha256sum")) {
+                            String checksum = fileTags.getString("sha256sum");
+                            checksumMap.put(file, checksum);
+                        }
+                        fileDownloadListener.notifyFileRetrieveComplete(file);
+            		}
+                    result = true;
+            	}
         	}
-            result = true;
         } catch (Exception e) {
             e.printStackTrace();
             fileDownloadListener.notifyError(e);
