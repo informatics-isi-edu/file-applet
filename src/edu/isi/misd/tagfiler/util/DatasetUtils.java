@@ -263,36 +263,20 @@ public class DatasetUtils {
 
     /**
      * 
-     * @param datasetName
-     *            name of the dataset
      * @param checksum
      *            checksum computed for the file
      * @return URL suffix for uploading a file
      * @throws FatalException if the URL cannot be constructed
      */
-    public static final String getUploadQuerySuffix(String datasetName,
-            String checksum) throws FatalException {
-
-        if (datasetName == null || datasetName.length() == 0) 
-        	throw new IllegalArgumentException(datasetName);
+    public static final String getUploadQuerySuffix(String checksum) throws FatalException {
 
         final StringBuffer restURL = new StringBuffer();
         
-        try {
-            restURL.append("?")
-                    .append(DatasetUtils.urlEncode(STUDY))
-                    .append("=")
-                    .append(DatasetUtils.urlEncode(datasetName));
-            if (checksum != null) {
-                restURL.append("&")
-	                .append(TagFilerProperties
-	                        .getProperty("tagfiler.tag.checksum")).append("=")
-	                .append(checksum);
-            }
-        } catch (UnsupportedEncodingException e) {
-            throw new FatalException(e);
-        }
-
+        restURL.append("?")
+        		.append(TagFilerProperties.getProperty("tagfiler.tag.checksum"))
+        		.append("=")
+                .append(checksum);
+        
         return restURL.toString();
     }
 
