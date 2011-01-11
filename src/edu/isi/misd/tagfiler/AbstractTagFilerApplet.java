@@ -68,7 +68,7 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
     
     // timeout for JavaScript call execution (milliseconds)
-    private static final long JAVASCRIPT_TIMEOUT = 100 * 1000;
+    private static final long JAVASCRIPT_TIMEOUT = 10 * 1000;
     
     // tagfiler server URL specified from the parameter of the applet
     protected String tagFilerServerURL = null;

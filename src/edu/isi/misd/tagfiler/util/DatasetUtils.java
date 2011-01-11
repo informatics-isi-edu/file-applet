@@ -1,6 +1,5 @@
 package edu.isi.misd.tagfiler.util;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -32,8 +31,6 @@ public class DatasetUtils {
     public static final String TAGS_URI = "/tags/";
 
     public static final String STUDY_URI = "/study/";
-
-    private static final String STUDY = "Dataset Name";
 
     private static final String NAME = "name";
     
@@ -210,55 +207,6 @@ public class DatasetUtils {
         }
 
         return body.toString();
-    }
-
-    /**
-     * 
-     * @param datasetName
-     *            name of the dataset
-     * @param tagFilerServer
-     *            tagfiler server url
-     * @param baseDirectory
-     *            base directory being used for the upload
-     * @param file
-     *            file that will be uploaded.
-     * @param checksum
-     *            checksum computed for the file
-     * @return URL for uploading a file to the tagserver
-     * @thows FatalException if the URL cannot be constructed
-     */
-    public static final String getFileUploadQuery(String datasetName,
-            String tagFilerServer, String baseDirectory, File file,
-            String checksum) throws FatalException {
-
-        if (datasetName == null || datasetName.length() == 0 ||
-        		tagFilerServer == null || tagFilerServer.length() == 0 ||
-        		baseDirectory == null ||
-        		file == null ||
-        		checksum == null) 
-        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer+", "+
-        			baseDirectory+", "+file+", "+checksum);
-        final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI);
-        try {
-
-            restURL.append(
-                    DatasetUtils.urlEncode(DatasetUtils.generateDatasetPath(
-                            datasetName, baseDirectory, file.getAbsolutePath())))
-                    .append("?")
-                    .append(DatasetUtils.urlEncode(STUDY))
-                    .append("=")
-                    .append(DatasetUtils.urlEncode(datasetName))
-                    .append("&")
-                    .append(TagFilerProperties
-                            .getProperty("tagfiler.tag.checksum")).append("=")
-                    .append(checksum);
-
-        } catch (UnsupportedEncodingException e) {
-            throw new FatalException(e);
-        }
-
-        return restURL.toString();
     }
 
     /**
