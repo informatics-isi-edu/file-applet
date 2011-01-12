@@ -22,8 +22,10 @@ public interface FileDownload extends FileTransfer {
      * 
      * @param dataset
      *            the dataset name of the files to retrieve
+     * @param version
+     *            the dataset version
      */
-    public List<String> getFiles(String dataset);
+    public List<String> getFiles(String dataset, int version);
 
     /**
      * Performs the dataset download.
@@ -40,6 +42,8 @@ public interface FileDownload extends FileTransfer {
      * 
      * @param controlNumber
      *            the Dataset Name to check
+     * @param version
+     *            the Dataset version
      * @param status
      *            the status returned by the HTTP response 
      * @param errorMessage
@@ -47,6 +51,6 @@ public interface FileDownload extends FileTransfer {
      * @return true if a dataset with the particular Dataset Name exists,
      *         false otherwise
      */
-    public boolean verifyValidControlNumber(String controlNumber, StringBuffer status, StringBuffer errorMessage);
+    public boolean verifyValidControlNumber(String controlNumber, int version, StringBuffer status, StringBuffer errorMessage);
 
 }

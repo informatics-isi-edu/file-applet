@@ -39,6 +39,9 @@ public class AbstractFileTransferSession implements FileTransfer {
     // the Dataset Name
     protected String dataset;
 
+    // the Dataset Version
+    protected int datasetVersion;
+
     // list containing the files names to be downloaded.
     protected List<String> fileNames = new ArrayList<String>();
 

@@ -83,9 +83,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * @param controlNumber
      *            the controlNumber of the dataset
      */
-    public List<String> getFiles(String controlNumber) {
+    public List<String> getFiles(String controlNumber, int version) {
         if (controlNumber == null || controlNumber.length() == 0) throw new IllegalArgumentException(controlNumber);
         dataset = controlNumber;
+        datasetVersion = version;
     	fileDownloadListener.notifyUpdateStart(dataset);
     	boolean success = false;
 
@@ -240,12 +241,14 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * @return true if a dataset with the particular Dataset Name exists,
      *         false otherwise
      */
-    public boolean verifyValidControlNumber(String controlNumber, StringBuffer code, StringBuffer errorMessage) {
+    public boolean verifyValidControlNumber(String controlNumber, int version, StringBuffer code, StringBuffer errorMessage) {
         if (controlNumber == null || controlNumber.length() == 0) throw new IllegalArgumentException(controlNumber);
         boolean valid = false;
         ClientURLResponse response = null;
         try {
-        	response = client.verifyValidControlNumber(DatasetUtils.getDatasetUrl(controlNumber, tagFilerServerURL), cookie);
+        	String url = DatasetUtils.getDatasetUrl(controlNumber, version, tagFilerServerURL);
+        	System.out.println("Verify Valid ControlNumber for: \"" + url + "\".");
+        	response = client.verifyValidControlNumber(url, cookie);
             if (response == null) {
             	dataset = controlNumber;
             	notifyFailure("Error: NULL response in retrieving study " + controlNumber);
@@ -308,7 +311,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     	String tags = DatasetUtils.joinEncode(customTagMap.getTagNames(), ",");
         String query = null;
 		try {
-			query = DatasetUtils.getDatasetTags(dataset,
+			query = DatasetUtils.getDatasetTags(dataset, datasetVersion,
 			        tagFilerServerURL, tags);
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block

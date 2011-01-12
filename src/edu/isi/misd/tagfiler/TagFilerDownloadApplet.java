@@ -40,11 +40,16 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
 
     private static final String TAGFILER_CONTROL_NUM_PARAM = "tagfiler.server.transmissionnum";
 
+    private static final String TAGFILER_VERSION_PARAM = "tagfiler.server.version";
+
     // download directory
     private StringBuffer destinationDirectoryField = new StringBuffer();
 
     // Dataset Name
     private String defaultControlNumber = null;
+
+    // Dataset Version
+    private int defaultVersion = 0;
 
     // download files
     private Set<String> filesToDownload = new HashSet<String>();
@@ -67,6 +72,11 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         defaultControlNumber = this.getParameter(TAGFILER_CONTROL_NUM_PARAM);
         if (defaultControlNumber == null) {
             defaultControlNumber = "";
+        } else {
+        	String version = this.getParameter(TAGFILER_VERSION_PARAM);
+        	if (version != null && version.length() > 0) {
+        		defaultVersion = Integer.parseInt(version);
+        	}
         }
 
         try {
@@ -97,9 +107,10 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         	if (defaultControlNumber.length() == 0) {
         		setEnabled("UpdateButton");
         		setEnabled("TransmissionNumber");
+        		setEnabled("Version");
         	} else {
         		String tags = eval("getTagsName()");
-            	getDatasetInfo(defaultControlNumber, tags);
+            	getDatasetInfo(tags);
         	}
     	}
     	
@@ -401,9 +412,8 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
     /**
      * Retrieve the tags and files to be downloaded
      */
-    public void getDatasetInfo(String controlNumber, String tags) {
+    public void getDatasetInfo(String tags) {
     	String name[] = tags.split("<br/>");
-        defaultControlNumber = controlNumber;
         for (int i=0; i < name.length; i++) {
         	customTagMap.setValue(name[i], "");
         }
@@ -411,9 +421,9 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         // make sure the Dataset Name exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
-        if (fileDownload.verifyValidControlNumber(controlNumber, status, errorMessage)) {
+        if (fileDownload.verifyValidControlNumber(defaultControlNumber, defaultVersion, status, errorMessage)) {
             final List<String> fileList = fileDownload
-                    .getFiles(controlNumber);
+                    .getFiles(defaultControlNumber, defaultVersion);
 
             if (fileList.size() > 0) {
                 enableSelectDirectory();
@@ -425,9 +435,19 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
                             getComponent(),
                     TagFilerProperties.getProperty(
                             "tagfiler.dialog.InvalidControlNumber",
-                            new String[] { controlNumber, errorMessage.toString() }),
+                            new String[] { defaultControlNumber, errorMessage.toString() }),
                             status.toString(), JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    /**
+     * Retrieve the tags and files to be downloaded
+     * This function is called from JavaScript
+     */
+    public void getDatasetInfo(String controlNumber, String version, String tags) {
+    	defaultControlNumber = controlNumber;
+    	defaultVersion = (version != null && version.length() > 0) ? Integer.parseInt(version) : 0;
+    	getDatasetInfo(tags);
     }
     
     /**
@@ -440,7 +460,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
     		defaultControlNumber = testProperties.getProperty("Control Number", "null");
     		TagFilerDownloadApplet.this.eval("setTransmissionNumber", defaultControlNumber);
     		String tags = eval("getTagsName()");
-        	getDatasetInfo(defaultControlNumber, tags);
+        	getDatasetInfo(tags);
         	File dir = new File(testProperties.getProperty("Destination Directory", "null") + "/" + UUID.randomUUID());
         	dir.mkdirs();
     		fileChooser.setSelectedFile(dir);

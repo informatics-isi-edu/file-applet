@@ -321,12 +321,14 @@ public class DatasetUtils {
      * 
      * @param datasetName
      *            name of the dataset
+     * @param version
+     *            version of the dataset
      * @param tagFilerServer
      *            tagfiler server URL
      * @return the encoded URL for dataset
      * @throws UnsupportedEncodingException
      */
-    public static final String getDatasetUrl(String datasetName,
+    public static final String getDatasetUrl(String datasetName, int version,
             String tagFilerServer) throws UnsupportedEncodingException {
         if (datasetName == null || datasetName.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
@@ -334,7 +336,8 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
         								.append(FILE_URI)
-        								.append(DatasetUtils.urlEncode(datasetName));
+        								.append(DatasetUtils.urlEncode(datasetName))
+        								.append(version != 0 ? "@"+version : "");
         return restURL.toString();
     }
 
@@ -364,6 +367,8 @@ public class DatasetUtils {
      * Get the URL for the dataset tags
      * @param datasetName
      *            name of the dataset
+     * @param version
+     *            version of the dataset
      * @param tagFilerServer
      *            tagfiler server URL
      * @param tags
@@ -371,7 +376,7 @@ public class DatasetUtils {
      * @return the encoded URL for dataset tags
      * @throws UnsupportedEncodingException
      */
-    public static final String getDatasetTags(String datasetName,
+    public static final String getDatasetTags(String datasetName, int version,
             String tagFilerServer, String tags)
             throws UnsupportedEncodingException {
         if (datasetName == null || datasetName.length() == 0 ||
@@ -380,7 +385,9 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
-                .append(DatasetUtils.urlEncode(datasetName)).append("?list=")
+                .append(DatasetUtils.urlEncode(datasetName))
+                .append(version != 0 ? "@"+version : "")
+                .append("?list=")
                 .append(tags);
         return restURL.toString();
     }
