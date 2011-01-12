@@ -484,6 +484,7 @@ public class JakartaClient  implements ClientURL {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		System.out.println("formparams: "+formparams);
 		httpput.setEntity(entity);
 		return execute(httpput, cookie);
 	}

@@ -252,7 +252,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             fileUploadListener.notifyLogMessage("Creating dataset URL entry.");
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
-                    + "\nBody:" + datasetBody);
+                    + "\nBody: " + datasetBody);
             
             applet.updateStatus(TagFilerProperties.getProperty("tagfiler.label.CompleteUploadStatus"));
             t1 = System.currentTimeMillis();
@@ -322,6 +322,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             // validate the upload
             datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
+            System.out.println("Sending Upload Validate Action: \"" + datasetURLQuery + "\".");
             response = client.validateAction(datasetURLQuery, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
