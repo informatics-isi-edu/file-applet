@@ -79,6 +79,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
     // flag to mark a checksum computation
 	private boolean enableChecksum;
 	
+    // the Dataset Id
+    protected String datasetId;
+
     // wrapper for WorkerQueue
 	private QueueWrapper workerWrapper = new QueueWrapper();
 	
@@ -169,6 +172,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public void upload(List<String> files) {
 		enableChecksum = listener.isEnableChecksum();
+		datasetId = listener.getDatasetId();
 		totalFiles = files.size();
 		for (String file : files) {
 			uploadFile(file);
@@ -200,6 +204,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public void upload(String filename) {
 		enableChecksum = listener.isEnableChecksum();
+		datasetId = listener.getDatasetId();
 		totalFiles = 1;
 		uploadFile(filename);
 		Thread thread = new DispatcherThread();
@@ -235,6 +240,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	public void download(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
         if (file == null || outputDir == null) throw new IllegalArgumentException(file+", "+outputDir);
 		enableChecksum = listener.isEnableChecksum();
+		datasetId = listener.getDatasetId();
 		totalFiles = 1;
 		isDownload = true;
         downloadFile(file, outputDir, checksumMap, bytesMap);
@@ -267,6 +273,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
         if (files == null || outputDir == null) throw new IllegalArgumentException(""+files+", "+outputDir);
 		enableChecksum = listener.isEnableChecksum();
+		datasetId = listener.getDatasetId();
 		totalFiles = files.size();
 		isDownload = true;
 		for (String file : files) {
@@ -595,7 +602,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				try {
 					if (enableChecksum) {
 						checksumMap.put(DatasetUtils.getBaseName(file.getName(), baseDirectory), cksum);
-						params = DatasetUtils.getUploadQuerySuffix(cksum);
+						params = DatasetUtils.getUploadQuerySuffix(datasetId, cksum);
 					}
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block

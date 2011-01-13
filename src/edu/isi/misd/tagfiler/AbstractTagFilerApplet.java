@@ -224,6 +224,7 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     	}
     	synchronized (javaScriptThread.getLoadLock()) {
         	javaScriptThread.setReady(true);
+        	javaScriptThread.getLoadLock().notifyAll();
     	}
     	super.stop();
     }
@@ -393,7 +394,6 @@ public abstract class AbstractTagFilerApplet extends JApplet {
      */
     public void redirect(String urlStr) {
         if (urlStr == null) throw new IllegalArgumentException(urlStr);
-        this.stop();
         System.out.println("redirect: " + urlStr);
         try {
             final URL url = new URL(urlStr);
@@ -407,7 +407,6 @@ public abstract class AbstractTagFilerApplet extends JApplet {
      * Reloads the UI
      */
     public void reload() {
-        this.stop();
         this.destroy();
 
         try {

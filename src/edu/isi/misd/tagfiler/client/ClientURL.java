@@ -108,15 +108,17 @@ public interface ClientURL {
     public ClientURLResponse getFileLength(String url, String cookie);
     
     /**
-     * Get a new control number
+     * Get a new sequence number
      * 
      * @param url
      *            the query url
+     * @param table
+     *            the sequence table
      * @param cookie
      *            the cookie to be set in the request
      * @return the HTTP Response
      */
-    public ClientURLResponse getTransmitNumber(String url, String cookie);
+    public ClientURLResponse getSequenceNumber(String url, String table, String cookie);
     
     /**
      * Checks for and saves updated session cookie
@@ -195,6 +197,8 @@ public interface ClientURL {
      * 
      * @param url
      *            the query url
+     * @param key
+     *            the set key
      * @param status
      *            the action status (success or failure)
      * @param study_size
@@ -207,5 +211,5 @@ public interface ClientURL {
      *            the cookie to be set in the request
      * @return the HTTP Response
      */
-    public ClientURLResponse validateAction(String url, String status, long study_size, int count, String direction, String cookie);
+    public ClientURLResponse validateAction(String url, String key, String status, long study_size, int count, String direction, String cookie);
 }

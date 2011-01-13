@@ -114,8 +114,9 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         boolean result = false;
         try {
         	if (dataset == null || dataset.length() == 0) {
-        		dataset = getTransmitNumber();
+        		dataset = getSequenceNumber("transmitnumber");
         	}
+        	datasetId = getSequenceNumber("keygenerator");
             result = postFiles(files);
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,15 +127,18 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     }
 
     /**
-     * Makes a web server access to get a Dataset Name.
+     * Makes a web server access to get a sequence number.
+     * @param table
+     *            the sequnce table to generate a number.
+     * @return a sequence number
      */
-    private String getTransmitNumber() throws FatalException {
+    private String getSequenceNumber(String table) throws FatalException {
         String ret = "";
         String query = tagFilerServerURL + "/transmitnumber";
-        ClientURLResponse response = client.getTransmitNumber(query, cookie);
+        ClientURLResponse response = client.getSequenceNumber(query, table, cookie);
 
         if (response == null) {
-        	notifyFailure("Error: NULL response in getting a Dataset Name for the study.");
+        	notifyFailure("Error: NULL response in getting a sequence number, table \"" + table + "\".");
         	return null;
         }
         synchronized (this) {
@@ -145,7 +149,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             ret = response.getLocationString();
         } else {
             fileUploadListener
-                    .notifyLogMessage("Error getting a Dataset Name (code="
+                    .notifyLogMessage("Error getting a sequence number, table \"" + table + "\" (code="
                             + response.getStatus() + ")");
             throw new FatalException(
                     TagFilerProperties
@@ -245,7 +249,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Upload rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-t2)) + " MB/s.");
             // then create and tag the dataset url entry
             String datasetURLQuery = DatasetUtils
-                    .getDatasetURLUploadQuery(dataset, tagFilerServerURL,
+                    .getDatasetURLUploadQuery(dataset, datasetId, tagFilerServerURL,
                             customTagMap);
             String datasetBody = DatasetUtils.getDatasetURLUploadBody(
             		dataset, tagFilerServerURL);
@@ -289,7 +293,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             fileUploadListener.notifyLogMessage("Registering dataset files.");
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
-                    + "\nBody:" + datasetBody);
+                    + "\nBody: " + datasetBody);
             
             t1 = System.currentTimeMillis();
             response = client.putFileData(datasetURLQuery, datasetBody, cookie);
@@ -323,7 +327,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             // validate the upload
             datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
             System.out.println("Sending Upload Validate Action: \"" + datasetURLQuery + "\".");
-            response = client.validateAction(datasetURLQuery, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
+            response = client.validateAction(datasetURLQuery, datasetId, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
             }
@@ -483,7 +487,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			client.validateAction(datasetURLQuery, "failure", 0, 0, "upload", cookie);
+			client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "upload", cookie);
 			fileUploadListener.notifyFailure(dataset, err);
 		}
 	}

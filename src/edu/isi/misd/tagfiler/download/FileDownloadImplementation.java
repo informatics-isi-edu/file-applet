@@ -424,7 +424,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 				e.printStackTrace();
 			}
 			// log download failure
-			client.validateAction(datasetURLQuery, "failure", 0, 0, "download", cookie);
+			client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "download", cookie);
 			fileDownloadListener.notifyFailure(dataset, err);
 		}
 	}
@@ -459,7 +459,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 			e.printStackTrace();
 		}
 		// log download failure
-		client.validateAction(datasetURLQuery, "success", 0, 0, "download", cookie);
+		client.validateAction(datasetURLQuery, datasetId, "success", 0, 0, "download", cookie);
 		fileDownloadListener.notifySuccess(dataset);
 	}
 

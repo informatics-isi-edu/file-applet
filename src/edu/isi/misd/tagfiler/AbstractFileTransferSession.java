@@ -39,7 +39,10 @@ public class AbstractFileTransferSession implements FileTransfer {
     // the Dataset Name
     protected String dataset;
 
-    // the Dataset Version
+    // the Dataset Id
+    protected String datasetId;
+
+	// the Dataset Version
     protected int datasetVersion;
 
     // list containing the files names to be downloaded.
@@ -87,6 +90,14 @@ public class AbstractFileTransferSession implements FileTransfer {
 
 	public void setEnableChecksum(boolean enableChecksum) {
 		this.enableChecksum = enableChecksum;
+	}
+
+    public String getDatasetId() {
+		return datasetId;
+	}
+
+	public void setDatasetId(String datasetId) {
+		this.datasetId = datasetId;
 	}
 
     /**

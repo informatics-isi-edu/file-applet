@@ -97,6 +97,8 @@ public class DatasetUtils {
      * 
      * @param datasetName
      *            name of the dataset
+     * @param key
+     *            the dataset key
      * @param tagFilerServer
      *            URL of the tagfiler server
      * @param customTagMap
@@ -104,7 +106,7 @@ public class DatasetUtils {
      * @return the REST URL to create a tagfiler URL upload for the dataset.
      * @thows FatalException if the URL cannot be constructed
      */
-    public static final String getDatasetURLUploadQuery(String datasetName,
+    public static final String getDatasetURLUploadQuery(String datasetName, String key,
             String tagFilerServer, CustomTagMap customTagMap)
             throws FatalException {
 
@@ -116,7 +118,11 @@ public class DatasetUtils {
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
                     .append("?")
-                    .append(DatasetUtils.urlEncode(IMAGE_SET));
+                    .append(DatasetUtils.urlEncode(IMAGE_SET))
+                    .append("&")
+                    .append("key")
+                    .append("=")
+                    .append(key);
 
             Set<String> tagNames = customTagMap.getTagNames();
             for (String tagName : tagNames) {
@@ -210,19 +216,33 @@ public class DatasetUtils {
 
     /**
      * 
+     * @param id
+     *            the dataset id
      * @param checksum
      *            checksum computed for the file
      * @return URL suffix for uploading a file
      * @throws FatalException if the URL cannot be constructed
      */
-    public static final String getUploadQuerySuffix(String checksum) throws FatalException {
+    public static final String getUploadQuerySuffix(String id, String checksum) throws FatalException {
 
         final StringBuffer restURL = new StringBuffer();
         
-        restURL.append("?")
-        		.append(TagFilerProperties.getProperty("tagfiler.tag.checksum"))
-        		.append("=")
-                .append(checksum);
+        try {
+			restURL.append("?")
+			.append(TagFilerProperties.getProperty("tagfiler.tag.key"))
+			.append("=")
+			.append(DatasetUtils.urlEncode(id));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        if (checksum != null) {
+            restURL.append("&")
+    		.append(TagFilerProperties.getProperty("tagfiler.tag.checksum"))
+    		.append("=")
+            .append(checksum);
+        }
         
         return restURL.toString();
     }

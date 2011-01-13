@@ -288,17 +288,29 @@ public class JakartaClient  implements ClientURL {
 	}
     
     /**
-     * Get a new control number
+     * Get a new sequence number
      * 
      * @param url
      *            the query url
+     * @param table
+     *            the sequence table
      * @param cookie
      *            the cookie to be set in the request
      * @return the HTTP Response
      */
-    public ClientURLResponse getTransmitNumber(String url, String cookie) {
+    public ClientURLResponse getSequenceNumber(String url, String table, String cookie) {
 		HttpPost httppost = new HttpPost(url);
-		httppost.setHeader("Content-Type", "application/octet-stream");
+		httppost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		List<NameValuePair> formparams = new ArrayList<NameValuePair>();
+		formparams.add(new BasicNameValuePair("table", table));
+		UrlEncodedFormEntity entity = null;
+		try {
+			entity = new UrlEncodedFormEntity(formparams, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		httppost.setEntity(entity);
 		return execute(httppost, cookie);
 	}
     
@@ -460,6 +472,8 @@ public class JakartaClient  implements ClientURL {
      *            the query url
      * @param status
      *            the action status (success or failure)
+     * @param key
+     *            the set id
      * @param study_size
      *            the size of the study
      * @param count
@@ -470,13 +484,14 @@ public class JakartaClient  implements ClientURL {
      *            the cookie to be set in the request
      * @return the HTTP Response
      */
-    public ClientURLResponse validateAction(String url, String status, long study_size, int count,  String direction, String cookie) {
+    public ClientURLResponse validateAction(String url, String key, String status, long study_size, int count,  String direction, String cookie) {
 		HttpPut httpput = new HttpPut(url);
 		List<NameValuePair> formparams = new ArrayList<NameValuePair>();
 		formparams.add(new BasicNameValuePair("study_size", ""+study_size));
 		formparams.add(new BasicNameValuePair("status", status));
 		formparams.add(new BasicNameValuePair("direction", direction));
 		formparams.add(new BasicNameValuePair("count", ""+count));
+		formparams.add(new BasicNameValuePair("key", key));
 		UrlEncodedFormEntity entity = null;
 		try {
 			entity = new UrlEncodedFormEntity(formparams, "UTF-8");

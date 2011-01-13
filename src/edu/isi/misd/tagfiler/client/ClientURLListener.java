@@ -72,4 +72,9 @@ public interface ClientURLListener {
      */
     public boolean isEnableChecksum();
 
+    /**
+     * @return the dataset id
+     */
+    public String getDatasetId();
+
 }
