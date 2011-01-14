@@ -229,7 +229,7 @@ public class DatasetUtils {
         
         try {
 			restURL.append("?")
-			.append(TagFilerProperties.getProperty("tagfiler.tag.key"))
+			.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.memberOf")))
 			.append("=")
 			.append(DatasetUtils.urlEncode(id));
 		} catch (UnsupportedEncodingException e) {
