@@ -350,10 +350,10 @@ public abstract class AbstractTagFilerApplet extends JApplet {
         	javaScriptThread.getLoadLock().notifyAll();
     	}
     	
-    	long t0, t1;
-    	t0 = t1 = System.currentTimeMillis();
-    	// wait now for the result, but not more than 100 seconds
     	synchronized (javaScriptThread.getReleaseLock()) {
+        	long t0, t1;
+        	t0 = t1 = System.currentTimeMillis();
+        	// wait now for the result, but not more than 10 seconds
     		while (javaScriptThread.getCommand() != null && (t1 - t0) < JAVASCRIPT_TIMEOUT) {
     			try {
 					javaScriptThread.getReleaseLock().wait(JAVASCRIPT_TIMEOUT - (t1 - t0));
@@ -366,13 +366,14 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     		if (javaScriptThread.getCommand() == null) {
     			// success
     			res = javaScriptThread.getResult();
-    		} else {
-    			// timeout; raise FatalException
-    			System.out.println("OOPS: The browser is not responding.");
-                JOptionPane.showMessageDialog(this.getComponent(), "The browser is not responding.\nIt is recommended to restart the browser.",
-                        "Warning", JOptionPane.WARNING_MESSAGE);
-    			FatalException e = new FatalException("The browser is not responding");
-    			fileListener.notifyFatal(e);
+    		} else if (!stopped) {
+        			// timeout; raise FatalException
+    				stopped = true;
+        			System.out.println("OOPS: The browser is not responding.");
+                    JOptionPane.showMessageDialog(this.getComponent(), "The browser is not responding.\nIt is recommended to restart the browser.",
+                            "Warning", JOptionPane.WARNING_MESSAGE);
+        			FatalException e = new FatalException("The browser is not responding");
+        			fileListener.notifyFatal(e);
     		}
     	}
         return res;
