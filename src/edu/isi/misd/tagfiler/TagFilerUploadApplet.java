@@ -147,13 +147,16 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
         /**
          * Called when a dataset is complete.
          */
-        public void notifySuccess(String datasetName) {
+        public void notifySuccess(String datasetName, int version) {
             if (datasetName == null || datasetName.length() == 0) throw new IllegalArgumentException(datasetName);
             System.out.println(TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetSuccess"));
 
             try {
                 datasetName = DatasetUtils.urlEncode(datasetName);
+                if (version > 0) {
+                	datasetName += "@" + version;
+                }
             } catch (UnsupportedEncodingException e) {
                 // just pass the unencoded message
             	e.printStackTrace();

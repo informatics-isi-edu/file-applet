@@ -68,9 +68,11 @@ public interface ConcurrentClientURL extends ClientURL{
      * @param baseDirectory
      *            the base directory to be used for the uploaded files
      * @param checksumMap
-     *            the map containing the checksums of the files 
+     *            the checksum Map for the uploaded files
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap);
+	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap, Map<String, Integer> versionMap);
 	
     /**
      * Upload a file
@@ -101,8 +103,10 @@ public interface ConcurrentClientURL extends ClientURL{
      *            the map containing the checksums of all files to be downloaded.
      * @param bytesMap
      *            the map containing the bytes of all files to be downloaded
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	public void download(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap);
+	public void download(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap);
 	
     /**
      * Download a list of files
@@ -125,7 +129,9 @@ public interface ConcurrentClientURL extends ClientURL{
      *            the map containing the checksums of all files to be downloaded.
      * @param bytesMap
      *            the map containing the bytes of all files to be downloaded
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap);
+	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap);
 	
 }

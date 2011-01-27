@@ -142,7 +142,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         }
         fileDownloadListener.notifyStart(dataset, totalSize);
         start = System.currentTimeMillis();
-        client.download(fileNames, destDir, checksumMap, bytesMap);
+        client.download(fileNames, destDir, checksumMap, bytesMap, versionMap);
 
         return success;
     }
@@ -209,6 +209,11 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
                         datasetSize += bytes;
                         bytesMap.put(file, bytes);
 
+                        // get the version
+                        String vname = fileTags.getString("vname");
+                        int version = Integer.parseInt(vname.substring(vname.lastIndexOf("@") + 1));
+                        versionMap.put(file, version);
+
                         // get the checksum
                         if (!fileTags.isNull("sha256sum")) {
                             String checksum = fileTags.getString("sha256sum");
@@ -259,7 +264,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
                             + DatasetUtils.TAGS_URI
-                            + controlNumber + "/contains")) {
+                            + controlNumber + "/vcontains")) {
                 valid = true;
             }
             else {
@@ -460,7 +465,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		}
 		// log download failure
 		client.validateAction(datasetURLQuery, datasetId, "success", 0, 0, "download", cookie);
-		fileDownloadListener.notifySuccess(dataset);
+		fileDownloadListener.notifySuccess(dataset, datasetVersion);
 	}
 
 	/**

@@ -14,8 +14,10 @@ public interface FileListener {
      * 
      * @param datasetName
      *            name of the dataset
+     * @param version
+     *            the dataset version
      */
-    public void notifySuccess(String datasetName);
+    public void notifySuccess(String datasetName, int version);
 
     /**
      * Called when a dataset fails to transfer completely.

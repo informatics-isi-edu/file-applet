@@ -283,13 +283,16 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 		        return success;
             }
             
+            // get the dataset version
+            datasetVersion = DatasetUtils.getVersion(response.getLocationString());
+            
             response.release();
             
             // Register the dataset files
             datasetURLQuery = DatasetUtils
-            	.getDatasetURLUploadQuery(dataset, tagFilerServerURL);
+            	.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL);
             datasetBody = DatasetUtils.getDatasetURLUploadBody(
-            		dataset, tagFilerServerURL, files, baseDirectory);
+            		dataset, tagFilerServerURL, files, versionMap, baseDirectory);
             
             fileUploadListener.notifyLogMessage("Registering dataset files.");
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery
@@ -339,7 +342,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             if (200 == status) {
                 fileUploadListener.notifyLogMessage("Dataset URL entry created successfully.");
                 success = true;
-        		fileUploadListener.notifySuccess(dataset);
+        		fileUploadListener.notifySuccess(dataset, datasetVersion);
             } else {
                 fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
@@ -425,7 +428,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         if (files == null) throw new IllegalArgumentException(""+files);
 
         client.setBaseURL(DatasetUtils.getBaseUploadQuery(dataset, tagFilerServerURL));
-        client.upload(files, baseDirectory, checksumMap);
+        client.upload(files, baseDirectory, checksumMap, versionMap);
         return true;
     }
 

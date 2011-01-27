@@ -54,7 +54,10 @@ public class AbstractFileTransferSession implements FileTransfer {
     // map containing the checksums of all files to be transferred.
     protected Map<String, String> checksumMap = new HashMap<String, String>();
 
-    // flag to mark a failure
+    // map containing the versions of all files to be transferred.
+    protected Map<String, Integer> versionMap = new HashMap<String, Integer>();
+
+	// flag to mark a failure
     protected boolean cancel;
 
     // the time when the last cookie was updated
@@ -110,10 +113,10 @@ public class AbstractFileTransferSession implements FileTransfer {
      * @return the JSON Array with the tags values
      */
     protected JSONArray getFilesTagValues(AbstractTagFilerApplet applet, FileListener fl) {
-    	String tags = "bytes,sha256sum";
+    	String tags = "bytes,sha256sum,vname";
         String query = null;
 		try {
-			query = DatasetUtils.getFilesTags(dataset,
+			query = DatasetUtils.getFilesTags(dataset, datasetVersion,
 			        tagFilerServerURL, tags);
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block

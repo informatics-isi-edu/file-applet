@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.isi.misd.tagfiler.exception.FatalException;
@@ -33,8 +34,10 @@ public class DatasetUtils {
     public static final String STUDY_URI = "/study/";
 
     private static final String NAME = "name";
+
+    private static final String VNAME = "vname";
     
-    private static final String CONTAINS = "(contains)/?list=";
+    private static final String VCONTAINS = "(vcontains)/?versions=any&list=";
     
     private static final String IMAGE_SET = "Image Set";
 
@@ -142,12 +145,14 @@ public class DatasetUtils {
      * 
      * @param datasetName
      *            name of the dataset
+     * @param version
+     *            the dataset version
      * @param tagFilerServer
      *            URL of the tagfiler server
      * @return the REST URL to create a tagfiler URL upload for the dataset.
      * @thows FatalException if the URL cannot be constructed
      */
-    public static final String getDatasetURLUploadQuery(String datasetName,
+    public static final String getDatasetURLUploadQuery(String datasetName, int version,
             String tagFilerServer)
             throws FatalException {
         if (datasetName == null || datasetName.length() == 0 ||
@@ -157,7 +162,8 @@ public class DatasetUtils {
                 .append(TAGS_URI);
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
-                    .append("/contains");
+            		.append(version != 0 ? "@"+version : "")
+                    .append("/vcontains");
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
@@ -294,7 +300,7 @@ public class DatasetUtils {
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
                 .append(datasetName)
-                .append("/contains");
+                .append("/vcontains");
         return restURL.toString();
     }
 
@@ -306,12 +312,14 @@ public class DatasetUtils {
      *            tagfiler server URL
      * @param files
      *            the list of files to be registered
+     * @param versionMap
+     *            the files versions map
      * @param baseDirectory
      *            the base directory of the files
      * @return URL for querying for all the files in a dataset
      */
     public static final String getDatasetURLUploadBody(String datasetName,
-            String tagFilerServer, List<String> files, String baseDirectory) {
+            String tagFilerServer, List<String> files,  Map<String, Integer> versionMap,String baseDirectory) {
         if (datasetName == null || datasetName.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
@@ -320,7 +328,7 @@ public class DatasetUtils {
         HashSet <String> array = new HashSet <String>();
         for (String file : files) {
         	StringBuffer buff = new StringBuffer();
-		    buff.append(generateDatasetPath(datasetName, baseDirectory, file));
+		    buff.append(generateDatasetPath(datasetName, baseDirectory, file)).append("@").append(versionMap.get(file));
 			try {
 				array.add(DatasetUtils.urlEncode(buff.toString()));
 			} catch (UnsupportedEncodingException e) {
@@ -328,9 +336,9 @@ public class DatasetUtils {
 				e.printStackTrace();
 			}
         }
-        String tags = DatasetUtils.join(array, "&contains=");
+        String tags = DatasetUtils.join(array, "&vcontains=");
         if (tags.trim().length() > 0) {
-        	restURL.append("contains=");
+        	restURL.append("vcontains=");
         }
         restURL.append(tags);
         return restURL.toString();
@@ -415,6 +423,8 @@ public class DatasetUtils {
      * Get the URL for the files tags
      * @param datasetName
      *            name of the dataset
+     * @param version
+     *            the dataset version
      * @param tagFilerServer
      *            tagfiler server URL
      * @param tags
@@ -422,7 +432,7 @@ public class DatasetUtils {
      * @return the encoded URL for files tags
      * @throws UnsupportedEncodingException
      */
-    public static final String getFilesTags(String datasetName,
+    public static final String getFilesTags(String datasetName, int version,
             String tagFilerServer, String tags)
             throws UnsupportedEncodingException {
         if (datasetName == null || datasetName.length() == 0 ||
@@ -431,10 +441,10 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(QUERY_URI)
-                .append(NAME)
+                .append(version != 0 ? VNAME : NAME)
                 .append("=")
-                .append(DatasetUtils.urlEncode(datasetName))
-                .append(CONTAINS)
+                .append(DatasetUtils.urlEncode(datasetName+(version != 0 ? "@"+version : "")))
+                .append(VCONTAINS)
                 .append(tags);
         return restURL.toString();
     }

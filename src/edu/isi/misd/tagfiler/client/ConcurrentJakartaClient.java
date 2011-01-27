@@ -88,6 +88,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
     // map containing the checksums of all files to be transferred.
 	private Map<String, String> checksumMap;
 
+    // map containing the versions of all files to be transferred.
+	private Map<String, Integer> versionMap;
+
 	/**
      * Excludes "." and ".." from directory lists in case the client is
      * UNIX-based.
@@ -188,11 +191,16 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the files to be uploaded
      * @param baseDirectory
      *            the base directory to be used for the uploaded files
+     * @param checksumMap
+     *            the checksum Map for the uploaded files
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap) {
+	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap, Map<String, Integer> versionMap) {
 		// TODO Auto-generated method stub
 		this.baseDirectory = baseDirectory;
 		this.checksumMap = checksumMap;
+		this.versionMap = versionMap;
 		upload(files);
 	}
 	
@@ -222,7 +230,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      */
 	public void download(String file, String outputDir) {
 		// HTTP for the file length
-		download(file, outputDir, null, null);
+		download(file, outputDir, null, null, null);
 	}
 	
     /**
@@ -236,14 +244,16 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the map containing the checksums of all files to be downloaded.
      * @param bytesMap
      *            the map containing the bytes of all files to be downloaded
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	public void download(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
+	public void download(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap) {
         if (file == null || outputDir == null) throw new IllegalArgumentException(file+", "+outputDir);
 		enableChecksum = listener.isEnableChecksum();
 		datasetId = listener.getDatasetId();
 		totalFiles = 1;
 		isDownload = true;
-        downloadFile(file, outputDir, checksumMap, bytesMap);
+        downloadFile(file, outputDir, checksumMap, bytesMap, versionMap);
 	}
 	
     /**
@@ -255,7 +265,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the directory where the files will be downloaded
      */
 	public void download(List<String> files, String outputDir) {
-		download(files, outputDir, null, null);
+		download(files, outputDir, null, null, null);
 	}
 	
     /**
@@ -269,15 +279,17 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the map containing the checksums of all files to be downloaded.
      * @param bytesMap
      *            the map containing the bytes of all files to be downloaded
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
+	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap) {
         if (files == null || outputDir == null) throw new IllegalArgumentException(""+files+", "+outputDir);
 		enableChecksum = listener.isEnableChecksum();
 		datasetId = listener.getDatasetId();
 		totalFiles = files.size();
 		isDownload = true;
 		for (String file : files) {
-			downloadFile(file, outputDir, checksumMap, bytesMap);
+			downloadFile(file, outputDir, checksumMap, bytesMap, versionMap);
 		}
 	}
 	
@@ -321,8 +333,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      *            the map containing the checksums of all files to be downloaded.
      * @param bytesMap
      *            the map containing the bytes of all files to be downloaded
+     * @param versionMap
+     *            the version Map for the uploaded files
      */
-	private void downloadFile(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap) {
+	private void downloadFile(String file, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap) {
         if (file == null || outputDir == null) throw new IllegalArgumentException(file+", "+outputDir);
 		long totalLength = 0;
 		
@@ -344,6 +358,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
+			int version = versionMap.get(file);
+			url.append("@").append(version);
 			if (browser) {
 				System.out.println("Sending HEAD request: url: "+url+", File: '"+file+"'");
 			}
@@ -364,7 +380,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		if (checksumMap != null && checksumMap.get(file) != null && enableChecksum) {
 			fileChecksum = new FileChecksum(file, totalLength, connections-1);
 		}
-		while (position < totalLength) {
+		while (position < totalLength || totalLength == 0) {
 			long size = allowChunks ? chunkSize : totalLength;
 			if (position+size > totalLength) {
 				size = totalLength - position;
@@ -374,8 +390,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				fc.setFileChecksum(fileChecksum);
 				fc.setChecksum(checksumMap.get(file));
 			}
+			fc.setVersion(versionMap.get(file));
 			workerWrapper.put(fc);
 			position += size;
+			if (totalLength == 0) {
+				break;
+			}
 		}
 	}
 	
@@ -633,6 +653,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			updateSessionCookie();
 			FileChunk fc = null;
 			if (201 == status || 204 == status) {
+				if (file.getOffset() == 0) {
+					// set the file version
+					int version = DatasetUtils.getVersion(response.getLocationString());
+					versionMap.put(file.getName(), version);
+				}
 				long size = fi.update(file.getLength());
 				if (size > 0) {
 					long position = file.getTotalLength() - size;
@@ -711,6 +736,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		}
 		try {
 			url.append(URLEncoder.encode("/"+file.getName(), "UTF-8"));
+			if (file.getVersion() > 0) {
+				url.append("@").append(file.getVersion());
+			}
 		} catch (UnsupportedEncodingException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
@@ -949,14 +977,6 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		return buffer.toString();
 	}
 	
-	public void setChecksumMap(Map<String, String> checksumMap) {
-		this.checksumMap = checksumMap;
-	}
-
-	public Map<String, String> getChecksumMap() {
-		return checksumMap;
-	}
-
 	/**
 	 * Class to represent the incrementally checksum computation of a file
 	 * 
