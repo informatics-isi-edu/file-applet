@@ -263,8 +263,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             if ((status == 200 || status == 303) && response.checkResponseHeaderPattern(
             		ClientUtils.LOCATION_HEADER_NAME, 
                     tagFilerServerURL
-                            + DatasetUtils.TAGS_URI
-                            + controlNumber + "/vcontains")) {
+                    + DatasetUtils.QUERY_URI
+                    + DatasetUtils.KEY
+                    + ".*"
+                    + DatasetUtils.ANY_VERSION)) {
                 valid = true;
             }
             else {

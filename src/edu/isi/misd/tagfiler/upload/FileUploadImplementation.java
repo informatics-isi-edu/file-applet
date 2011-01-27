@@ -252,7 +252,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     .getDatasetURLUploadQuery(dataset, datasetId, tagFilerServerURL,
                             customTagMap);
             String datasetBody = DatasetUtils.getDatasetURLUploadBody(
-            		dataset, tagFilerServerURL);
+            		datasetId, tagFilerServerURL);
             
             fileUploadListener.notifyLogMessage("Creating dataset URL entry.");
             fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery

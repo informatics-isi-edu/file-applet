@@ -27,7 +27,7 @@ public class DatasetUtils {
 
     private static final String FILE_URI = "/file/";
 
-    private static final String QUERY_URI = "/query/";
+    public static final String QUERY_URI = "/query/";
 
     public static final String TAGS_URI = "/tags/";
 
@@ -38,6 +38,10 @@ public class DatasetUtils {
     private static final String VNAME = "vname";
     
     private static final String VCONTAINS = "(vcontains)/?versions=any&list=";
+    
+    public static final String KEY = "key=";
+    
+    public static final String ANY_VERSION = "/?versions=any";
     
     private static final String IMAGE_SET = "Image Set";
 
@@ -197,21 +201,21 @@ public class DatasetUtils {
 
     /**
      * 
-     * @param datasetName
-     *            name of the dataset
+     * @param datasetId
+     *            the dataset id
      * @param tagFilerServer
      *            tagfiler server url
      * @return the message body to use for the file URL creation.
      * @thows FatalException if the URL cannot be constructed
      */
-    public static final String getDatasetURLUploadBody(String datasetName,
+    public static final String getDatasetURLUploadBody(String datasetId,
             String tagFilerServer) throws FatalException {
-        if (datasetName == null || datasetName.length() == 0 ||
+        if (datasetId == null || datasetId.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
-        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
+        	throw new IllegalArgumentException(""+datasetId+", "+tagFilerServer);
         final StringBuffer body = new StringBuffer("action=put&url=");
         try {
-            body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetName,
+            body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetId,
                     tagFilerServer)));
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
@@ -285,22 +289,29 @@ public class DatasetUtils {
 
     /**
      * 
-     * @param datasetName
-     *            name of the dataset
+     * @param datasetId
+     *            the dataset id
      * @param tagFilerServer
      *            tagfiler server URL
      * @return URL for querying for all the files in a dataset
      */
-    public static final String getDatasetTagsQuery(String datasetName,
+    public static final String getDatasetTagsQuery(String datasetId,
             String tagFilerServer) {
-        if (datasetName == null || datasetName.length() == 0 ||
+        if (datasetId == null || datasetId.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
-        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
+        	throw new IllegalArgumentException(""+datasetId+", "+tagFilerServer);
 
-        final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(TAGS_URI)
-                .append(datasetName)
-                .append("/vcontains");
+        StringBuffer restURL = null;
+		try {
+			restURL = new StringBuffer(tagFilerServer)
+			        .append(QUERY_URI)
+			        .append(KEY)
+			        .append(DatasetUtils.urlEncode(datasetId))
+			        .append(ANY_VERSION);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return restURL.toString();
     }
 
