@@ -367,7 +367,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			if (200 == response.getStatus()) {
 				totalLength = response.getResponseSize();
 			} else {
-				notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response) +" in getting the length of the file '" + file + "'");
+				String err = ConcurrentJakartaClient.getStatusMessage(response);
+				response.release();
+				notifyFailure("Error " + err +" in getting the length of the file '" + file + "'");
 			}
 		}
 		
@@ -702,9 +704,14 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					}
 				}
 			} else {
-				notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response) +" in uploading file " + file);
+				String err = ConcurrentJakartaClient.getStatusMessage(response);
+				response.release();
+				response = null;
+				notifyFailure("Error " + err +" in uploading file " + file);
 			}
-			response.release();
+			if (response != null) {
+				response.release();
+			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -768,7 +775,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			file.setResponse(response);
 			processDownloadResult(file, thread);
 		} else {
-			notifyFailure("Error " + ConcurrentJakartaClient.getStatusMessage(response) +" in downloading file " + file);
+			String err = ConcurrentJakartaClient.getStatusMessage(response);
+			response.release();
+			notifyFailure("Error " + err +" in downloading file " + file);
 		}
 	}
 	
