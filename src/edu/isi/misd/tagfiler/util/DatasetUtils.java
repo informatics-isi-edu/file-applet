@@ -37,7 +37,9 @@ public class DatasetUtils {
 
     private static final String VNAME = "vname";
     
-    private static final String VCONTAINS = "(vcontains)/?versions=any&list=";
+    private static final String VCONTAINS_ANY = "(vcontains)/?versions=any&list=";
+    
+    private static final String VCONTAINS_LATEST = "(vcontains)/?versions=latest&list=";
     
     public static final String KEY = "key=";
     
@@ -455,7 +457,7 @@ public class DatasetUtils {
                 .append(version != 0 ? VNAME : NAME)
                 .append("=")
                 .append(DatasetUtils.urlEncode(datasetName+(version != 0 ? "@"+version : "")))
-                .append(VCONTAINS)
+                .append(VCONTAINS_LATEST)
                 .append(tags);
         return restURL.toString();
     }
