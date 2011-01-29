@@ -288,6 +288,35 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             response.release();
             
+            if (datasetVersion > 1) {
+            	// delete the vcontains, as it was populated by coping files from the previous versions
+                datasetURLQuery = DatasetUtils.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL);
+                fileUploadListener.notifyLogMessage("Deleting \"vcontains\" tag.");
+                fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery);
+                response = client.delete(datasetURLQuery, cookie);
+                if (response == null) {
+                	notifyFailure("Error: NULL response in registering dataset files.");
+                	success = false;
+                	return success;
+                } else {
+                    synchronized (this) {
+                        cookie = client.updateSessionCookie(applet, cookie);
+                    }
+                    
+                    int status = response.getStatus();
+                    String errMsg = (status == 200) ? "" : response.getErrorMessage();
+                    response.release();
+                    if (status != 200) {
+                        fileUploadListener
+                        .notifyLogMessage("Error creating the dataset URL entry (code="
+                                + status + "). Can not delete the \"vcontains\" tag");
+		                success = false;
+		                fileUploadListener.notifyFailure(dataset, status, errMsg);
+		                return success;
+                    }
+                }
+            }
+            
             // Register the dataset files
             datasetURLQuery = DatasetUtils
             	.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL);

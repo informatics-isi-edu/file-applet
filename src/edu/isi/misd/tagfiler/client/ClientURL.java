@@ -212,4 +212,15 @@ public interface ClientURL {
      * @return the HTTP Response
      */
     public ClientURLResponse validateAction(String url, String key, String status, long study_size, int count, String direction, String cookie);
+
+    /**
+     * Delete a resource
+     * 
+     * @param url
+     *            the url of the resource to be deleted
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse delete(String url, String cookie);
 }

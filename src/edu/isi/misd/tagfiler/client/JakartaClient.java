@@ -20,6 +20,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
@@ -502,6 +503,20 @@ public class JakartaClient  implements ClientURL {
 		System.out.println("formparams: "+formparams);
 		httpput.setEntity(entity);
 		return execute(httpput, cookie);
+	}
+    
+    /**
+     * Delete a resource
+     * 
+     * @param url
+     *            the url of the resource to be deleted
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
+    public ClientURLResponse delete(String url, String cookie) {
+		HttpDelete httpdelete = new HttpDelete(url);
+		return execute(httpdelete, cookie);
 	}
     
     private ClientURLResponse execute(HttpUriRequest request, String cookie) {
