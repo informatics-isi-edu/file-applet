@@ -39,13 +39,13 @@ public class DatasetUtils {
     
     public static final String KEY = "key=";
     
-    public static final String ANY_VERSION = "/?versions=any";
+    public static final String ANY_VERSION = "?versions=any";
     
-    private static final String LATEST_VERSION = "/?versions=latest";
+    private static final String LATEST_VERSION = "?versions=latest";
     
-    private static final String VCONTAINS = "(vcontains)";
+    private static final String VCONTAINS = "(vcontains)/";
     
-    private static final String TAGS_LIST = "&list=";
+    private static final String TAGS_LIST = "?list=";
     
     private static final String IMAGE_SET = "Image Set";
 
@@ -429,7 +429,7 @@ public class DatasetUtils {
                 .append(TAGS_URI)
                 .append(DatasetUtils.urlEncode(datasetName))
                 .append(version != 0 ? "@"+version : "")
-                .append("?list=")
+                .append(TAGS_LIST)
                 .append(tags);
         return restURL.toString();
     }
@@ -460,9 +460,10 @@ public class DatasetUtils {
                 .append("=")
                 .append(DatasetUtils.urlEncode(datasetName+(version != 0 ? "@"+version : "")))
                 .append(VCONTAINS)
-                .append(version == 0 ? LATEST_VERSION : ANY_VERSION)
-                .append(TAGS_LIST)
-                .append(tags);
+                .append("(")
+                .append(tags)
+                .append(")")
+                .append(version == 0 ? LATEST_VERSION : ANY_VERSION);
         return restURL.toString();
     }
 
