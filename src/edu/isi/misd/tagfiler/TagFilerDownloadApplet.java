@@ -433,12 +433,13 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
             }
 
         } else {
+        	String version = (defaultVersion > 0) ? "@"+defaultVersion : "";
             JOptionPane
                     .showMessageDialog(
                             getComponent(),
                     TagFilerProperties.getProperty(
                             "tagfiler.dialog.InvalidControlNumber",
-                            new String[] { defaultControlNumber, errorMessage.toString() }),
+                            new String[] { defaultControlNumber, version, errorMessage.toString() }),
                             status.toString(), JOptionPane.ERROR_MESSAGE);
         }
     }
