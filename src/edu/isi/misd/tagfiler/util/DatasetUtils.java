@@ -217,7 +217,7 @@ public class DatasetUtils {
         if (datasetId == null || datasetId.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
         	throw new IllegalArgumentException(""+datasetId+", "+tagFilerServer);
-        final StringBuffer body = new StringBuffer("action=put&url=");
+        final StringBuffer body = new StringBuffer("action=put&type=url&url=");
         try {
             body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetId,
                     tagFilerServer)));
@@ -592,7 +592,13 @@ public class DatasetUtils {
 		int res = 0;
 		int index = url.lastIndexOf("@");
 		if (index != -1) {
-			res = Integer.parseInt(url.substring(index+1));
+			String version = url.substring(index+1);
+			index = version.indexOf("?");
+			if (index != -1) {
+				// we have query options
+				version = version.substring(0, index);
+			}
+			res = Integer.parseInt(version);
 		}
         
         return res;
