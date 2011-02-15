@@ -624,7 +624,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				try {
 					if (enableChecksum) {
 						checksumMap.put(DatasetUtils.getBaseName(file.getName(), baseDirectory), cksum);
-						params = DatasetUtils.getUploadQuerySuffix(datasetId, cksum);
+						params = DatasetUtils.getUploadQuerySuffix(cksum);
 					}
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
