@@ -417,7 +417,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
      */
     public void getDatasetInfo(String tags) {
     	String name[] = tags.split("<br/>");
-        for (int i=0; i < name.length; i++) {
+        for (int i=0; i < name.length && name[i].trim().length() > 0; i++) {
         	customTagMap.setValue(name[i], "");
         }
         
