@@ -46,12 +46,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.util.EntityUtils;
-import org.htmlparser.Node;
-import org.htmlparser.Parser;
-import org.htmlparser.filters.TagNameFilter;
-import org.htmlparser.util.NodeList;
-import org.htmlparser.util.ParserException;
-import org.htmlparser.util.Translate;
 
 import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.util.ClientUtils;
@@ -72,6 +66,9 @@ public class JakartaClient  implements ClientURL {
 	
     // client used to connect with the tagfiler server
 	protected boolean browser = true;
+	
+	// error description header
+	private static final String error_description_header = "X-Error-Description";
 	
     /**
      * Constructor
@@ -684,20 +681,15 @@ public class JakartaClient  implements ClientURL {
          */
         public String getErrorMessage() {
         	String errormessage = "";
-        	Parser parser = new Parser();
-        	try {
-				parser.setInputHTML(this.getEntityString());
-				NodeList nl = parser.parse (null);
-				NodeList pl = nl.extractAllNodesThatMatch(new TagNameFilter ("p"), true);
-				if (pl.size() > 0) {
-					Node p = pl.elementAt(0).getFirstChild();
-					errormessage = Translate.decode(p.getText());
+        	Header header = response.getFirstHeader(error_description_header);
+        	if (header != null) {
+        		try {
+					errormessage = URLDecoder.decode(header.getValue(),  "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			} catch (ParserException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        	
+        	}
     		return errormessage;
     	}
 
