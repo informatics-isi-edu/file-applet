@@ -215,7 +215,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
                     "tagfiler.message.download.DatasetFailure",
                     new String[] { datasetName });
             if (err != null) {
-                message += " " + err + ".";
+                message += err;
             }
             try {
                 message = DatasetUtils.urlEncode(message);

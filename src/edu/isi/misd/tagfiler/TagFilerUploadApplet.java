@@ -205,7 +205,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
             String message = TagFilerProperties
                     .getProperty("tagfiler.message.upload.DatasetFailure");
             if (err != null) {
-                message += " (" + err + ").";
+                message += err;
             }
             try {
                 message = DatasetUtils.urlEncode(message);

@@ -295,7 +295,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 .notifyLogMessage("Error creating the dataset URL entry (code="
                         + response.getStatus() + ")");
 		        success = false;
-		        fileUploadListener.notifyFailure(dataset, response.getStatus(), response.getErrorMessage());
+		        String err = "<p>Failure in creating the dataset \"" + dataset + "\".<p>Status ";
+		        err += ConcurrentJakartaClient.getStatusMessage(response);
+		        response.release();
+		        fileUploadListener.notifyFailure(dataset, err);
 		        return success;
             }
             
@@ -360,7 +363,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             // successful tagfiler POST issues 303 redirect to result page
             int status = response.getStatus();
             success = (200 == status || 303 == status);
-            String errMsg = success ? "" : response.getErrorMessage();
+            String errMsg = success ? "" : "<p>Failure in registering the files of the dataset \"" + dataset + "\".<p>Status ";
+            errMsg += ConcurrentJakartaClient.getStatusMessage(response);
         	response.release();
         	
         	if (success) {
@@ -393,7 +397,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         .notifyLogMessage("Error creating the dataset URL entry (code="
                                 + status + ")");
                 success = false;
-                fileUploadListener.notifyFailure(dataset, status, errMsg);
+                fileUploadListener.notifyFailure(dataset, errMsg);
             }
         } catch (Exception e) {
             // notify the UI of any uncaught errors

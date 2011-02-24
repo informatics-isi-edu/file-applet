@@ -720,7 +720,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				String err = ConcurrentJakartaClient.getStatusMessage(response);
 				response.release();
 				response = null;
-				notifyFailure("Error " + err +" in uploading file " + file);
+				notifyFailure("<p>Failure in uploading the file \"" + file + "\".<p>Status " + err);
 			}
 			if (response != null) {
 				response.release();
@@ -790,7 +790,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		} else {
 			String err = ConcurrentJakartaClient.getStatusMessage(response);
 			response.release();
-			notifyFailure("Error " + err +" in downloading file " + file);
+			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Status " + err);
 		}
 	}
 	
@@ -989,12 +989,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			
 		}
 		
+		buffer.append(")");
 		String err = response.getErrorMessage();
 		if (err != null && err.trim().length() > 0) {
-			buffer.append(" - " + err);
+			buffer.append(": " + err);
 		}
-		
-		buffer.append(")");
 		
 		return buffer.toString();
 	}
@@ -1256,7 +1255,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 
 		// String representation
 		public String toString() {
-			return name+"(Offset: "+offset+", Chunk Size: "+length+", File Size: "+totalLength+")";
+			return name + " (Offset: "+offset+", Chunk Size: "+length+", File Size: "+totalLength+")";
 		}
 
 		public void setLastChunk(boolean lastChunk) {
