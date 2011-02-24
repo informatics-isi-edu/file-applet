@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Created-By: 1.5.0 (Sun Microsystems Inc.)
+Pluggable: no
+Crypto-Strength: strong
+Specification-Vendor: Sun Microsystems, Inc.
+Specification-Version: 1.5
+Implementation-Vendor-Id: com.sun
+Implementation-Version: 1.5
+Implementation-Vendor: Sun Microsystems, Inc.
+

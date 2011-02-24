@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: oleg
+Build-Jdk: 1.6.0_10
+Implementation-Vendor: Apache Software Foundation
+Implementation-Vendor-Id: org.apache
+Implementation-Version: 4.0.1
+Specification-Title: Apache HttpCore
+Specification-Vendor: Apache Software Foundation
+X-Compile-Source-JDK: 1.3
+X-Compile-Target-JDK: 1.3
+
