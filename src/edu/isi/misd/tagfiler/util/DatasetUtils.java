@@ -141,7 +141,7 @@ public class DatasetUtils {
         		tagFilerServer == null || tagFilerServer.length() == 0) 
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer+", "+customTagMap);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI);
+                .append(FILE_URI).append("name=");
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
                     .append("?")
@@ -185,8 +185,8 @@ public class DatasetUtils {
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI);
         try {
-            restURL.append(DatasetUtils.urlEncode(datasetName))
-            		.append(version != 0 ? "@"+version : "")
+            restURL.append("name=").append(DatasetUtils.urlEncode(datasetName))
+            		.append(version != 0 ? ";version="+version : "")
                     .append("/vcontains");
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
@@ -282,7 +282,7 @@ public class DatasetUtils {
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI);
+                .append(FILE_URI).append("name=");
         try {
 
             restURL.append(
@@ -382,8 +382,8 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
         								.append(FILE_URI)
-        								.append(DatasetUtils.urlEncode(datasetName))
-        								.append(version != 0 ? "@"+version : "");
+        								.append("name=").append(DatasetUtils.urlEncode(datasetName))
+        								.append(version != 0 ? ";version="+version : "");
         return restURL.toString();
     }
 
@@ -431,8 +431,8 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
-                .append(DatasetUtils.urlEncode(datasetName))
-                .append(version != 0 ? "@"+version : "")
+                .append("name=").append(DatasetUtils.urlEncode(datasetName))
+                .append(version != 0 ? ";version="+version : "")
                 .append(TAGS_LIST)
                 .append(tags);
         return restURL.toString();
@@ -594,9 +594,10 @@ public class DatasetUtils {
 	public static int getVersion(String url) {
         if (url == null) throw new IllegalArgumentException("url is NULL");
 		int res = 0;
-		int index = url.lastIndexOf("@");
+		int index = url.lastIndexOf("version=");
 		if (index != -1) {
-			String version = url.substring(index+1);
+			index += "version=".length();
+			String version = url.substring(index);
 			index = version.indexOf("?");
 			if (index != -1) {
 				// we have query options
