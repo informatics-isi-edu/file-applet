@@ -382,7 +382,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			} else {
 				String err = ConcurrentJakartaClient.getStatusMessage(response);
 				response.release();
-				notifyFailure("Error " + err +" in getting the length of the file '" + file + "'");
+    			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Can not get the length of the file.<p>Status " + err);
 			}
 		}
 		
@@ -659,7 +659,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 			
 			if (response == null) {
-				notifyFailure("Error: NULL response in uploading file " + file);
+				notifyFailure("<p>Failure in uploading the file \"" + file + "\".<p>NULL response.");
 				return;
 			}
 			
@@ -757,7 +757,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		try {
 			url.append(URLEncoder.encode("/"+file.getName(), "UTF-8"));
 			if (file.getVersion() > 0) {
-				url.append("@").append(file.getVersion());
+				url.append(";version=").append(file.getVersion());
 			}
 		} catch (UnsupportedEncodingException e2) {
 			// TODO Auto-generated catch block
@@ -776,7 +776,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			response = downloadFile(url.toString(), file.getLength(), file.getOffset(), cookie);
 		}
 		if (response == null) {
-			notifyFailure("Error: NULL response in downloading file " + file);
+			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>NULL response.");
 			return;
 		}
 		
@@ -816,7 +816,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                     }
                 }
                 if (!OK) {
-                	notifyFailure("Can not make directory \"" + dir + "\".");
+        			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Can not make directory \"" + dir + "\".");
                 	return;
                 }
             }
@@ -1419,7 +1419,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					FileChecksum fileChecksum = filesChecksum.remove(name);
 					String fileCksum = fileChecksum.getDigest();
 			        if (fileCksum == null || !fileCksum.equals(cksum)) {
-			        	notifyFailure("Checksum failed for downloading the file: " + name);
+	        			notifyFailure("<p>Failure in downloading the file \"" + name + "\".<p>Checksum failed.");
 			        }
 					//verifyCheckSum(name, dir, cksum);
 				}

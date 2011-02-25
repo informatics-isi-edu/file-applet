@@ -124,7 +124,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	if (success) {
             	fileDownloadListener.notifyUpdateComplete(dataset);
         	} else {
-        		fileDownloadListener.notifyFailure(dataset, "Can not retrieve the file(s) to be downloaded");
+        		fileDownloadListener.notifyFailure(dataset, "<p>Can not retrieve the file(s) to be downloaded.");
         	}
         }
     	
@@ -272,7 +272,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	response = client.verifyValidControlNumber(url, cookie);
             if (response == null) {
             	dataset = controlNumber;
-            	notifyFailure("Error: NULL response in retrieving study " + controlNumber);
+            	fileDownloadListener.notifyFailure(dataset, "<p>Can not verify control number: \"" + controlNumber + "\".<p>NULL response.");
             	return valid;
             }
         	int status = response.getStatus();
@@ -343,7 +343,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		System.out.println("Dataset Query: "+query);
         ClientURLResponse response = client.getTagsValues(query, cookie);
         if (response == null) {
-        	notifyFailure("Error: NULL response in getting the tag values for the study " + dataset);
+        	fileDownloadListener.notifyFailure(dataset, "<p>Can not get the dataset tags.<p>NULL response.");
         	return null;
         }
 
@@ -353,7 +353,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         {
         	// if status is 404, the tag might have been deleted
         	if (response.getStatus() != 404) {
-            	fileDownloadListener.notifyFailure(dataset, response.getStatus(), response.getErrorMessage());
+            	fileDownloadListener.notifyFailure(dataset, "<p>Can not get the dataset tags.<p>Status " + ConcurrentJakartaClient.getStatusMessage(response));
         	}
         	response.release();
         	return null;

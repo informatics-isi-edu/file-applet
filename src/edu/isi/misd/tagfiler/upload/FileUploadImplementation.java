@@ -154,7 +154,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = client.getSequenceNumber(query, table, cookie);
 
         if (response == null) {
-        	notifyFailure("Error: NULL response in getting a sequence number, table \"" + table + "\".");
+			notifyFailure("<p>Failure in uploading a study.<p>Can not get a sequence number from table \"" + table + "\".<p>NULL response.");
         	return null;
         }
         synchronized (this) {
@@ -281,7 +281,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
             if (response == null) {
-            	notifyFailure("Error: NULL response in creating dataset URL entry.");
+            	fileUploadListener.notifyFailure(dataset, "<p>Can not create the dataset URL entry.<p>NULL response.");
             	success = false;
             	return success;
             }
@@ -314,7 +314,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery);
                 response = client.delete(datasetURLQuery, cookie);
                 if (response == null) {
-                	notifyFailure("Error: NULL response in registering dataset files.");
+                	fileUploadListener.notifyFailure(dataset, "<p>Can not delete the \"vcontains\" tag.<p>NULL response.");
                 	success = false;
                 	return success;
                 } else {
@@ -323,14 +323,15 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     }
                     
                     int status = response.getStatus();
-                    String errMsg = (status == 200) ? "" : response.getErrorMessage();
+                    String errMsg = "<p>Can not delete the \"vcontains\" tag.<p>Status ";
+                    errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
                     response.release();
                     if (status != 200) {
                         fileUploadListener
                         .notifyLogMessage("Error creating the dataset URL entry (code="
                                 + status + "). Can not delete the \"vcontains\" tag");
 		                success = false;
-		                fileUploadListener.notifyFailure(dataset, status, errMsg);
+		                fileUploadListener.notifyFailure(dataset, errMsg);
 		                return success;
                     }
                 }
@@ -351,7 +352,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             t2 = System.currentTimeMillis();
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             if (response == null) {
-            	notifyFailure("Error: NULL response in registering dataset files.");
+            	fileUploadListener.notifyFailure(dataset, "<p>Can not register the dataset files.<p>NULL response.");
             	success = false;
             	return success;
             }
@@ -363,8 +364,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             // successful tagfiler POST issues 303 redirect to result page
             int status = response.getStatus();
             success = (200 == status || 303 == status);
-            String errMsg = success ? "" : "<p>Failure in registering the files of the dataset \"" + dataset + "\".<p>Status ";
-            errMsg += ConcurrentJakartaClient.getStatusMessage(response);
+            String errMsg = "<p>Can not register the dataset files.<p>Status ";
+            errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
         	response.release();
         	
         	if (success) {
@@ -385,7 +386,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             }
             if (success) {
             	status = response.getStatus();
-            	errMsg = (status == 200) ? "" : response.getErrorMessage();
+            	errMsg = (status == 200) ? "" : "<p>Can not validate upload.<p>Status " + ConcurrentJakartaClient.getStatusMessage(response);
             }
 
             if (200 == status) {

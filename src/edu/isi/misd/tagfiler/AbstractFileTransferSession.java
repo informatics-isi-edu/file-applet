@@ -170,6 +170,8 @@ public class AbstractFileTransferSession implements FileTransfer {
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
         response.release();
         

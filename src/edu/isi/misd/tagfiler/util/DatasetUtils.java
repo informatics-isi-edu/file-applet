@@ -404,7 +404,7 @@ public class DatasetUtils {
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI)
+                .append(FILE_URI).append("name=")
                 .append(DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
