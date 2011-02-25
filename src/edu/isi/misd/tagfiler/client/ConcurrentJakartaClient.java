@@ -569,7 +569,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				url.append(URLEncoder.encode(DatasetUtils.getBaseName(file.getName(), baseDirectory), "UTF-8"));
 				int fileVersion = file.getVersion();
 				if (fileVersion > 0) {
-					url.append("@").append(fileVersion);
+					url.append(";version=").append(fileVersion);
 				}
 			} catch (UnsupportedEncodingException e2) {
 				// TODO Auto-generated catch block
