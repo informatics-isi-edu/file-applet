@@ -371,7 +371,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         	if (success) {
             	success = checkDataSet();
             	if (!success) {
-            		errMsg = "Failure in checking the uploaded files.";
+            		errMsg = "<p>Failure in checking the uploaded files.";
             		System.out.println(errMsg);
             		status = -1;
             	}
