@@ -467,7 +467,8 @@ public class DatasetUtils {
                 .append("(")
                 .append(tags)
                 .append(")")
-                .append(version == 0 ? LATEST_VERSION : ANY_VERSION);
+                .append(version == 0 ? LATEST_VERSION : ANY_VERSION)
+                .append("&limit=none");
         return restURL.toString();
     }
 
