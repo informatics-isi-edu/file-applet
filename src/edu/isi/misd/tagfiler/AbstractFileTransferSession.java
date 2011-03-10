@@ -129,7 +129,7 @@ public class AbstractFileTransferSession implements FileTransfer {
      * @return the JSON Array with the tags values
      */
     protected JSONArray getFilesTagValues(AbstractTagFilerApplet applet, FileListener fl) {
-    	String tags = "bytes,sha256sum,vname";
+    	String tags = "bytes;sha256sum;vname";
         String query = null;
 		try {
 			query = DatasetUtils.getFilesTags(dataset, datasetVersion,
