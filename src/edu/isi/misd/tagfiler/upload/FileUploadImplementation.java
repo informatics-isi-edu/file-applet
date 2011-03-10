@@ -572,8 +572,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	*/
 	public void updateSessionCookie() {
 		// TODO Auto-generated method stub
+		String newCookie = client.getSessionCookie();
+		String oldKey = cookie.split("\\|")[0];
+		String newKey = newCookie.split("\\|")[0];
 		long t = System.currentTimeMillis();
-		if ((t - lastCookieUpdate) >= cookieUpdatePeriod) {
+		boolean mustUpdate = (t - lastCookieUpdate) >= cookieUpdatePeriod || !oldKey.equals(newKey);
+		if (mustUpdate) {
 			lastCookieUpdate = t;
 	        cookie = client.updateSessionCookie(applet, cookie);
 		}

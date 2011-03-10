@@ -358,6 +358,21 @@ public class JakartaClient  implements ClientURL {
 	}
     
     /**
+     * Checks for and saves updated session cookie
+     * 
+     * @return the latest replacement
+     */
+    public String getSessionCookie() {
+    	for (Cookie candidate : httpclient.getCookieStore().getCookies()) {
+    		if (candidate.getName().equals("webauthn")) {
+        		return getCookieValue(candidate);
+        	}
+        }
+        
+        return null;
+	}
+    
+    /**
      * Uploads a set of given files with a specified dataset name.
      * 
      * @param url
@@ -561,7 +576,7 @@ public class JakartaClient  implements ClientURL {
      */
     private void setCookie(String cookie, HttpUriRequest request) {
     	if (cookie != null) {
-    		httpclient.getCookieStore().clear();
+    		//httpclient.getCookieStore().clear();
         	request.setHeader("Cookie", "webauthn="+cookie);
     	}
     }

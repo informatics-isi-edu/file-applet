@@ -150,6 +150,13 @@ public interface ClientURL {
     public String updateSessionCookie(AbstractTagFilerApplet applet, String cookie);
     
     /**
+     * Checks for and saves updated session cookie
+     * 
+     * @return the latest replacement
+     */
+    public String getSessionCookie();
+    
+    /**
      * Uploads a set of given files with a specified dataset name.
      * 
      * @param url
