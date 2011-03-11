@@ -552,6 +552,7 @@ public class JakartaClient  implements ClientURL {
     
     private ClientURLResponse execute(HttpUriRequest request, String cookie) {
     	setCookie(cookie, request);
+    	request.setHeader("X-Machine-Generated", "true");
     	ClientURLResponse response = null;
 		try {
 			response = new JakartaClientResponse(httpclient.execute(request));
