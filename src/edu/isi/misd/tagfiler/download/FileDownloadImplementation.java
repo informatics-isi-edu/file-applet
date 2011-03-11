@@ -157,6 +157,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	}
         }
         fileDownloadListener.notifyStart(dataset, totalSize);
+        if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
+            ClientUtils.disableExpirationWarning(applet);
+        }
         start = System.currentTimeMillis();
         client.download(fileNames, destDir, checksumMap, bytesMap, versionMap);
 
@@ -465,6 +468,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	        long t1 = System.currentTimeMillis();
 	        System.out.println("Download time: " + (t1-start) + " ms.");
 	        System.out.println("Download rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-start)) + " MB/s.");
+            if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
+                ClientUtils.enableExpirationWarning(applet);
+            }
 		}
 	}
 

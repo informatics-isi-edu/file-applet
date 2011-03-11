@@ -33,6 +33,7 @@ import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.FileListener;
+import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -249,10 +250,16 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 
             // upload all the files
             long t2 = 0;
+            if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
+                ClientUtils.disableExpirationWarning(applet);
+            }
             synchronized (lock) {
         	    success = postFileDataHelper(files);
                 t2 = System.currentTimeMillis();
         	    lock.wait();
+            }
+            if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
+                ClientUtils.enableExpirationWarning(applet);
             }
             
             if (cancel) {

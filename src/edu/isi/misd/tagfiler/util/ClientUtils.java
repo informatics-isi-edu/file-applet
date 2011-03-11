@@ -113,4 +113,28 @@ public class ClientUtils {
 	applet.getWindow().eval(jstext);
     }
 
+    /**
+     * Enables the expiration warning of the session
+     * 
+     * @param applet
+     *            the applet that is embedded in the browser
+     */
+    public static void enableExpirationWarning(AbstractTagFilerApplet applet) {
+	String jstext = "enableExpirationWarning()";
+	applet.getWindow().eval(jstext);
+	System.out.println("enableExpirationWarning");
+    }
+
+    /**
+     * Disables the expiration warning of the session
+     * 
+     * @param applet
+     *            the applet that is embedded in the browser
+     */
+    public static void disableExpirationWarning(AbstractTagFilerApplet applet) {
+	String jstext = "disableExpirationWarning()";
+	applet.getWindow().eval(jstext);
+	System.out.println("disableExpirationWarning");
+    }
+
 }
