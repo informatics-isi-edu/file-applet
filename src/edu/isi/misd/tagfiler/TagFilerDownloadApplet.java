@@ -192,9 +192,9 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
                     new String[] { datasetName }));
 
             try {
-                datasetName = DatasetUtils.urlEncode(datasetName);
+                datasetName = "name=" + DatasetUtils.urlEncode(datasetName);
                 if (version > 0) {
-                	datasetName += "@" + version;
+                	datasetName += ";version=" + version;
                 }
             } catch (UnsupportedEncodingException e) {
                 // just pass the unencoded message
