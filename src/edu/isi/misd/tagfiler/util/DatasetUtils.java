@@ -47,7 +47,7 @@ public class DatasetUtils {
 
     public static final String TAGS_URI = "/tags/";
 
-    public static final String STUDY_URI = "/study/";
+    public static final String STUDY_URI = "/study/name=";
 
     private static final String NAME = "name";
 
