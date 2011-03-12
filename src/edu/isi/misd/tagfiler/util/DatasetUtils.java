@@ -186,8 +186,7 @@ public class DatasetUtils {
                 .append(TAGS_URI);
         try {
             restURL.append("name=").append(DatasetUtils.urlEncode(datasetName))
-            		.append(version != 0 ? ";version="+version : "")
-                    .append("/vcontains");
+            		.append(version != 0 ? ";version="+version : "");
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
