@@ -84,6 +84,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     client = new ConcurrentJakartaClient(allowChunks ? ((AbstractTagFilerApplet) applet).getMaxConnections() : 2, ((AbstractTagFilerApplet) applet).getSocketBufferSize(), this);
     client.setChunked(allowChunks);
     client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
+    client.setRetryCount(((AbstractTagFilerApplet) applet).getMaxRetries());
+    client.setRetryInterval(((AbstractTagFilerApplet) applet).getSleepTime());
     }
 
     /**

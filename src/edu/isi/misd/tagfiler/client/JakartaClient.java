@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.URLDecoder;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -86,7 +87,13 @@ public class JakartaClient  implements ClientURL {
 	// error description header
 	private static final String error_description_header = "X-Error-Description";
 	
-    /**
+	// number of retries if the connection is broken
+	private int retries;
+	
+	// the sleep time in seconds between the retries
+	private int sleepTime;
+	
+	/**
      * Constructor
      * 
      * @param connections
@@ -101,7 +108,27 @@ public class JakartaClient  implements ClientURL {
 		}
 	}
 	
-    /**
+	/**
+     * Setter method
+     * 
+     * @param retries
+     *            the number of retries if the connection is broken
+     */
+    public void setRetryCount(int retries) {
+		this.retries = retries;
+	}
+
+	/**
+     * Setter method
+     * 
+     * @param sleepTime
+     *            the seconds to sleep before retrying 
+     */
+    public void setRetryInterval(int sleepTime) {
+		this.sleepTime = sleepTime;
+	}
+
+	/**
      * Check we have a valid client
      * 
      * @return true if the client is valid
@@ -550,19 +577,47 @@ public class JakartaClient  implements ClientURL {
 		return execute(httpdelete, cookie);
 	}
     
+    /**
+     * Execute a HttpUriRequest
+     * 
+     * @param request
+     *            the request to be executed
+     * @param cookie
+     *            the cookie to be set in the request
+     * @return the HTTP Response
+     */
     private ClientURLResponse execute(HttpUriRequest request, String cookie) {
     	setCookie(cookie, request);
     	request.setHeader("X-Machine-Generated", "true");
     	ClientURLResponse response = null;
-		try {
-			response = new JakartaClientResponse(httpclient.execute(request));
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	int retry = 0;
+    	while (true) {
+    		try {
+    			response = new JakartaClientResponse(httpclient.execute(request));
+    			break;
+    		} catch (ConnectException e) {
+    			// Can not connect and send the request
+    			// Retry maximum 10 times
+    			e.printStackTrace();
+    		} catch (ClientProtocolException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		} catch (IOException e) {
+    			// The request was sent, but no response; connection might have been broken
+    			e.printStackTrace();
+    		}
+			if (++retry > retries) {
+				break;
+			} else {
+				// sleep before retrying
+				try {
+					Thread.sleep(sleepTime);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+    	}
 		
 		return response;
     }

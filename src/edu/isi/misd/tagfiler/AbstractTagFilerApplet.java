@@ -83,6 +83,12 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     // parameter name for cookie name
     private static final String COOKIE_NAME_PROPERTY = "tagfiler.cookie.name";
     
+    // parameter name for the maximum retries during a broken connection
+    private static final String TAGFILER_MAX_RETRIES = "tagfiler.retries";
+
+    // parameter name for the time to sleep between retrying to send a request due to a broken connection
+    private static final String TAGFILER_SLEEP_TIME = "tagfiler.sleep.time";
+
     // timeout for JavaScript call execution (milliseconds)
     private static final long JAVASCRIPT_TIMEOUT = 10 * 1000;
     
@@ -122,6 +128,10 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     protected int socketBufferSize = 8192;
 
     protected int chunkSize = 4194304;
+
+    protected int maxRetries = 10;
+
+    protected int sleepTime = 10*1000;
 
     // the mode for transfering the file
     protected boolean allowChunks;
@@ -167,6 +177,18 @@ public abstract class AbstractTagFilerApplet extends JApplet {
         String maxConn = this.getParameter(TAGFILER_APPLET_MAX_CONNECTIONS);
         if (maxConn != null) {
         	maxConnections = Integer.parseInt(maxConn);
+        }
+
+        // arguments
+        String retries = this.getParameter(TAGFILER_MAX_RETRIES);
+        if (retries != null) {
+        	maxRetries = Integer.parseInt(retries);
+        }
+
+        // arguments
+        String retrySleepTime = this.getParameter(TAGFILER_SLEEP_TIME);
+        if (retrySleepTime != null) {
+        	sleepTime = Integer.parseInt(retrySleepTime) * 1000;
         }
 
         // arguments
@@ -464,6 +486,24 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     }
     
     /**
+     * Get the maximum number of retries
+     * 
+     * @return the maximum number of retries
+     */
+    public int getMaxRetries() {
+		return maxRetries;
+	}
+
+    /**
+     * Get the interval between retries
+     * 
+     * @return the interval between retries
+     */
+	public int getSleepTime() {
+		return sleepTime;
+	}
+
+	/**
      * Get the mode for transferring the file
      * 
      * @return the mode for transferring the file
