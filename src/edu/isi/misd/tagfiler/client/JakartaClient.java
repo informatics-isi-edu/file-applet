@@ -90,9 +90,6 @@ public class JakartaClient  implements ClientURL {
 	// number of retries if the connection is broken
 	private int retries;
 	
-	// the sleep time in seconds between the retries
-	private int sleepTime;
-	
 	/**
      * Constructor
      * 
@@ -116,16 +113,6 @@ public class JakartaClient  implements ClientURL {
      */
     public void setRetryCount(int retries) {
 		this.retries = retries;
-	}
-
-	/**
-     * Setter method
-     * 
-     * @param sleepTime
-     *            the seconds to sleep before retrying 
-     */
-    public void setRetryInterval(int sleepTime) {
-		this.sleepTime = sleepTime;
 	}
 
 	/**
@@ -590,7 +577,7 @@ public class JakartaClient  implements ClientURL {
     	setCookie(cookie, request);
     	request.setHeader("X-Machine-Generated", "true");
     	ClientURLResponse response = null;
-    	int retry = 0;
+    	int count = 0;
     	while (true) {
     		try {
     			response = new JakartaClientResponse(httpclient.execute(request));
@@ -606,12 +593,13 @@ public class JakartaClient  implements ClientURL {
     			// The request was sent, but no response; connection might have been broken
     			e.printStackTrace();
     		}
-			if (++retry > retries) {
+			if (++count > retries) {
 				break;
 			} else {
 				// sleep before retrying
+				int delay = (int) Math.ceil((0.75 + Math.random() * 0.5) * Math.pow(10, count) * 0.00001);
 				try {
-					Thread.sleep(sleepTime);
+					Thread.sleep(delay);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -655,7 +643,7 @@ public class JakartaClient  implements ClientURL {
 		return value;
     }
     
-    synchronized private void debug(AbstractHttpMessage request) {
+    synchronized private void debug(HttpUriRequest request) {
 		Header headers[] = request.getAllHeaders();
         for (int i=0; i<headers.length; i++) {
         	try {

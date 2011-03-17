@@ -87,7 +87,6 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     client.setChunked(allowChunks);
     client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     client.setRetryCount(((AbstractTagFilerApplet) applet).getMaxRetries());
-    client.setRetryInterval(((AbstractTagFilerApplet) applet).getSleepTime());
     }
 
     /**

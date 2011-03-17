@@ -254,12 +254,4 @@ public interface ClientURL {
      *            the number of retries
      */
     public void setRetryCount(int count);
-
-    /**
-     * Set the interval between retries
-     * 
-     * @param sleepTime
-     *            the sleep time between retries
-     */
-    public void setRetryInterval(int sleepTime);
 }
