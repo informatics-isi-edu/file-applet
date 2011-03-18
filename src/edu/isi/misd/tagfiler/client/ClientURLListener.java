@@ -33,8 +33,10 @@ public interface ClientURLListener {
      * 
      * @param err
      *            the error message
+     * @param connectionBroken
+     *            true if the error is due to a broken connection
      */
-	public void notifyFailure(String err);
+	public void notifyFailure(String err, boolean connectionBroken);
 	
     /**
      * Callback to notify a chunk block transfer completion during the upload/download process

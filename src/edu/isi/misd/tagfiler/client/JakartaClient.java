@@ -598,6 +598,7 @@ public class JakartaClient  implements ClientURL {
 			} else {
 				// sleep before retrying
 				int delay = (int) Math.ceil((0.75 + Math.random() * 0.5) * Math.pow(10, count) * 0.00001);
+				System.out.println("Retry delay: " + delay + " ms.");
 				try {
 					Thread.sleep(delay);
 				} catch (InterruptedException e1) {

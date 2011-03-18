@@ -37,6 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.LocalFileChecksum;
+import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 
 /**
@@ -377,6 +378,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				System.out.println("Sending HEAD request: url: "+url+", File: '"+file+"'");
 			}
 			response = getFileLength(url.toString(), cookie);
+			if (response == null) {
+				notifyFailure("Failure in getting the length of the file \"" + file + "\" of dataset \"" + listener.getDataset() + "\".\\n\\n" +
+						TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
+				return;
+			}
 			if (200 == response.getStatus()) {
 				totalLength = response.getResponseSize();
 			} else {
@@ -479,11 +485,20 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * Notify listener about failure
      */
 	private void notifyFailure(String err) {
+		notifyFailure(err, false);
+	}
+	
+    /**
+     * Upload or download has failed. 
+     * Terminate the threads from the pools
+     * Notify listener about failure
+     */
+	private void notifyFailure(String err, boolean connectionBroken) {
 		failure = true;
 		terminateThreads();
 		
 		synchronized (listenerLock) {
-			listener.notifyFailure(err);
+			listener.notifyFailure(err, connectionBroken);
 		}
 	}
 	
@@ -659,7 +674,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 			
 			if (response == null) {
-				notifyFailure("<p>Failure in uploading the file \"" + file + "\".<p>NULL response.");
+				notifyFailure("Failure in uploading the file \"" + file + "\" of dataset \"" + listener.getDataset() + "\".\\n\\n" +
+						TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
 				return;
 			}
 			
@@ -776,7 +792,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			response = downloadFile(url.toString(), file.getLength(), file.getOffset(), cookie);
 		}
 		if (response == null) {
-			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>NULL response.");
+			notifyFailure("Failure in downloading the file \"" + file + "\" of dataset \"" + listener.getDataset() + "\".\\n\\n" +
+					TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
 			return;
 		}
 		

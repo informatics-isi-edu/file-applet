@@ -321,6 +321,19 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     }
 
     /**
+     * Convenience method for evaluating a JS function
+     * 
+     * @param function
+     * 			the function to be evaluated
+     * @param arg
+     * 			the function argument
+     */
+    public void eval(String function, String arg, boolean alert) {
+    	System.out.println("Invoking " + function + "('" + arg + "')");
+    	invoke(function + "('" + arg + "')", alert);
+    }
+
+    /**
      * Convenience method for enabling an HTML button
      * 
      * @param button
@@ -370,6 +383,19 @@ public abstract class AbstractTagFilerApplet extends JApplet {
      * @return the JS function evaluation result
      */
     public Object invoke(String function) {
+        return invoke(function, true);
+    }
+
+    /**
+     * Convenience method for evaluating a JS function
+     * 
+     * @param function
+     * 			the function to be evaluated
+     * @param alert
+     * 			if true, it will alert a message to restart the browser
+     * @return the JS function evaluation result
+     */
+    public Object invoke(String function, boolean alert) {
     	Object res = "";
     	// set the command to be executed to the JavaScript thread
     	synchronized (javaScriptThread.getLoadLock()) {
@@ -396,11 +422,13 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     		} else if (!stopped) {
         			// timeout; raise FatalException
     				stopped = true;
-        			System.out.println("OOPS: The browser is not responding.");
-                    JOptionPane.showMessageDialog(this.getComponent(), "The browser is not responding.\nIt is recommended to restart the browser.",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-        			FatalException e = new FatalException("The browser is not responding");
-        			fileListener.notifyFatal(e);
+    				if (alert) {
+            			System.out.println("OOPS: The browser is not responding.");
+                        JOptionPane.showMessageDialog(this.getComponent(), "The browser is not responding.\nIt is recommended to restart the browser.",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
+            			FatalException e = new FatalException("The browser is not responding");
+            			fileListener.notifyFatal(e);
+    				} 
     		}
     	}
         return res;

@@ -37,6 +37,7 @@ import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.FileListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
+import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
  * Default implementation of the
@@ -276,7 +277,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	response = client.verifyValidControlNumber(url, cookie);
             if (response == null) {
             	dataset = controlNumber;
-            	fileDownloadListener.notifyFailure(dataset, "<p>Can not verify control number: \"" + controlNumber + "\".<p>NULL response.");
+            	notifyFailure("Can not verify control number: \"" + controlNumber + "\" for the dataset \"" + dataset + "\".\\n\\n" +
+            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
             	return valid;
             }
         	int status = response.getStatus();
@@ -347,7 +349,8 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		System.out.println("Dataset Query: "+query);
         ClientURLResponse response = client.getTagsValues(query, cookie);
         if (response == null) {
-        	fileDownloadListener.notifyFailure(dataset, "<p>Can not get the dataset tags.<p>NULL response.");
+        	notifyFailure("Can not get the tags for the dataset \"" + dataset + "\".\\n\\n" +
+        			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
         	return null;
         }
 
@@ -432,8 +435,10 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 * 
 	 * @param err
 	 *            the error message
+	 * @param connectionBroken
+	 *            true if the error is due to a broken connection
 	 */
-	public void notifyFailure(String err) {
+	public void notifyFailure(String err, boolean connectionBroken) {
 		// TODO Auto-generated method stub
 		boolean notify = false;
 		synchronized (this) {
@@ -443,16 +448,21 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 			}
 		}
 		if (notify) {
-            String datasetURLQuery = null;
-			try {
-				datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
-			} catch (FatalException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (!connectionBroken) {
+	            String datasetURLQuery = null;
+				try {
+					datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
+				} catch (FatalException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				// log download failure
+				client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "download", cookie);
+				fileDownloadListener.notifyFailure(dataset, err);
 			}
-			// log download failure
-			client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "download", cookie);
-			fileDownloadListener.notifyFailure(dataset, err);
+		} else {
+			// send here JavaScript error message, as the connection is broken
+			applet.eval("notifyFailure", err, false);
 		}
 	}
 

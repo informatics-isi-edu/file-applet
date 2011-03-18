@@ -37,7 +37,7 @@ import edu.isi.misd.tagfiler.util.DatasetUtils;
  * @author David Smith
  * 
  */
-public class AbstractFileTransferSession implements FileTransfer {
+public abstract class AbstractFileTransferSession implements FileTransfer {
     protected String cookie = null;
 
     // tagfiler server URL
@@ -142,7 +142,7 @@ public class AbstractFileTransferSession implements FileTransfer {
         ClientURLResponse response = client.getTagsValues(query, cookie);
 
         if (response == null) {
-        	fl.notifyFailure(dataset, -1, "Error: NULL response in getting the files tag values for the study " + dataset);
+        	notifyFailure("Error: NULL response in getting the files tag values for the study " + dataset, true);
         	return null;
         }
 	cookie = client.updateSessionCookie(applet, cookie);
@@ -178,4 +178,13 @@ public class AbstractFileTransferSession implements FileTransfer {
         return array;
     }
 
+	/**
+	 * Callback to notify a failure during the upload/download process
+	 * 
+	 * @param err
+	 *            the error message
+     * @param connectionBroken
+     *            true if the error is due to a broken connection
+	 */
+     public abstract void notifyFailure(String err, boolean connectionBroken);
 }

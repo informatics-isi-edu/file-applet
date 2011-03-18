@@ -156,7 +156,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = client.getSequenceNumber(query, table, cookie);
 
         if (response == null) {
-			notifyFailure("<p>Failure in uploading a study.<p>Can not get a sequence number from table \"" + table + "\".<p>NULL response.");
+			notifyFailure("Failure in uploading a study. Can not get a sequence number from table \"" + table + "\".\\n\\n" +
+					TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
         	return null;
         }
         synchronized (this) {
@@ -289,7 +290,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
             if (response == null) {
-            	fileUploadListener.notifyFailure(dataset, "<p>Can not create the dataset URL entry.<p>NULL response.");
+            	notifyFailure("Can not create the URL entry for the dataset \"" + dataset + "\".\\n\\n" + 
+            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
             	success = false;
             	return success;
             }
@@ -322,7 +324,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery);
                 response = client.delete(datasetURLQuery, cookie);
                 if (response == null) {
-                	fileUploadListener.notifyFailure(dataset, "<p>Can not delete the \"vcontains\" tag.<p>NULL response.");
+                	notifyFailure("Can not delete the \"vcontains\" tag of the dataset \"" + dataset + "\".\\n\\n" +
+                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
                 	success = false;
                 	return success;
                 } else {
@@ -360,7 +363,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             t2 = System.currentTimeMillis();
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             if (response == null) {
-            	fileUploadListener.notifyFailure(dataset, "<p>Can not register the dataset files.<p>NULL response.");
+            	notifyFailure("Can not register the files for the dataset \"" + dataset + "\".\\n\\n" + 
+            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
             	success = false;
             	return success;
             }
@@ -389,6 +393,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
             System.out.println("Sending Upload Validate Action: \"" + datasetURLQuery + "\".");
             response = client.validateAction(datasetURLQuery, datasetId, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
+            if (response == null) {
+            	notifyFailure("Can not validate upload for the dataset \"" + dataset + "\".\\n\\n" +
+            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
+            	success = false;
+            	return success;
+            }
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
             }
@@ -429,40 +439,42 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         try {
         	// get the "bytes" and "sha256sum" tags of the files
         	JSONArray tagsValues = getFilesTagValues(applet, fileUploadListener);
-        	if (fileNames.size() != tagsValues.length()) {
-        		return result;
-        	}
-    		for (int i=0; i < tagsValues.length(); i++) {
-    			JSONObject fileTags = tagsValues.getJSONObject(i);
-    			
-                // get the file name
-                String file = fileTags.getString("name").substring(dataset.length());
-                if (!fileNames.remove(file)) {
-                	return result;
-                }
-
-                // get the bytes
-                long bytes = fileTags.getLong("bytes");
-                Long size = bytesMap.remove(file);
-                if (size == null || size != bytes) {
-                	return result;
-                }
-                
-                if (enableChecksum) {
-                	if (fileTags.isNull("sha256sum")) {
-                		return result;
-                	}
-                    String checksum = fileTags.getString("sha256sum");
-                    String cksum = checksumMap.remove(file);
-                    if (!checksum.equals(cksum)) {
+        	if (tagsValues != null) {
+            	if (fileNames.size() != tagsValues.length()) {
+            		return result;
+            	}
+        		for (int i=0; i < tagsValues.length(); i++) {
+        			JSONObject fileTags = tagsValues.getJSONObject(i);
+        			
+                    // get the file name
+                    String file = fileTags.getString("name").substring(dataset.length());
+                    if (!fileNames.remove(file)) {
                     	return result;
                     }
-                }
-    		}
-    		if (fileNames.size() != 0) {
-    			return result;
-    		}
-            result = true;
+
+                    // get the bytes
+                    long bytes = fileTags.getLong("bytes");
+                    Long size = bytesMap.remove(file);
+                    if (size == null || size != bytes) {
+                    	return result;
+                    }
+                    
+                    if (enableChecksum) {
+                    	if (fileTags.isNull("sha256sum")) {
+                    		return result;
+                    	}
+                        String checksum = fileTags.getString("sha256sum");
+                        String cksum = checksumMap.remove(file);
+                        if (!checksum.equals(cksum)) {
+                        	return result;
+                        }
+                    }
+        		}
+        		if (fileNames.size() != 0) {
+        			return result;
+        		}
+                result = true;
+        	}
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
@@ -529,8 +541,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	 * 
 	 * @param err
 	 *            the error message
+     * @param connectionBroken
+     *            true if the error is due to a broken connection
 	 */
-	public void notifyFailure(String err) {
+	public void notifyFailure(String err, boolean connectionBroken) {
 		// TODO Auto-generated method stub
 		boolean notify = false;
 		synchronized (lock) {
@@ -541,15 +555,20 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 			}
 		}
 		if (notify) {
-            String datasetURLQuery = null;
-			try {
-				datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
-			} catch (FatalException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (!connectionBroken) {
+	            String datasetURLQuery = null;
+				try {
+					datasetURLQuery = DatasetUtils.getDatasetQuery(dataset, tagFilerServerURL);
+				} catch (FatalException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "upload", cookie);
+				fileUploadListener.notifyFailure(dataset, err);
+			} else {
+				// send here JavaScript error message, as the connection is broken
+				applet.eval("notifyFailure", err, false);
 			}
-			client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "upload", cookie);
-			fileUploadListener.notifyFailure(dataset, err);
 		}
 	}
 
