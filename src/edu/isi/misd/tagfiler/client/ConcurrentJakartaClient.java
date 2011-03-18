@@ -594,9 +594,13 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			FileItem fi = filesCompletion.get(file.getName());
 
 			// if this is the last chunk, Dataset Name and Checksum parameters will be added
-			String params = "";
 			String cksum = null;
 			byte ret[] = null;
+			long slot = 0;
+			if (chunkSize != 0) {
+				slot = file.getOffset() / chunkSize;
+			}
+			String params = "?slots=" + slot;
 			if (file.getLength() == file.getTotalLength()) {
 				if (enableChecksum) {
 					try {
@@ -652,14 +656,15 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				try {
 					if (enableChecksum) {
 						checksumMap.put(DatasetUtils.getBaseName(file.getName(), baseDirectory), cksum);
-						params = DatasetUtils.getUploadQuerySuffix(cksum);
+						params += DatasetUtils.getUploadQuerySuffix(cksum);
 					}
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				url.append(params);
 			}
+			
+			url.append(params);
 			
 			// Execute the HTTP request
 			ClientURLResponse response = null;

@@ -255,7 +255,7 @@ public class DatasetUtils {
         final StringBuffer restURL = new StringBuffer();
         
         if (checksum != null) {
-            restURL.append("?")
+            restURL.append("&")
     		.append(TagFilerProperties.getProperty("tagfiler.tag.checksum"))
     		.append("=")
             .append(checksum);
