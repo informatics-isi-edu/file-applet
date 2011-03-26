@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
+import edu.isi.misd.tagfiler.client.ConcurrentJakartaClient;
 import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.security.TagFilerSecurity;
 import edu.isi.misd.tagfiler.ui.CustomTagMap;
@@ -140,7 +141,12 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     // thread to execute javaScript calls
     private JavaScriptThread javaScriptThread;
 
-    /**
+    // the transfer target: 'all' or 'resume'
+    protected String target;
+    
+    private ConcurrentJakartaClient client;
+
+   /**
      * Loads security settings, common parameters, session cookie
      */
 	public void init() {
@@ -245,6 +251,9 @@ public abstract class AbstractTagFilerApplet extends JApplet {
      * Stop the threads
      */
     public void stop() {
+    	if (client != null) {
+    		client.writeCheckPoint();
+    	}
     	synchronized (lock) {
     		stopped = true;
         	lock.notifyAll();
@@ -529,6 +538,10 @@ public abstract class AbstractTagFilerApplet extends JApplet {
 		return window;
 	}
 	
+	public void setClient(ConcurrentJakartaClient client) {
+		this.client = client;
+	}
+
 	private class JavaScriptThread extends Thread {
 		// the command to be evaluated by the JavaScript
 		String command;

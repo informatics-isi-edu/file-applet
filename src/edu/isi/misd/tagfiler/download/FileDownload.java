@@ -48,9 +48,11 @@ public interface FileDownload extends FileTransfer {
      * 
      * @param destinationDir
      *            directory to save the files
+     * @param target
+     *            resume or download all
      * @return true if all files were downloaded successfully
      */
-    public boolean downloadFiles(String destinationDir);
+    public boolean downloadFiles(String destinationDir, String target);
 
     /**
      * Checks with the tagfiler server to verify that a dataset by the control

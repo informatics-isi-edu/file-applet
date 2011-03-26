@@ -42,9 +42,11 @@ public interface FileUpload extends FileTransfer {
      * 
      * @param files
      *            list of file names to upload
+     * @param target
+     *            resume or upload all
      * @return true if all files were uploaded successfully
      */
-    public boolean postFileData(List<String> files);
+    public boolean postFileData(List<String> files, String target);
 
     /**
      * Sets the files to be uploaded on the Web Page.

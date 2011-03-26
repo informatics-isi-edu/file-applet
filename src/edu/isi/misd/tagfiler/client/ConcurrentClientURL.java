@@ -19,6 +19,8 @@ package edu.isi.misd.tagfiler.client;
 import java.util.List;
 import java.util.Map;
 
+import edu.isi.misd.tagfiler.util.FileWrapper;
+
 /**
  * @author Serban Voinea
  *
@@ -71,7 +73,7 @@ public interface ConcurrentClientURL extends ClientURL{
      * @param files
      *            the files to be uploaded
      */
-	public void upload(List<String> files);
+	public void upload(List<FileWrapper> files);
 	
     /**
      * Upload a list of files
@@ -85,7 +87,7 @@ public interface ConcurrentClientURL extends ClientURL{
      * @param versionMap
      *            the version Map for the uploaded files
      */
-	public void upload(List<String> files, String baseDirectory, Map<String, String> checksumMap, Map<String, Integer> versionMap);
+	public void upload(List<FileWrapper> files, String baseDirectory, Map<String, String> checksumMap, Map<String, Integer> versionMap);
 	
     /**
      * Upload a file
@@ -93,7 +95,7 @@ public interface ConcurrentClientURL extends ClientURL{
      * @param file
      *            the file to be uploaded
      */
-	public void upload(String filename);
+	public void upload(FileWrapper filename);
 	
     /**
      * Download a file
@@ -145,6 +147,6 @@ public interface ConcurrentClientURL extends ClientURL{
      * @param versionMap
      *            the version Map for the uploaded files
      */
-	public void download(List<String> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap);
+	public void download(List<FileWrapper> files, String outputDir, Map<String, String> checksumMap, Map<String, Long> bytesMap, Map<String, Integer> versionMap);
 	
 }

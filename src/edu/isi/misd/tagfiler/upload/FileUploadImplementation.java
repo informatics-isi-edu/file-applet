@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.isi.misd.tagfiler.AbstractFileTransferSession;
@@ -35,6 +36,7 @@ import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.FileListener;
 import edu.isi.misd.tagfiler.util.ClientUtils;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
+import edu.isi.misd.tagfiler.util.FileWrapper;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
@@ -87,6 +89,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     client.setChunked(allowChunks);
     client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     client.setRetryCount(((AbstractTagFilerApplet) applet).getMaxRetries());
+    applet.setClient((ConcurrentJakartaClient) client);
     }
 
     /**
@@ -126,15 +129,18 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      * 
      * @param files
      *            list of absolute file names.
+     * @param target
+     *            resume or upload all
      */
-    public boolean postFileData(List<String> files) {
-        if (files == null) throw new IllegalArgumentException(""+files);
+    public boolean postFileData(List<String> files, String target) {
+        if (files == null || target == null) throw new IllegalArgumentException(""+files+", "+target);
+        this.target = target;
         boolean result = false;
         try {
         	if (dataset == null || dataset.length() == 0) {
-        		dataset = getSequenceNumber("transmitnumber");
+        		dataset = getSequenceNumber(TagFilerProperties.getProperty("tagfiler.tag.transmitnumber"));
         	}
-        	datasetId = getSequenceNumber("keygenerator");
+        	datasetId = getSequenceNumber(TagFilerProperties.getProperty("tagfiler.tag.keygenerator"));
             result = postFiles(files);
         } catch (Exception e) {
             e.printStackTrace();
@@ -152,7 +158,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      */
     private String getSequenceNumber(String table) throws FatalException {
         String ret = "";
-        String query = tagFilerServerURL + "/transmitnumber";
+        String query = tagFilerServerURL + "/" + TagFilerProperties.getProperty("tagfiler.tag.transmitnumber");
         ClientURLResponse response = client.getSequenceNumber(query, table, cookie);
 
         if (response == null) {
@@ -189,22 +195,79 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      * @throws FatalException
      *             if a fatal exception occurs when computing checksums
      */
-    private void buildTotalSize(List<String> files)
+    private List<FileWrapper> buildTotalSize(List<String> files)
             throws FatalException {
         if (files == null) throw new IllegalArgumentException(""+files);
 
-        File file = null;
-        long fileSize = 0;
-        datasetSize = 0;
+        // the copy is done for performance reasons in the inner loop
+        ArrayList<String> tempFiles = new ArrayList<String>(files);
+        
+        List<FileWrapper> filesList = new ArrayList<FileWrapper>();
         checksumMap = new HashMap<String, String>();
         bytesMap = new HashMap<String, Long>();
         fileNames = new ArrayList<String>();
-        for (String filename : files) {
-            file = new File(filename);
-            if (file.exists() && file.canRead()) {
+        
+        if (target.equals(RESUME_TARGET)) {
+        	// check what is completed or partial done
+            JSONArray array = getFilesTagValues(applet, fileUploadListener);
+            for (int i=0; i<array.length(); i++) {
+            	try {
+    				JSONObject obj = array.getJSONObject(i);
+                    String vname = obj.getString(VNAME);
+                    String cksum = null;
+                    if (!obj.isNull(SHA256SUM)) {
+                        cksum = obj.getString(SHA256SUM);
+                    }
+    				for (String filename : tempFiles) {
+						long fileSize = (new File(filename)).length();
+    					String basename = DatasetUtils.getBaseName(filename, baseDirectory);
+    					if (obj.getString(NAME).equals(dataset+basename)) {
+    	                    int version = Integer.parseInt(vname.substring(vname.lastIndexOf("@") + 1));
+    						if (cksum != null) {
+        						checksumMap.put(basename, cksum);
+    						}
+    						if (!obj.isNull(CHECK_POINT_OFFSET)) {
+    							long offset = obj.getLong(CHECK_POINT_OFFSET);
+    							if (offset != fileSize) {
+    								// the file is partial uploaded
+    								filesList.add(new FileWrapper(filename, offset, version, fileSize));
+    							} else {
+    								// upload completed for this file
+    								// initialize the tables for upload validation
+            						fileNames.add(basename);
+            	                    bytesMap.put(basename, fileSize);
+        		                    datasetSize += fileSize;
+    							}
+    							// for inner loop performance
+    							tempFiles.remove(filename);
+    						}
+    						versionMap.put(filename, version);
+    						break;
+    					}
+    				}
+    			} catch (JSONException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+            }
+        }
 
+        // add the rest of the files without check points
+        for (String filename : tempFiles) {
+        	int version = 0;
+        	if (versionMap.get(filename) != null) {
+        		version = versionMap.get(filename);
+        	}
+			filesList.add(new FileWrapper(filename, 0, version, (new File(filename)).length()));
+        }
+        
+        // update the tables for the files that will be upload
+        for (FileWrapper fileWrapper : filesList) {
+        	String filename = fileWrapper.getName();
+        	File file = new File(filename);
+            if (file.exists() && file.canRead()) {
                 if (file.isFile()) {
-                    fileSize = file.length();
+                    long fileSize = file.length();
                     datasetSize += fileSize;
                     String basename = DatasetUtils.getBaseName(filename, baseDirectory);
                     bytesMap.put(basename, fileSize);
@@ -220,6 +283,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                         + "' is not readible or does not exist.");
             }
         }
+        
+        return filesList;
     }
 
     /**
@@ -241,10 +306,23 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         fileUploadListener
                 .notifyLogMessage("Computing size and checksum of files...");
         try {
-        	buildTotalSize(files);
-            fileUploadListener.notifyStart(dataset, (enableChecksum ? 2 : 1)*datasetSize);
-            fileUploadListener.notifyLogMessage(datasetSize
-                    + " total bytes will be transferred");
+        	List<FileWrapper> filesList = buildTotalSize(files);
+        	
+        	// get the total size of the files that will be uploaded
+        	long totalSize = 0;
+        	long uploadSize = 0;
+        	for (FileWrapper fileWrapper : filesList) {
+        		long size = fileWrapper.getFileLength() - fileWrapper.getOffset();
+        		totalSize += size;
+        		uploadSize += size;
+        		if (enableChecksum) {
+        			// checksum can not be resumed - so it will be applied to the entire file
+        			totalSize += fileWrapper.getFileLength();
+        		}
+        	}
+            fileUploadListener.notifyStart(dataset, totalSize);
+            fileUploadListener.notifyLogMessage(uploadSize
+                    + " total bytes will be transferred\n"+totalSize+ " total bytes in the progress bar");
 
             fileUploadListener
                     .notifyLogMessage("Beginning transfer of dataset '"
@@ -255,10 +333,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
                 ClientUtils.disableExpirationWarning(applet);
             }
-            synchronized (lock) {
-        	    success = postFileDataHelper(files);
-                t2 = System.currentTimeMillis();
-        	    lock.wait();
+            if (filesList.size() > 0) {
+                synchronized (lock) {
+            	    success = postFileDataHelper(filesList);
+                    t2 = System.currentTimeMillis();
+            	    lock.wait();
+                }
             }
             if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
                 ClientUtils.enableExpirationWarning(applet);
@@ -447,23 +527,23 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         			JSONObject fileTags = tagsValues.getJSONObject(i);
         			
                     // get the file name
-                    String file = fileTags.getString("name").substring(dataset.length());
+                    String file = fileTags.getString(NAME).substring(dataset.length());
                     if (!fileNames.remove(file)) {
                     	return result;
                     }
 
                     // get the bytes
-                    long bytes = fileTags.getLong("bytes");
+                    long bytes = fileTags.getLong(BYTES);
                     Long size = bytesMap.remove(file);
                     if (size == null || size != bytes) {
                     	return result;
                     }
                     
                     if (enableChecksum) {
-                    	if (fileTags.isNull("sha256sum")) {
+                    	if (fileTags.isNull(SHA256SUM)) {
                     		return result;
                     	}
-                        String checksum = fileTags.getString("sha256sum");
+                        String checksum = fileTags.getString(SHA256SUM);
                         String cksum = checksumMap.remove(file);
                         if (!checksum.equals(cksum)) {
                         	return result;
@@ -493,7 +573,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
      * @throws FatalException
      *             if an error occurred in one of the file transfers
      */
-    private boolean postFileDataHelper(List<String> files)
+    private boolean postFileDataHelper(List<FileWrapper> files)
             throws FatalException {
         if (files == null) throw new IllegalArgumentException(""+files);
 

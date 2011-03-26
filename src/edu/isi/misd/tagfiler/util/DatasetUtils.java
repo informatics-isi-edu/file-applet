@@ -49,11 +49,15 @@ public class DatasetUtils {
 
     public static final String STUDY_URI = "/study/name=";
 
-    private static final String NAME = "name";
+    private static final String NAME = "name=";
 
-    private static final String VNAME = "vname";
+    private static final String NAME_REGEXP = "name:regexp:";
+
+    private static final String VNAME = "vname=";
     
     public static final String KEY = "key=";
+    
+    public static final String VERSION = "version=";
     
     public static final String ANY_VERSION = "?versions=any";
     
@@ -61,9 +65,16 @@ public class DatasetUtils {
     
     private static final String VCONTAINS = "(vcontains)/";
     
+    private static final String VCONTAINS_PROPERTY = "vcontains=";
+    
     private static final String TAGS_LIST = "?list=";
     
     private static final String IMAGE_SET = "Image Set";
+    
+    private static final String UPLOAD_BODY = "action=put&type=url&url=";
+    
+    private static final String LIMIT_NONE = "&limit=none";
+    
 
     /**
      * 
@@ -141,14 +152,13 @@ public class DatasetUtils {
         		tagFilerServer == null || tagFilerServer.length() == 0) 
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer+", "+customTagMap);
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI).append("name=");
+                .append(FILE_URI).append(NAME);
         try {
             restURL.append(DatasetUtils.urlEncode(datasetName))
                     .append("?")
                     .append(DatasetUtils.urlEncode(IMAGE_SET))
                     .append("&")
-                    .append("key")
-                    .append("=")
+                    .append(KEY)
                     .append(key);
 
             Set<String> tagNames = customTagMap.getTagNames();
@@ -185,8 +195,8 @@ public class DatasetUtils {
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI);
         try {
-            restURL.append("name=").append(DatasetUtils.urlEncode(datasetName))
-            		.append(version != 0 ? ";version="+version : "");
+            restURL.append(NAME).append(DatasetUtils.urlEncode(datasetName))
+            		.append(version != 0 ? ";"+VERSION+version : "");
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
@@ -232,7 +242,7 @@ public class DatasetUtils {
         if (datasetId == null || datasetId.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
         	throw new IllegalArgumentException(""+datasetId+", "+tagFilerServer);
-        final StringBuffer body = new StringBuffer("action=put&type=url&url=");
+        final StringBuffer body = new StringBuffer(UPLOAD_BODY);
         try {
             body.append(DatasetUtils.urlEncode(getDatasetTagsQuery(datasetId,
                     tagFilerServer)));
@@ -266,6 +276,30 @@ public class DatasetUtils {
 
     /**
      * 
+     * @param checksum
+     *            checksum computed for the file
+     * @return URL suffix for uploading a file
+     * @throws FatalException if the URL cannot be constructed
+     */
+    public static final String getUploadQueryCheckPoint(long offset) throws FatalException {
+
+        final StringBuffer restURL = new StringBuffer();
+        
+        try {
+			restURL.append("?")
+			.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.checkpointoffset")))
+			.append("=")
+			.append(offset);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        return restURL.toString();
+    }
+
+    /**
+     * 
      * @param datasetName
      *            name of the dataset
      * @param tagFilerServer
@@ -281,7 +315,7 @@ public class DatasetUtils {
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI).append("name=");
+                .append(FILE_URI).append(NAME);
         try {
 
             restURL.append(
@@ -354,9 +388,9 @@ public class DatasetUtils {
 				e.printStackTrace();
 			}
         }
-        String tags = DatasetUtils.join(array, "&vcontains=");
+        String tags = DatasetUtils.join(array, "&"+VCONTAINS_PROPERTY);
         if (tags.trim().length() > 0) {
-        	restURL.append("vcontains=");
+        	restURL.append(VCONTAINS_PROPERTY);
         }
         restURL.append(tags);
         return restURL.toString();
@@ -381,8 +415,8 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
         								.append(FILE_URI)
-        								.append("name=").append(DatasetUtils.urlEncode(datasetName))
-        								.append(version != 0 ? ";version="+version : "");
+        								.append(NAME).append(DatasetUtils.urlEncode(datasetName))
+        								.append(version != 0 ? ";"+VERSION+version : "");
         return restURL.toString();
     }
 
@@ -403,7 +437,7 @@ public class DatasetUtils {
         	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
-                .append(FILE_URI).append("name=")
+                .append(FILE_URI).append(NAME)
                 .append(DatasetUtils.urlEncode(datasetName));
         return restURL.toString();
     }
@@ -430,8 +464,8 @@ public class DatasetUtils {
 
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(TAGS_URI)
-                .append("name=").append(DatasetUtils.urlEncode(datasetName))
-                .append(version != 0 ? ";version="+version : "")
+                .append(NAME).append(DatasetUtils.urlEncode(datasetName))
+                .append(version != 0 ? ";"+VERSION+version : "")
                 .append(TAGS_LIST)
                 .append(tags);
         return restURL.toString();
@@ -460,14 +494,43 @@ public class DatasetUtils {
         final StringBuffer restURL = new StringBuffer(tagFilerServer)
                 .append(QUERY_URI)
                 .append(version != 0 ? VNAME : NAME)
-                .append("=")
                 .append(DatasetUtils.urlEncode(datasetName+(version != 0 ? "@"+version : "")))
                 .append(VCONTAINS)
                 .append("(")
                 .append(tags)
                 .append(")")
                 .append(version == 0 ? LATEST_VERSION : ANY_VERSION)
-                .append("&limit=none");
+                .append(LIMIT_NONE);
+        return restURL.toString();
+    }
+
+    /**
+     * Get the URL for the files tags
+     * @param datasetName
+     *            name of the dataset
+     * @param tagFilerServer
+     *            tagfiler server URL
+     * @param tags
+     *            the list of tags separated by comma
+     * @return the encoded URL for files tags
+     * @throws UnsupportedEncodingException
+     */
+    public static final String getFilesTags(String datasetName,
+            String tagFilerServer, String tags)
+            throws UnsupportedEncodingException {
+        if (datasetName == null || datasetName.length() == 0 ||
+        		tagFilerServer == null || tagFilerServer.length() == 0) 
+        	throw new IllegalArgumentException(""+datasetName+", "+tagFilerServer);
+
+        final StringBuffer restURL = new StringBuffer(tagFilerServer)
+                .append(QUERY_URI)
+                .append(NAME_REGEXP)
+                .append(DatasetUtils.urlEncode("^"+datasetName+"/"))
+                .append("(")
+                .append(tags)
+                .append(")")
+                .append(ANY_VERSION)
+                .append(LIMIT_NONE);
         return restURL.toString();
     }
 
@@ -510,7 +573,24 @@ public class DatasetUtils {
      * @return the join string of the set elements
      */
 	public static String joinEncode(Set<String> strings, String delimiter){
-		  if(strings==null || delimiter == null) {
+		  if(strings == null || delimiter == null) {
+		    return "";
+		  }
+		  
+		  return DatasetUtils.joinEncode(strings.toArray(new String[0]), delimiter);
+		}
+
+    /**
+     * Join the encoded elements of the array
+     * 
+     * @param strings
+     *            the set of elements
+     * @param delimiter
+     *            the delimiter
+     * @return the join string of the set elements
+     */
+	public static String joinEncode(String strings[], String delimiter){
+		  if(strings == null || delimiter == null) {
 		    return "";
 		  }
 		 
@@ -594,9 +674,9 @@ public class DatasetUtils {
 	public static int getVersion(String url) {
         if (url == null) throw new IllegalArgumentException("url is NULL");
 		int res = 0;
-		int index = url.lastIndexOf("version=");
+		int index = url.lastIndexOf(VERSION);
 		if (index != -1) {
-			index += "version=".length();
+			index += VERSION.length();
 			String version = url.substring(index);
 			index = version.indexOf("?");
 			if (index != -1) {

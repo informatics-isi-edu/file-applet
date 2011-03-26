@@ -139,6 +139,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
      */
     public void enableUpload() {
     	setEnabled("Upload All");
+    	eval("enableUploadResume()");
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultUploadStatus"));
     }
@@ -312,8 +313,9 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
     /**
      * send event for the upload process
      */
-    public void uploadAll() {
-        synchronized (lock) {
+    public void uploadAll(String target) {
+    	synchronized (lock) {
+        	this.target = target;
         	upload = true;
         	lock.notifyAll();
         }
@@ -431,7 +433,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
 				e.printStackTrace();
 			}
             if (filesList.size() > 0) {
-                fileUpload.postFileData(filesList);
+                fileUpload.postFileData(filesList, target);
             }
         }
     }
@@ -459,7 +461,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
             	        	fileUpload.setDatasetName(getDatasetName());
             	        	setCustomTags();
             	            if (filesList.size() > 0) {
-            	                fileUpload.postFileData(filesList);
+            	                fileUpload.postFileData(filesList, target);
             	            }
             	        } catch (Exception ex) {
             	            JOptionPane.showMessageDialog(getComponent(),

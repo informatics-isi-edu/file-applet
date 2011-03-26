@@ -154,6 +154,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
      */
     public void enableDownload() {
     	setEnabled("Download Files");
+    	setEnabled("Resume");
     	eval("setDestinationDirectory", destinationDirectoryField.toString().trim().replaceAll("\\\\", "\\\\\\\\"));
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultDownloadStatus"));
@@ -386,8 +387,9 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
     /**
      * send event for the download process
      */
-    public void downloadFiles() {
+    public void downloadFiles(String target) {
         synchronized (lock) {
+        	this.target = target;
         	download = true;
         	lock.notifyAll();
         }
@@ -487,7 +489,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
 			chooseDir();
 	        int valid = validateFields();
 	        if (valid == 1) {
-                fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
+                fileDownload.downloadFiles(destinationDirectoryField.toString().trim(), target);
 	        }
     	}
     }
@@ -513,7 +515,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
             	        int valid = validateFields();
             	        if (valid == 1) {
             	        	fileDownload.setEnableChecksum(getChecksum());
-                            fileDownload.downloadFiles(destinationDirectoryField.toString().trim());
+                            fileDownload.downloadFiles(destinationDirectoryField.toString().trim(), target);
             	        } else if (valid == -1) {
             	            JOptionPane.showMessageDialog(getComponent(),
             	                    TagFilerProperties

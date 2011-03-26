@@ -38,7 +38,21 @@ import edu.isi.misd.tagfiler.util.DatasetUtils;
  * 
  */
 public abstract class AbstractFileTransferSession implements FileTransfer {
-    protected String cookie = null;
+    protected static final String NAME = "name";
+    
+    protected static final String VNAME = "vname";
+    
+    protected static final String BYTES = "bytes";
+    
+    protected static final String SHA256SUM = "sha256sum";
+    
+    protected static final String CHECK_POINT_OFFSET = "check point offset";
+    
+    protected static final String RESUME_TARGET = "resume";
+    
+    protected static final String ALL_TARGET = "all";
+    
+	protected String cookie = null;
 
     // tagfiler server URL
     protected String tagFilerServerURL;
@@ -85,6 +99,9 @@ public abstract class AbstractFileTransferSession implements FileTransfer {
     // flag to enable/disable the checksum
     protected boolean enableChecksum;
 
+    // the transfer target: 'all' or 'resume'
+    protected String target = ALL_TARGET;
+
 	/**
      * Updates the session cookie
      */
@@ -129,11 +146,17 @@ public abstract class AbstractFileTransferSession implements FileTransfer {
      * @return the JSON Array with the tags values
      */
     protected JSONArray getFilesTagValues(AbstractTagFilerApplet applet, FileListener fl) {
-    	String tags = "bytes;sha256sum;vname;name";
+    	String tags[] = {"bytes", "sha256sum", "vname", "name", "check point offset"};
+    	String tagsList = DatasetUtils.joinEncode(tags, ";");
         String query = null;
 		try {
-			query = DatasetUtils.getFilesTags(dataset, datasetVersion,
-			        tagFilerServerURL, tags);
+			if (target.equals(ALL_TARGET)) {
+				query = DatasetUtils.getFilesTags(dataset, datasetVersion,
+				        tagFilerServerURL, tagsList);
+			} else {
+				query = DatasetUtils.getFilesTags(dataset,
+				        tagFilerServerURL, tagsList);
+			}
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

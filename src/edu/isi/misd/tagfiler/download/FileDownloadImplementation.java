@@ -16,9 +16,15 @@ package edu.isi.misd.tagfiler.download;
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +43,7 @@ import edu.isi.misd.tagfiler.ui.CustomTagMap;
 import edu.isi.misd.tagfiler.ui.FileListener;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.ClientUtils;
+import edu.isi.misd.tagfiler.util.FileWrapper;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
 /**
@@ -86,6 +93,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
     client.setChunked(allowChunks);
     client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     client.setRetryCount(((AbstractTagFilerApplet) applet).getMaxRetries());
+    applet.setClient((ConcurrentJakartaClient) client);
     }
 
     /**
@@ -138,9 +146,13 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * 
      * @param destDir
      *            destination directory for the download
+     * @param target
+     *            resume or download all
      */
-    public boolean downloadFiles(String destDir) {
-        if (destDir == null || destDir.length() == 0) throw new IllegalArgumentException(destDir);
+    @SuppressWarnings("unchecked")
+	public boolean downloadFiles(String destDir, String target) {
+        if (destDir == null || destDir.length() == 0 || target == null) throw new IllegalArgumentException(destDir+", "+target);
+        this.target = target;
         try {
 			client.setBaseURL(DatasetUtils.getBaseDownloadUrl(dataset, tagFilerServerURL));
 		} catch (UnsupportedEncodingException e1) {
@@ -148,24 +160,78 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 			e1.printStackTrace();
 		}
 
-        boolean success = true;
-        long totalSize = datasetSize;
-        if (enableChecksum) {
-        	Set<String> keys = checksumMap.keySet();
-        	for (String key : keys) {
-        		if (bytesMap.get(key) != null) {
-        			totalSize += bytesMap.get(key);
-        		}
+        // the copy is done for performance reasons in the inner loop
+        ArrayList<String> tempFiles = new ArrayList<String>(fileNames);
+        
+        List<FileWrapper> filesList = new ArrayList<FileWrapper>();
+        if (target.equals(RESUME_TARGET)) {
+        	// resume download
+        	String filename = destDir + File.separator + TagFilerProperties.getProperty("tagfiler.checkpoint.file");
+        	File file = new File(filename);
+        	if (file.exists() && file.isFile() && file.canRead()) {
+        		// get the download check point status
+        		try {
+					FileInputStream fis = new FileInputStream(filename);
+					ObjectInputStream in = new ObjectInputStream(fis);
+					Hashtable<String, Long> checkPoint = (Hashtable<String, Long>) in.readObject();
+					in.close();
+					fis.close();
+					System.out.println("Check Points Read: "+checkPoint);
+					Set<String> keys = checkPoint.keySet();
+					for (String key : keys) {
+						if (tempFiles.contains(key)) {
+							tempFiles.remove(key);
+							if ((long)bytesMap.get(key) == (long)checkPoint.get(key)) {
+								// file already downloaded
+								bytesMap.remove(key);
+								versionMap.remove(key);
+								checksumMap.remove(key);
+							} else {
+								// file partial downloaded
+								filesList.add(new FileWrapper(key, checkPoint.get(key), versionMap.get(key), bytesMap.get(key)));
+							}
+						}
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
         	}
         }
+        
+        // add the rest of the files without check points
+        for (String filename : tempFiles) {
+			filesList.add(new FileWrapper(filename, 0, versionMap.get(filename), bytesMap.get(filename)));
+        }
+        
+        System.out.println(""+filesList.size()+" files will be downloaded");
+        
+        // get the total size of the files to be downloaded and checksum
+        long totalSize = 0;
+        long tb = 0;
+        for (FileWrapper fileWrapper : filesList) {
+        	tb += fileWrapper.getFileLength() - fileWrapper.getOffset();
+        	totalSize += fileWrapper.getFileLength() - fileWrapper.getOffset();
+        	if (enableChecksum) {
+    			totalSize += fileWrapper.getFileLength();
+        	}
+        }
+        fileDownloadListener.notifyLogMessage(tb
+                + " total bytes will be transferred\n"+totalSize+ " total bytes in the progress bar");
         fileDownloadListener.notifyStart(dataset, totalSize);
         if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
             ClientUtils.disableExpirationWarning(applet);
         }
         start = System.currentTimeMillis();
-        client.download(fileNames, destDir, checksumMap, bytesMap, versionMap);
+        client.download(filesList, destDir, checksumMap, bytesMap, versionMap);
 
-        return success;
+        return true;
     }
 
     /**
@@ -206,7 +272,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         		// by replacing a file with an URL, we might have have fewer files to be downloaded
         		int totalFiles = tagsValues.length();
         		for (int i=0; i < tagsValues.length(); i++) {
-        			if (tagsValues.getJSONObject(i).isNull("bytes")) {
+        			if (tagsValues.getJSONObject(i).isNull(BYTES)) {
         				totalFiles--;
         			}
         		}
@@ -217,27 +283,27 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             			JSONObject fileTags = tagsValues.getJSONObject(i);
             			
             			// make sure we have a file
-            			if (fileTags.isNull("bytes")) {
+            			if (fileTags.isNull(BYTES)) {
             				continue;
             			}
             			
             			// get the file name
-                        String file = fileTags.getString("name").substring(dataset.length()+1);
+                        String file = fileTags.getString(NAME).substring(dataset.length()+1);
                         fileNames.add(file);
 
                         // get the bytes
-                        long bytes = fileTags.getLong("bytes");
+                        long bytes = fileTags.getLong(BYTES);
                         datasetSize += bytes;
                         bytesMap.put(file, bytes);
 
                         // get the version
-                        String vname = fileTags.getString("vname");
+                        String vname = fileTags.getString(VNAME);
                         int version = Integer.parseInt(vname.substring(vname.lastIndexOf("@") + 1));
                         versionMap.put(file, version);
 
                         // get the checksum
-                        if (!fileTags.isNull("sha256sum")) {
-                            String checksum = fileTags.getString("sha256sum");
+                        if (!fileTags.isNull(SHA256SUM)) {
+                            String checksum = fileTags.getString(SHA256SUM);
                             checksumMap.put(file, checksum);
                         }
                         fileDownloadListener.notifyFileRetrieveComplete(file);
@@ -459,11 +525,11 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 				// log download failure
 				client.validateAction(datasetURLQuery, datasetId, "failure", 0, 0, "download", cookie);
 				fileDownloadListener.notifyFailure(dataset, err);
+			} else {
+				// send here JavaScript error message, as the connection is broken
+				applet.eval("notifyFailure", err, false);
 			}
-		} else {
-			// send here JavaScript error message, as the connection is broken
-			applet.eval("notifyFailure", err, false);
-		}
+		} 
 	}
 
 	/**
