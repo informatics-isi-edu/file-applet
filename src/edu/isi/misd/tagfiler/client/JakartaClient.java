@@ -90,6 +90,10 @@ public class JakartaClient  implements ClientURL {
 	// number of retries if the connection is broken
 	private int retries;
 	
+	// exception messages got during the retries if the connection is broken
+	private String connectException;
+	private String clientProtocolException;
+	private String ioException;
 	/**
      * Constructor
      * 
@@ -578,6 +582,9 @@ public class JakartaClient  implements ClientURL {
     	request.setHeader("X-Machine-Generated", "true");
     	ClientURLResponse response = null;
     	int count = 0;
+    	connectException = null;
+    	clientProtocolException = null;
+    	ioException = null;
     	while (true) {
     		try {
     			response = new JakartaClientResponse(httpclient.execute(request));
@@ -585,13 +592,31 @@ public class JakartaClient  implements ClientURL {
     		} catch (ConnectException e) {
     			// Can not connect and send the request
     			// Retry maximum 10 times
-    			e.printStackTrace();
+    			synchronized (this) {
+        			if (connectException == null || !connectException.equals(e.getMessage())) {
+            			System.err.println("ConnectException");
+        				e.printStackTrace();
+            			connectException = e.getMessage();
+        			}
+    			}
     		} catch (ClientProtocolException e) {
     			// TODO Auto-generated catch block
-    			e.printStackTrace();
+    			synchronized (this) {
+        			if (clientProtocolException == null || !clientProtocolException.equals(e.getMessage())) {
+            			System.err.println("ClientProtocolException");
+            			e.printStackTrace();
+            			clientProtocolException = e.getMessage();
+        			}
+    			}
     		} catch (IOException e) {
     			// The request was sent, but no response; connection might have been broken
-    			e.printStackTrace();
+    			synchronized (this) {
+        			if (ioException == null || !ioException.equals(e.getMessage())) {
+            			System.err.println("IOException");
+            			e.printStackTrace();
+            			ioException = e.getMessage();
+        			}
+    			}
     		}
 			if (++count > retries) {
 				break;
