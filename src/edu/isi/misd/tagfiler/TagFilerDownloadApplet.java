@@ -153,9 +153,16 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
      * Enables the download button
      */
     public void enableDownload() {
+    	String destDir = destinationDirectoryField.toString().trim().replaceAll("\\\\", "\\\\\\\\");
     	setEnabled("Download Files");
-    	setEnabled("Resume");
-    	eval("setDestinationDirectory", destinationDirectoryField.toString().trim().replaceAll("\\\\", "\\\\\\\\"));
+    	String filename = destDir + File.separator + TagFilerProperties.getProperty("tagfiler.checkpoint.file");
+    	File file = new File(filename);
+    	if (file.exists() && file.isFile() && file.canRead()) {
+			setVisibility("Resume", "visible");
+    	} else {
+			setVisibility("Resume", "hidden");
+    	}
+    	eval("setDestinationDirectory", destDir);
         updateStatus(TagFilerProperties
                 .getProperty("tagfiler.label.DefaultDownloadStatus"));
     }

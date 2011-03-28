@@ -343,6 +343,18 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     }
 
     /**
+     * Convenience method for making visible a HTML button
+     * 
+     * @param button
+     * 			the button to make visible
+     * @param value
+     * 			the visibility value
+     */
+    protected void setVisibility(String button, String value) {
+    	invoke("setVisibility('" + button + "', '" + value + "')");
+    }
+
+    /**
      * Convenience method for enabling an HTML button
      * 
      * @param button
