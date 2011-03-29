@@ -361,15 +361,15 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// put the first chunk into Worker Queue
 			if (fileWrapper.getOffset() > 0) {
 				// file partial uploaded - resume from the check point offset
-				int size = chunkSize;
+				long size = chunkSize;
 				long remaining = length - fileWrapper.getOffset();
-				if (remaining <= chunkSize) {
-					size = (int) remaining;
+				if (remaining < (long) chunkSize) {
+					size = remaining;
 				}
 				fc = new FileChunk(filename, fileWrapper.getOffset(), size, length);
 				fc.setVersion(fileWrapper.getVersion());
 				fc.setFirstChunk(true);
-				if (remaining <= chunkSize) {
+				if (remaining <= (long) chunkSize) {
 					fc.setLastChunk(true);
 				}
 				fi.setLastCheckPoint((int) (fileWrapper.getOffset()/chunkSize));
@@ -417,14 +417,13 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	        BufferedInputStream bis = new BufferedInputStream(fis, chunkSize);
 			long offset = fileWrapper.getOffset();
 			long length = offset;
-			long writeOffset = 0;
+			int slot = 0;
 			while (length > 0) {
 				// read the chunk and update the checksum
 				int size = length >= chunkSize ? chunkSize : (int) length;
 				byte[] chunk = read(bis, size);
-				fileChecksum.put(chunk, size, (int) (writeOffset/chunkSize));
+				fileChecksum.put(chunk, size, slot++);
 				length -= size;
-				writeOffset += size;
 			}
 			if (offset != offset/chunkSize*chunkSize) {
 				// we have an offset that it is not multiple of chunkSize
@@ -780,6 +779,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			String cksum = null;
 			byte ret[] = null;
 			long slotOffset = 0;
+			int slot = 0;
+			long slotUpperBound = 0;
 			if (file.getLength() == file.getTotalLength()) {
 				if (enableChecksum) {
 					try {
@@ -813,7 +814,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					    	if (enableChecksum) {
 						        file.getFileChecksum().put(ret, (int) file.getLength(), (int) (writeOffset/chunkSize));
 					    	} 
-					    	slotOffset = fi.updateCheckPoint((int) (writeOffset/chunkSize), writeOffset+file.getLength());
+					    	slot = (int) (writeOffset/chunkSize);
+					    	slotUpperBound = writeOffset + file.getLength();
+					    	slotOffset = fi.nextCheckPoint(slot, slotUpperBound);
 					    	break;
 					   }
 					}
@@ -884,7 +887,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			FileChunk fc = null;
 			if (201 == status || 204 == status) {
 				if (params != null) {
-					fi.resetBusy();
+					// a check point was set
+					fi.resetBusy(slot, slotUpperBound, slotOffset);
+				} else {
+					fi.updateCheckPoint(slot, slotUpperBound);
 				}
 				if (file.getOffset() == 0) {
 					// set the file version
@@ -1546,24 +1552,42 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			this.lastCheckPoint = lastCheckPoint;
 		}
 
-		synchronized public void resetBusy() {
-			busy = false;
+		public void resetBusy(int slot, long slotUpperBound, long slotOffset) {
+			if (slotUpperBound != slotOffset) {
+				slots.put(slot, slotUpperBound);
+			}
+			synchronized (this) {
+				busy = false;
+			}
 		}
 		
-		long updateCheckPoint(int slot, long offset) {
+		void updateCheckPoint(int slot, long offset) {
 			slots.put(slot, offset);
+		}
+		
+		long nextCheckPoint(int slot, long offset) {
 			synchronized (this) {
 				if (busy) {
 					return -1;
 				}
 				long ret = -1;
-				while (lastCheckPoint <= slot) {
+				// check for available compact written slots
+				while (lastCheckPoint < slot) {
 					Long checkpoint = slots.remove(lastCheckPoint);
 					if (checkpoint == null) {
-						return ret;
+						break;
 					}
 					lastCheckPoint++;
 					ret = checkpoint;
+				}
+				if (lastCheckPoint == slot) {
+					// current slot is the latest compact one
+					ret = offset;
+					lastCheckPoint++;
+				}
+				if (ret != -1) {
+					// a check point will be set
+					busy = true;
 				}
 				return ret;
 			}
