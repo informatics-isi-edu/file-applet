@@ -1120,14 +1120,16 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                 file.getResponse().release();
 				
                 // verify checksum if download file completed
-				if (success && fi.update(file.getLength()) == 0) {
-					thread.setEOF(file.getName());
-					synchronized (ConcurrentJakartaClient.this) {
-						if (totalFiles == 0) {
-							terminateThreads();
-						}
-					}
-				}
+                if (success) {
+    				if (fi.update(file.getLength()) == 0) {
+    					thread.setEOF(file.getName());
+    					synchronized (ConcurrentJakartaClient.this) {
+    						if (totalFiles == 0) {
+    							terminateThreads();
+    						}
+    					}
+    				}
+                }
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.out.println("IOException in download: " + e.getMessage());
