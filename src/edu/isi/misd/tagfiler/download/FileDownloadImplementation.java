@@ -174,14 +174,20 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 					FileInputStream fis = new FileInputStream(filename);
 					ObjectInputStream in = new ObjectInputStream(fis);
 					Hashtable<String, Long> checkPoint = (Hashtable<String, Long>) in.readObject();
+					HashMap<String, String> checksum = (HashMap<String, String>) in.readObject();
 					in.close();
 					fis.close();
-					System.out.println("Check Points Read: "+checkPoint);
+					System.out.println("Check Points Read: "+checkPoint+"\n"+checksum);
 					Set<String> keys = checkPoint.keySet();
 					for (String key : keys) {
 						if (tempFiles.contains(key)) {
 							tempFiles.remove(key);
-							if ((long)bytesMap.get(key) == (long)checkPoint.get(key)) {
+							boolean complete = (long)bytesMap.get(key) == (long)checkPoint.get(key);
+							if (complete && enableChecksum) {
+								complete = checksum.get(key) != null && checksumMap.get(key) != null && 
+										   checksum.get(key).equals(checksumMap.get(key));
+							}
+							if (complete) {
 								// file already downloaded
 								bytesMap.remove(key);
 								versionMap.remove(key);

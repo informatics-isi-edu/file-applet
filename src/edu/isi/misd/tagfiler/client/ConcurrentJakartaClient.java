@@ -73,7 +73,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
     // the map with the files transfer in progress
 	private HashMap<String, FileItem> filesCompletion;
 	
+    // the map with the download check point offset
 	private Hashtable<String, Long> downloadCheckPoint;
+	
+    // the map with the download check point checksum
+	private HashMap<String, String> downloadChecksum;
 	
     // the total number of files to be uploaded or downloaded
 	private int totalFiles;
@@ -146,6 +150,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		TransmissionQueue = new LinkedBlockingQueue<FileChunk>();
 		filesCompletion = new HashMap<String, FileItem>();
 		downloadCheckPoint = new Hashtable<String, Long>();
+		downloadChecksum = new HashMap<String, String>();
 		workerWrapper = new QueueWrapper();
 		workerWrapper.maxThreads = this.connections;
 		cancel = false;
@@ -552,9 +557,25 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// file partial downloaded - resume from the check point offset
 			position = fileWrapper.getOffset();
 			filesCompletion.get(file).setLastCheckPoint((int) (fileWrapper.getOffset()/chunkSize));
-			if (enableChecksum) {
+			if (enableChecksum && checksumMap != null && checksumMap.get(file) != null) {
 				// re-compute the checksum up to the check point offset
 				fileChecksum = initChecksum(fileWrapper);
+			}
+			if (fileWrapper.getOffset() == fileWrapper.getFileLength()) {
+				// the file is already downloaded
+				// we need maybe to check the checksum
+				filesCompletion.get(file).update(0);
+				if (fileChecksum != null) {
+					String fileCksum = fileChecksum.getDigest();
+					String cksum = checksumMap.get(file);
+			        if (fileCksum == null || !fileCksum.equals(cksum)) {
+			        	System.out.println("Failure in downloading the file \"" + fileWrapper.getName() +
+			        			"\". Checksum failed. Checksum tag: "+cksum+". Checksum computed: "+fileCksum+".");
+	        			notifyFailure("<p>Failure in downloading the file \"" + fileWrapper.getName() + "\".<p>Checksum failed.");
+			        }
+			        downloadChecksum.put(fileWrapper.getName(), fileCksum);
+				}
+				downloadCheckPoint.put(fileWrapper.getName(), fileWrapper.getFileLength());
 			}
 		}
 		if (fileChecksum == null && checksumMap != null && checksumMap.get(file) != null && enableChecksum) {
@@ -684,10 +705,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				FileOutputStream fos = new FileOutputStream(filename);
 				ObjectOutputStream out = new ObjectOutputStream(fos);
 				out.writeObject(downloadCheckPoint);
+				out.writeObject(downloadChecksum);
 				out.close();
 				fos.close();
-				System.out.println("Check Points Written: "+downloadCheckPoint);
+				System.out.println("Check Points Written: "+downloadCheckPoint+"\n"+downloadChecksum);
 				downloadCheckPoint = null;
+				downloadChecksum = null;
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1805,6 +1828,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			        			"\". Checksum failed. Checksum tag: "+cksum+". Checksum computed: "+fileCksum+".");
 	        			notifyFailure("<p>Failure in downloading the file \"" + name + "\".<p>Checksum failed.");
 			        }
+			        downloadChecksum.put(name, fileCksum);
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -1878,6 +1902,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 						System.out.println("Deleted the check point file \""+filename+"\"");
 					}
 					downloadCheckPoint = null;
+					downloadChecksum = null;
 				}
 				synchronized (listenerLock) {
 					listener.notifySuccess();
