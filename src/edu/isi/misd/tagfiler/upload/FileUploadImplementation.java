@@ -206,6 +206,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         checksumMap = new HashMap<String, String>();
         bytesMap = new HashMap<String, Long>();
         fileNames = new ArrayList<String>();
+        datasetSize = 0;
         
         if (target.equals(RESUME_TARGET)) {
         	// check what is completed or partial done
@@ -303,6 +304,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = null;
 
         // retrieve the amount of total bytes, checksums for each file
+        cancel = false;
         fileUploadListener
                 .notifyLogMessage("Computing size and checksum of files...");
         try {

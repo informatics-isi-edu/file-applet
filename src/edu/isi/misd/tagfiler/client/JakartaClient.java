@@ -88,7 +88,7 @@ public class JakartaClient  implements ClientURL {
 	private static final String error_description_header = "X-Error-Description";
 	
 	// number of retries if the connection is broken
-	private int retries;
+	protected int retries;
 	
 	// exception messages got during the retries if the connection is broken
 	private String connectException;

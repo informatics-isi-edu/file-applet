@@ -257,6 +257,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
             totalBytes = totalSize + totalFiles;
             filesCompleted = 0;
             lastPercent = 0;
+            bytesTransferred = 0;
 
             drawProgressBar(0);
 

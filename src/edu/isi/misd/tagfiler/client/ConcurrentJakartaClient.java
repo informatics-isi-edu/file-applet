@@ -65,15 +65,15 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	private int connections;
 	
     // the queue for the HTTP requests
-	private LinkedBlockingQueue<FileChunk> WorkerQueue = new LinkedBlockingQueue<FileChunk>();
+	private LinkedBlockingQueue<FileChunk> WorkerQueue;
 	
     // the queue for passing elements to the Worker Queue
-	private LinkedBlockingQueue<FileChunk> TransmissionQueue = new LinkedBlockingQueue<FileChunk>();
+	private LinkedBlockingQueue<FileChunk> TransmissionQueue;
 	
     // the map with the files transfer in progress
-	private HashMap<String, FileItem> filesCompletion = new HashMap<String, FileItem>();
+	private HashMap<String, FileItem> filesCompletion;
 	
-	private Hashtable<String, Long> downloadCheckPoint = new Hashtable<String, Long>();
+	private Hashtable<String, Long> downloadCheckPoint;
 	
     // the total number of files to be uploaded or downloaded
 	private int totalFiles;
@@ -139,7 +139,17 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		super(connections, socketBufferSize);
 		this.connections = connections;
 		this.listener = listener;
+	}
+	
+	private void init() {
+		WorkerQueue = new LinkedBlockingQueue<FileChunk>();
+		TransmissionQueue = new LinkedBlockingQueue<FileChunk>();
+		filesCompletion = new HashMap<String, FileItem>();
+		downloadCheckPoint = new Hashtable<String, Long>();
+		workerWrapper = new QueueWrapper();
 		workerWrapper.maxThreads = this.connections;
+		cancel = false;
+		failure = false;
 	}
 	
     /**
@@ -203,6 +213,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		enableChecksum = listener.isEnableChecksum();
 		datasetId = listener.getDatasetId();
 		totalFiles = files.size();
+		init();
 		for (FileWrapper file : files) {
 			uploadFile(file);
 		}
@@ -244,6 +255,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		enableChecksum = listener.isEnableChecksum();
 		datasetId = listener.getDatasetId();
 		totalFiles = 1;
+		init();
 		uploadFile(fileWrapper);
 		Thread thread = new DispatcherThread();
 		thread.start();
@@ -284,6 +296,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		totalFiles = 1;
 		isDownload = true;
 		checkPointDir = outputDir;
+		init();
         downloadFile(new FileWrapper(file, 0, versionMap.get(file), bytesMap.get(file)), outputDir, checksumMap, bytesMap, versionMap);
 	}
 	
@@ -324,6 +337,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		totalFiles = files.size();
 		isDownload = true;
 		checkPointDir = outputDir;
+		init();
 
 		for (FileWrapper file : files) {
 			downloadCheckPoint.put(file.getName(), file.getOffset());
@@ -989,33 +1003,42 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		}
 		
 		// Execute the HTTP request
-		ClientURLResponse response = null;
-		if (browser) {
-			System.out.println("Sending download: url: "+url+", File: "+file);
-		}
-		if (file.getLength() == file.getTotalLength()) {
-			// small file; upload the entire file
-			response = downloadFile(url.toString(), cookie);
-		} else {
-			response = downloadFile(url.toString(), file.getLength(), file.getOffset(), cookie);
-		}
-		if (response == null) {
-			notifyFailure("Failure in downloading the file \"" + file + "\" of dataset \"" + listener.getDataset() + "\".\\n\\n" +
-					TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-			return;
-		}
-		
-		// Check result
-		int status = response.getStatus();
-		updateSessionCookie();
-		if (200 == status || 206 == status) {
-			// place response into the post request processing queue
-			file.setResponse(response);
-			processDownloadResult(file, thread);
-		} else {
-			String err = ConcurrentJakartaClient.getStatusMessage(response);
-			response.release();
-			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Status " + err);
+		int count = 0;
+		while (true) {
+			// execute it up to re
+			ClientURLResponse response = null;
+			if (browser) {
+				System.out.println((count == 0 ? "Sending " : "Resending ") + "download: url: "+url+", File: "+file);
+			}
+			if (file.getLength() == file.getTotalLength()) {
+				// small file; upload the entire file
+				response = downloadFile(url.toString(), cookie);
+			} else {
+				response = downloadFile(url.toString(), file.getLength(), file.getOffset(), cookie);
+			}
+			if (response == null) {
+				notifyFailure("Failure in downloading the file \"" + file + "\" of dataset \"" + listener.getDataset() + "\".\\n\\n" +
+						TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
+				return;
+			}
+			
+			// Check result
+			int status = response.getStatus();
+			updateSessionCookie();
+			if (200 == status || 206 == status) {
+				// place response into the post request processing queue
+				file.setResponse(response);
+				if (processDownloadResult(file, thread)) {
+					return;
+				} else if (++count > retries){
+					notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Input stream is broken.");
+					return;
+				}
+			} else {
+				String err = ConcurrentJakartaClient.getStatusMessage(response);
+				response.release();
+				notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Status " + err);
+			}
 		}
 	}
 	
@@ -1025,7 +1048,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * @param file
      *            the file to be uploaded
      */
-	private void processDownloadResult(FileChunk file, WorkerThread thread) {
+	private boolean processDownloadResult(FileChunk file, WorkerThread thread) {
+		boolean success = false;
 		try {
 		    String localFile = file.getName().replace('/', File.separatorChar);
 			FileItem fi = filesCompletion.get(file.getName());
@@ -1043,7 +1067,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                 }
                 if (!OK) {
         			notifyFailure("<p>Failure in downloading the file \"" + file + "\".<p>Can not make directory \"" + dir + "\".");
-                	return;
+                	return success;
                 }
             }
 
@@ -1077,16 +1101,18 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                         writeOffset += chunkSize;
                         ret = new byte[chunkSize];
                         remaining = chunkSize;
+                        success = true;
                     }
                 }
                 
-                if (offset > 0) {
+                if (offset > 0 && file.getLength() == offset) {
                     // remaining chunk
                 	raf.write(ret, 0, offset);
                 	if (enableChecksum && file.getFileChecksum() != null) {
                         file.getFileChecksum().put(ret, offset, (int) (writeOffset/chunkSize));
                 	}
                     fi.updateDownloadCheckPoint((int) (writeOffset/chunkSize), writeOffset+offset);
+                    success = true;
                }
                 
                 // release the open resources
@@ -1094,7 +1120,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                 file.getResponse().release();
 				
                 // verify checksum if download file completed
-				if (fi.update(file.getLength()) == 0) {
+				if (success && fi.update(file.getLength()) == 0) {
 					thread.setEOF(file.getName());
 					synchronized (ConcurrentJakartaClient.this) {
 						if (totalFiles == 0) {
@@ -1111,6 +1137,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		return success;
 	}
 	
     /**
@@ -1287,6 +1315,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				expectedChunk++;
 			}
 		}
+		
 	    /**
 	     * Provide a new chunk for checksum computation
 	     * @param chunk
@@ -1548,10 +1577,24 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			this.name = name;
 		}
 		
+	    /**
+	     * Set the check point in case of resume
+	     * @param lastCheckPoint
+	     *            the expected slot
+	     */
 		public void setLastCheckPoint(int lastCheckPoint) {
 			this.lastCheckPoint = lastCheckPoint;
 		}
 
+	    /**
+	     * Release the lock for setting check point offset
+	     * @param slot
+	     *            the slot that set a check point
+	     * @param slotUpperBound
+	     *            the slot upper limit
+	     * @param slotOffset
+	     *            the check point offset that was set
+	     */
 		public void resetBusy(int slot, long slotUpperBound, long slotOffset) {
 			if (slotUpperBound != slotOffset) {
 				slots.put(slot, slotUpperBound);
@@ -1561,10 +1604,25 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 		}
 		
+	    /**
+	     * A new slot was uploaded
+	     * @param slot
+	     *            the slot that set a check point
+	     * @param offset
+	     *            the slot upper limit
+	     */
 		void updateCheckPoint(int slot, long offset) {
 			slots.put(slot, offset);
 		}
 		
+	    /**
+	     * Get the next check point offset
+	     * @param slot
+	     *            the slot that set a check point
+	     * @param offset
+	     *            the slot upper limit
+	     * @return the next check point offset or -1 if None
+	     */
 		long nextCheckPoint(int slot, long offset) {
 			synchronized (this) {
 				if (busy) {
@@ -1584,6 +1642,13 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					// current slot is the latest compact one
 					ret = offset;
 					lastCheckPoint++;
+					// check now if new written slots might be added in the compact zone
+					Long checkpoint = slots.remove(lastCheckPoint);
+					while (checkpoint != null) {
+						lastCheckPoint++;
+						ret = checkpoint;
+						checkpoint = slots.remove(lastCheckPoint);
+					}
 				}
 				if (ret != -1) {
 					// a check point will be set
@@ -1593,19 +1658,24 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			}
 		}
 		
+	    /**
+	     * A new slot was downloaded
+	     * @param slot
+	     *            the slot that set a check point
+	     * @param offset
+	     *            the slot upper limit
+	     */
 		void updateDownloadCheckPoint(int slot, long offset) {
 			slots.put(slot, offset);
 			synchronized (this) {
 				long ret = -1;
-				while (lastCheckPoint <= slot) {
-					Long checkpoint = slots.remove(lastCheckPoint);
-					if (checkpoint == null) {
-						break;
-					}
+				Long checkpoint = slots.remove(lastCheckPoint);
+				while (checkpoint != null) {
 					lastCheckPoint++;
 					ret = checkpoint;
+					checkpoint = slots.remove(lastCheckPoint);
 				}
-				if (ret != -1) {
+				if (ret != -1 && !failure) {
 					downloadCheckPoint.put(name, ret);
 				}
 			}
@@ -1614,6 +1684,8 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		/**
 		 * Mark the file transfer progress: file transfer completed or chunk transfer completed
 		 * 
+	     * @param size
+	     *            the chunk size that was transferred
 		 * @return the remaining bytes to be transfered
 		 */
 		synchronized long update(long size) {

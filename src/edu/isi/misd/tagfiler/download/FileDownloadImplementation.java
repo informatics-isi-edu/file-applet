@@ -210,7 +210,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 			filesList.add(new FileWrapper(filename, 0, versionMap.get(filename), bytesMap.get(filename)));
         }
         
-        System.out.println(""+filesList.size()+" files will be downloaded");
+        System.out.println(""+filesList.size()+" file(s) will be downloaded");
         
         // get the total size of the files to be downloaded and checksum
         long totalSize = 0;
@@ -229,6 +229,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
             ClientUtils.disableExpirationWarning(applet);
         }
         start = System.currentTimeMillis();
+        cancel = false;
         client.download(filesList, destDir, checksumMap, bytesMap, versionMap);
 
         return true;
