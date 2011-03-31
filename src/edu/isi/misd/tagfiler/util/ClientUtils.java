@@ -37,23 +37,6 @@ public class ClientUtils {
     public static final String LOCATION_HEADER_NAME = "Location";
 
     /**
-     * Creates a {@link com.sun.jersey.api.client.Client} instance with the
-     * necessary configuration for the TagFiler server.
-     * 
-     * @return a new instance of a Jersey client
-     */
-    public static ClientURL getClientURL(int maxConnections, int socketBufferSize) {
-
-    	JakartaClient client = new JakartaClient(maxConnections, socketBufferSize);
-    	
-    	if (client.isValid()) {
-    		return client;
-    	} else {
-    		return null;
-    	}
-    }
-
-    /**
      * Retrieves a cookie from the client browser
      * 
      * @param applet

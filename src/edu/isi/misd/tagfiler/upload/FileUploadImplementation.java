@@ -85,7 +85,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         cookie = c;
 	applet = a;
 	boolean allowChunks = ((AbstractTagFilerApplet) applet).allowChunksTransfering();
-    client = new ConcurrentJakartaClient(allowChunks ? ((AbstractTagFilerApplet) applet).getMaxConnections() : 2, ((AbstractTagFilerApplet) applet).getSocketBufferSize(), this);
+    client = new ConcurrentJakartaClient(allowChunks ? ((AbstractTagFilerApplet) applet).getMaxConnections() : 2, ((AbstractTagFilerApplet) applet).getSocketBufferSize(), ((AbstractTagFilerApplet) applet).getSocketTimeout(), this);
     client.setChunked(allowChunks);
     client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     client.setRetryCount(((AbstractTagFilerApplet) applet).getMaxRetries());

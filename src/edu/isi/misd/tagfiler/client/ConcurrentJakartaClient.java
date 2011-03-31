@@ -136,11 +136,15 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
      * 
      * @param connections
      *            the maximum number of HTTP connections
+     * @param socketBufferSize
+     *            the socket buffer size
+     * @param socketTimeout
+     *            the socket buffer timeout
      * @param listener
      *            the listener to receive callbacks
      */
-	public ConcurrentJakartaClient (int connections, int socketBufferSize, ClientURLListener listener) {
-		super(connections, socketBufferSize);
+	public ConcurrentJakartaClient (int connections, int socketBufferSize, int socketTimeout, ClientURLListener listener) {
+		super(connections, socketBufferSize, socketTimeout);
 		this.connections = connections;
 		this.listener = listener;
 	}

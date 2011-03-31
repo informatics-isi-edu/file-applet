@@ -63,6 +63,9 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     // parameter name for the socket buffer size
     private static final String SOCKET_BUFFER_SIZE = "tagfiler.socket.buffer.size";
 
+    // parameter name for the socket timeout
+    private static final String SOCKET_TIMEOUT = "tagfiler.client.socket.timeout";
+
     // parameter name for transfering the file in chunks
     private static final String TAGFILER_ALLOW_CHUNKS = "tagfiler.allow.chunks";
 
@@ -127,6 +130,8 @@ public abstract class AbstractTagFilerApplet extends JApplet {
 
     protected int chunkSize = 4194304;
 
+    protected int socketTimeout = 120*1000;
+
     protected int maxRetries = 10;
 
     // the mode for transfering the file
@@ -190,6 +195,12 @@ public abstract class AbstractTagFilerApplet extends JApplet {
         String socketBuffSize = this.getParameter(SOCKET_BUFFER_SIZE);
         if (socketBuffSize != null) {
         	socketBufferSize = Integer.parseInt(socketBuffSize);
+        }
+
+        // arguments
+        String socket_timeout = this.getParameter(SOCKET_TIMEOUT);
+        if (socket_timeout != null) {
+        	socketTimeout = Integer.parseInt(socket_timeout) * 1000;
         }
 
         // arguments
@@ -515,6 +526,15 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     }
     
     /**
+     * Get the socket timeout
+     * 
+     * @return the socket timeout
+     */
+    public int getSocketTimeout() {
+		return socketTimeout;
+	}
+
+	/**
      * Get the chunk size
      * 
      * @return the chunk size

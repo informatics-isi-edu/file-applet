@@ -58,7 +58,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.message.AbstractHttpMessage;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
@@ -100,9 +99,9 @@ public class JakartaClient  implements ClientURL {
      * @param connections
      *            the maximum number of HTTP connections
      */
-	public JakartaClient(int maxConnections, int socketBufferSize) {
+	public JakartaClient(int maxConnections, int socketBufferSize, int socketTimeout) {
 		try {
-			init(maxConnections, socketBufferSize);
+			init(maxConnections, socketBufferSize, socketTimeout);
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -133,8 +132,12 @@ public class JakartaClient  implements ClientURL {
      * 
      * @param connections
      *            the maximum number of HTTP connections
+     * @param socketBufferSize
+     *            the socket buffer size
+     * @param socketTimeout
+     *            the socket buffer timeout
      */
-	private void init(int maxConnections, int socketBufferSize) throws Throwable {
+	private void init(int maxConnections, int socketBufferSize, int socketTimeout) throws Throwable {
 		TrustManager easyTrustManager = new X509TrustManager() {
 
 		    public void checkClientTrusted(
@@ -163,6 +166,7 @@ public class JakartaClient  implements ClientURL {
 		BasicHttpParams params = new BasicHttpParams();
 		params.setParameter("http.protocol.handle-redirects", false);
 		params.setParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE, socketBufferSize);
+		params.setParameter(CoreConnectionPNames.SO_TIMEOUT, socketTimeout);
 		
 		// enable parallelism
 		ConnPerRouteBean connPerRoute = new ConnPerRouteBean(maxConnections);
