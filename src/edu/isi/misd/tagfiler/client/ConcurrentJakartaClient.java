@@ -1159,8 +1159,13 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                 }
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				System.out.println("IOException in download: " + e.getMessage());
-				e.printStackTrace();
+    			synchronized (this) {
+        			if (ioException == null || !ioException.equals(e.getMessage())) {
+            			System.err.println("IOException");
+            			e.printStackTrace();
+            			ioException = e.getMessage();
+        			}
+    			}
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block

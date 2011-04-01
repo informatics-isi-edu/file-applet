@@ -90,9 +90,9 @@ public class JakartaClient  implements ClientURL {
 	protected int retries;
 	
 	// exception messages got during the retries if the connection is broken
-	private String connectException;
-	private String clientProtocolException;
-	private String ioException;
+	protected String connectException;
+	protected String clientProtocolException;
+	protected String ioException;
 	/**
      * Constructor
      * 
@@ -586,9 +586,6 @@ public class JakartaClient  implements ClientURL {
     	request.setHeader("X-Machine-Generated", "true");
     	ClientURLResponse response = null;
     	int count = 0;
-    	connectException = null;
-    	clientProtocolException = null;
-    	ioException = null;
     	while (true) {
     		try {
     			response = new JakartaClientResponse(httpclient.execute(request));
