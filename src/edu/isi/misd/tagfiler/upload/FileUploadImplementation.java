@@ -401,7 +401,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             if (datasetVersion > 1) {
             	// delete the vcontains, as it was populated by coping files from the previous versions
-                datasetURLQuery = DatasetUtils.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL);
+                datasetURLQuery = DatasetUtils.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL, "vcontains");
                 fileUploadListener.notifyLogMessage("Deleting \"vcontains\" tag.");
                 fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery);
                 response = client.delete(datasetURLQuery, cookie);
@@ -432,7 +432,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             
             // Register the dataset files
             datasetURLQuery = DatasetUtils
-            	.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL);
+            	.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL, null);
             datasetBody = DatasetUtils.getDatasetURLUploadBody(
             		dataset, tagFilerServerURL, files, versionMap, baseDirectory);
             

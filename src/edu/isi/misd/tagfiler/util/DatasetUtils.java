@@ -183,11 +183,13 @@ public class DatasetUtils {
      *            the dataset version
      * @param tagFilerServer
      *            URL of the tagfiler server
+     * @param tag
+     *            the tag used as projection 
      * @return the REST URL to create a tagfiler URL upload for the dataset.
      * @thows FatalException if the URL cannot be constructed
      */
     public static final String getDatasetURLUploadQuery(String datasetName, int version,
-            String tagFilerServer)
+            String tagFilerServer, String tag)
             throws FatalException {
         if (datasetName == null || datasetName.length() == 0 ||
         		tagFilerServer == null || tagFilerServer.length() == 0) 
@@ -197,6 +199,11 @@ public class DatasetUtils {
         try {
             restURL.append(NAME).append(DatasetUtils.urlEncode(datasetName))
             		.append(version != 0 ? ";"+VERSION+version : "");
+            if (tag != null) {
+            	restURL.append("(")
+            	.append(DatasetUtils.urlEncode(tag))
+            	.append(")");
+            }
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
         }
