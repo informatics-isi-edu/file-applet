@@ -534,7 +534,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			int version = versionMap.get(file);
 			url.append("@").append(version);
 			if (browser) {
-				System.out.println("Sending HEAD request: url: "+url+", File: '"+file+"'");
+				System.out.println("Sending HEAD query: "+url+", File: '"+file+"'");
 			}
 			response = getFileLength(url.toString(), cookie);
 			if (response == null) {
@@ -814,6 +814,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				e2.printStackTrace();
 			}
 			
+			StringBuffer tagBaseUrl = new StringBuffer(url.toString().replaceFirst("/file/", "/tags/"));
 			FileItem fi = filesCompletion.get(file.getName());
 
 			// if this is the last chunk, Dataset Name and Checksum parameters will be added
@@ -880,10 +881,10 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			String params = null;
 			if (file.getLength() == file.getTotalLength() || file.isLastChunk()) {
 				try {
+					params = DatasetUtils.getUploadQueryCheckPoint(file.getTotalLength());
 					if (enableChecksum) {
 						checksumMap.put(DatasetUtils.getBaseName(file.getName(), baseDirectory), cksum);
-						params = DatasetUtils.getUploadQueryCheckPoint(file.getTotalLength());
-						params += DatasetUtils.getUploadQuerySuffix(cksum);
+						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.checksum"), cksum);
 					}
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
@@ -893,6 +894,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				try {
 					if (slotOffset != -1) {
 						params = DatasetUtils.getUploadQueryCheckPoint(slotOffset);
+						if (file.getOffset() == 0) {
+							params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.immutable.exempt"), null);
+						} 
 					} 
 				} catch (FatalException e1) {
 					// TODO Auto-generated catch block
@@ -907,7 +911,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// Execute the HTTP request
 			ClientURLResponse response = null;
 			if (browser) {
-				System.out.println("Sending upload: url: "+url+", File: "+file);
+				System.out.println("Sending UPLOAD query: "+url+", File: "+file);
 			}
 			if (file.getLength() == file.getTotalLength()) {
 				// small file; upload the entire file
@@ -939,7 +943,31 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					versionMap.put(file.getName(), version);
 				}
 				long size = fi.update(file.getLength());
-				if (size > 0) {
+				if (size == 0) {
+					// send a DELETE request for 'immutable exempt' tag
+					tagBaseUrl.append("(")
+						.append(DatasetUtils.urlEncode("immutable exempt"))
+						.append(")");
+					System.out.println("Sending DELETE query: "+tagBaseUrl);
+					response.release();
+					response = delete(tagBaseUrl.toString(), cookie);
+	                if (response == null) {
+	                	notifyFailure("Can not delete the \"immutable exempt\" tag of the dataset \"" + tagBaseUrl + "\".\\n\\n" +
+	                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
+	                	return;
+	                } else {
+                        updateSessionCookie();
+	                    status = response.getStatus();
+	                    response.release();
+	                    if (status != 200) {
+		                    String errMsg = "<p>Can not delete the \"vcontains\" tag.<p>Status ";
+		                    errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
+		                	notifyFailure("Can not delete the \"immutable exempt\" tag of the dataset \""  + tagBaseUrl + "\".\\n\\n" + errMsg);
+			                return;
+	                    }
+	                }
+				}
+				else if (size > 0) {
 					long position = file.getTotalLength() - size;
 					int version = DatasetUtils.getVersion(response.getLocationString());
 					if (size <= chunkSize) {
@@ -993,6 +1021,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -1035,7 +1066,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			// execute it up to re
 			ClientURLResponse response = null;
 			if (browser) {
-				System.out.println((count == 0 ? "Sending " : "Resending ") + "download: url: "+url+", File: "+file);
+				System.out.println((count == 0 ? "Sending " : "Resending ") + "DOWNLOAD query: "+url+", File: "+file);
 			}
 			if (file.getLength() == file.getTotalLength()) {
 				// small file; upload the entire file

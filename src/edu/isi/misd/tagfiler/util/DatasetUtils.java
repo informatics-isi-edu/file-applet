@@ -260,15 +260,22 @@ public class DatasetUtils {
      * @return URL suffix for uploading a file
      * @throws FatalException if the URL cannot be constructed
      */
-    public static final String getUploadQuerySuffix(String checksum) throws FatalException {
+    public static final String getUploadQuerySuffix(String tag, String value) throws FatalException {
 
         final StringBuffer restURL = new StringBuffer();
         
-        if (checksum != null) {
-            restURL.append("&")
-    		.append(TagFilerProperties.getProperty("tagfiler.tag.checksum"))
-    		.append("=")
-            .append(checksum);
+        if (tag != null) {
+            try {
+				restURL.append("&")
+				.append(DatasetUtils.urlEncode(tag));
+				if (value != null && value.trim().length() > 0) {
+					restURL.append("=")
+						.append(DatasetUtils.urlEncode(value));
+				}
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
         
         return restURL.toString();
@@ -287,7 +294,7 @@ public class DatasetUtils {
         
         try {
 			restURL.append("?")
-			.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.checkpointoffset")))
+			.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.checkpoint.offset")))
 			.append("=")
 			.append(offset);
 		} catch (UnsupportedEncodingException e) {
