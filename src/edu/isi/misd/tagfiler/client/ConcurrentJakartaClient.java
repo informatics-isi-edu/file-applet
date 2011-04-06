@@ -1313,7 +1313,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 		buffer.append(")");
 		String err = response.getErrorMessage();
 		if (err != null && err.trim().length() > 0) {
-			buffer.append(": " + err);
+			try {
+				buffer.append(": " + DatasetUtils.urlDecode(err));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		return buffer.toString();
