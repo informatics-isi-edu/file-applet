@@ -886,6 +886,9 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 						checksumMap.put(DatasetUtils.getBaseName(file.getName(), baseDirectory), cksum);
 						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.checksum"), cksum);
 					}
+					if (file.getLength() == file.getTotalLength()) {
+						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.immutable.exempt"), null);
+					} 
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
