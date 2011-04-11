@@ -342,15 +342,15 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             	    lock.wait();
                 }
             }
-            if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
-                ClientUtils.enableExpirationWarning(applet);
-            }
-            
             if (cancel) {
             	success = false;
             	return success;
             }
 
+            if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
+                ClientUtils.enableExpirationWarning(applet);
+            }
+            
             long t1 = System.currentTimeMillis();
             System.out.println("Upload time: " + (t1-t2) + " ms.");
             System.out.println("Upload rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-t2)) + " MB/s.");

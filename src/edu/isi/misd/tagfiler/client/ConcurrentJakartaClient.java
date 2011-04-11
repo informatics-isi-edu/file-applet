@@ -887,7 +887,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.checksum"), cksum);
 					}
 					if (file.getLength() == file.getTotalLength()) {
-						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.immutable.exempt"), null);
+						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.incomplete"), null);
 					} 
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
@@ -898,7 +898,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					if (slotOffset != -1) {
 						params = DatasetUtils.getUploadQueryCheckPoint(slotOffset);
 						if (file.getOffset() == 0) {
-							params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.immutable.exempt"), null);
+							params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.incomplete"), null);
 						} 
 					} 
 				} catch (FatalException e1) {
@@ -945,17 +945,17 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 					int version = DatasetUtils.getVersion(response.getLocationString());
 					versionMap.put(file.getName(), version);
 				}
-				long size = fi.update(file.getLength());
+				long size = fi.update(file.getLength(), true);
 				if (size == 0) {
-					// send a DELETE request for 'immutable exempt' tag
+					// send a DELETE request for 'incomplete' tag
 					tagBaseUrl.append("(")
-						.append(DatasetUtils.urlEncode("immutable exempt"))
+						.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.incomplete")))
 						.append(")");
 					System.out.println("Sending DELETE query: "+tagBaseUrl);
 					response.release();
 					response = delete(tagBaseUrl.toString(), cookie);
 	                if (response == null) {
-	                	notifyFailure("Can not delete the \"immutable exempt\" tag of the dataset \"" + tagBaseUrl + "\".\\n\\n" +
+	                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(tagBaseUrl.toString()) + "\"." +
 	                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
 	                	return;
 	                } else {
@@ -963,10 +963,12 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	                    status = response.getStatus();
 	                    response.release();
 	                    if (status != 200) {
-		                    String errMsg = "<p>Can not delete the \"vcontains\" tag.<p>Status ";
+		                    String errMsg = "<p>Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag.<p>Status ";
 		                    errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
-		                	notifyFailure("Can not delete the \"immutable exempt\" tag of the dataset \""  + tagBaseUrl + "\".\\n\\n" + errMsg);
+		                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \""  + DatasetUtils.urlDecode(tagBaseUrl.toString()) + "\"." + errMsg);
 			                return;
+	                    } else {
+	                    	notifyFileTransfered(fi.getName(), file.getLength());
 	                    }
 	                }
 				}
@@ -1650,7 +1652,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 			this.name = name;
 		}
 		
-	    /**
+	    public String getName() {
+			return name;
+		}
+
+		/**
 	     * Set the check point in case of resume
 	     * @param lastCheckPoint
 	     *            the expected slot
@@ -1761,10 +1767,26 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 	     *            the chunk size that was transferred
 		 * @return the remaining bytes to be transfered
 		 */
-		synchronized long update(long size) {
+		long update(long size) {
+			return update(size, false);
+		}
+		
+		/**
+		 * Mark the file transfer progress: file transfer completed or chunk transfer completed
+		 * 
+	     * @param size
+	     *            the chunk size that was transferred
+	     * @param delete
+	     *            if true, do not transfer the file as a DELETE 'incomplete' tag follows and it might failed
+	     *            So, prevent sending a success notification
+		 * @return the remaining bytes to be transfered
+		 */
+		synchronized long update(long size, boolean delete) {
 			bytes += size;
 			if (bytes == length) {
-				notifyFileTransfered(name, size);
+				if (!delete) {
+					notifyFileTransfered(name, size);
+				}
 				return 0;
 			} else {
 				notifyChunkTransfered(size);
