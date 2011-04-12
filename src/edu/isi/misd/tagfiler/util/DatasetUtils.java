@@ -159,7 +159,9 @@ public class DatasetUtils {
                     .append(DatasetUtils.urlEncode(IMAGE_SET))
                     .append("&")
                     .append(KEY)
-                    .append(key);
+                    .append(key)
+                    .append("&")
+                    .append(TagFilerProperties.getProperty("tagfiler.tag.incomplete"));
 
             Set<String> tagNames = customTagMap.getTagNames();
             for (String tagName : tagNames) {
@@ -184,7 +186,7 @@ public class DatasetUtils {
      * @param tagFilerServer
      *            URL of the tagfiler server
      * @param tag
-     *            the tag used as projection 
+     *            the tag used as projection
      * @return the REST URL to create a tagfiler URL upload for the dataset.
      * @thows FatalException if the URL cannot be constructed
      */

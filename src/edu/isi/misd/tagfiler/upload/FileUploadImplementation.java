@@ -461,6 +461,27 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             String errMsg = "<p>Can not register the dataset files.<p>Status ";
             errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
         	response.release();
+            if (success) {
+                datasetURLQuery = DatasetUtils
+            		.getDatasetURLUploadQuery(dataset, datasetVersion, tagFilerServerURL, TagFilerProperties.getProperty("tagfiler.tag.incomplete"));
+				System.out.println("Sending DELETE query: "+datasetURLQuery);
+				response = client.delete(datasetURLQuery, cookie);
+                if (response == null) {
+                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(datasetURLQuery) + "\"." +
+                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
+                	return false;
+                } else {
+                    updateSessionCookie();
+                    status = response.getStatus();
+                    response.release();
+                    if (status != 200) {
+	                    errMsg = "<p>Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag.<p>Status ";
+	                    errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
+	                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \""  + DatasetUtils.urlDecode(datasetURLQuery) + "\"." + errMsg, false);
+		                return false;
+                    } 
+                }
+            }
         	
         	if (success) {
             	success = checkDataSet();
