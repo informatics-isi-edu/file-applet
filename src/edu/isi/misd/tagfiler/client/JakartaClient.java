@@ -86,6 +86,12 @@ public class JakartaClient  implements ClientURL {
 	// error description header
 	private static final String error_description_header = "X-Error-Description";
 	
+	// error description begin message
+	private static final String error_description_begin = "<p>";
+	
+	// error description end message
+	private static final String error_description_end = "</p>";
+	
 	// number of retries if the connection is broken
 	protected int retries;
 	
@@ -783,6 +789,8 @@ public class JakartaClient  implements ClientURL {
          */
         public String getErrorMessage() {
         	String errormessage = "";
+        	
+        	// get the error message from the header
         	Header header = response.getFirstHeader(error_description_header);
         	if (header != null) {
         		try {
@@ -791,6 +799,20 @@ public class JakartaClient  implements ClientURL {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+        	} 
+        	
+        	// no error message in the header
+        	// try to get it from the response body
+        	if (errormessage.length() == 0) {
+        		String message = getEntityString();
+        		if (message != null) {
+            		int first = message.indexOf(error_description_begin);
+            		int last = message.indexOf(error_description_end);
+            		if (first != -1 && last != -1 && last > first) {
+            			first += error_description_begin.length();
+            			errormessage = message.substring(first, last).replace("&quot;", "\"");
+            		}
+        		}
         	}
     		return errormessage;
     	}

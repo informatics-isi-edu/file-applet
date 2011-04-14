@@ -48,11 +48,10 @@ import edu.isi.misd.tagfiler.util.TagFilerProperties;
             String message = TagFilerProperties
                     .getProperty(datasetFailure);
             if (code != -1) {
-                message += " (Status Code: " + code;
+                message += "<p>Status Code: " + code + "</p>";
                 if (errorMessage != null && errorMessage.trim().length() > 0) {
-                    message += " - " + errorMessage;
+                    message += "<p>" + errorMessage + "</p>";
                 }
-                message +=  ")";
             }
             try {
                 message = DatasetUtils.urlEncode(message);

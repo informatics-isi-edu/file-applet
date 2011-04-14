@@ -211,45 +211,47 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         if (target.equals(RESUME_TARGET)) {
         	// check what is completed or partial done
             JSONArray array = getFilesTagValues(applet, fileUploadListener);
-            for (int i=0; i<array.length(); i++) {
-            	try {
-    				JSONObject obj = array.getJSONObject(i);
-                    String vname = obj.getString(VNAME);
-                    String cksum = null;
-                    if (!obj.isNull(SHA256SUM)) {
-                        cksum = obj.getString(SHA256SUM);
-                    }
-    				for (String filename : tempFiles) {
-						long fileSize = (new File(filename)).length();
-    					String basename = DatasetUtils.getBaseName(filename, baseDirectory);
-    					if (obj.getString(NAME).equals(dataset+basename)) {
-    	                    int version = Integer.parseInt(vname.substring(vname.lastIndexOf("@") + 1));
-    						if (cksum != null) {
-        						checksumMap.put(basename, cksum);
-    						}
-    						if (!obj.isNull(CHECK_POINT_OFFSET)) {
-    							long offset = obj.getLong(CHECK_POINT_OFFSET);
-    							if (offset != fileSize) {
-    								// the file is partial uploaded
-    								filesList.add(new FileWrapper(filename, offset, version, fileSize));
-    							} else {
-    								// upload completed for this file
-    								// initialize the tables for upload validation
-            						fileNames.add(basename);
-            	                    bytesMap.put(basename, fileSize);
-        		                    datasetSize += fileSize;
-    							}
-    							// for inner loop performance
-    							tempFiles.remove(filename);
-    						}
-    						versionMap.put(filename, version);
-    						break;
-    					}
-    				}
-    			} catch (JSONException e) {
-    				// TODO Auto-generated catch block
-    				e.printStackTrace();
-    			}
+            if (array != null) {
+                for (int i=0; i<array.length(); i++) {
+                	try {
+        				JSONObject obj = array.getJSONObject(i);
+                        String vname = obj.getString(VNAME);
+                        String cksum = null;
+                        if (!obj.isNull(SHA256SUM)) {
+                            cksum = obj.getString(SHA256SUM);
+                        }
+        				for (String filename : tempFiles) {
+    						long fileSize = (new File(filename)).length();
+        					String basename = DatasetUtils.getBaseName(filename, baseDirectory);
+        					if (obj.getString(NAME).equals(dataset+basename)) {
+        	                    int version = Integer.parseInt(vname.substring(vname.lastIndexOf("@") + 1));
+        						if (cksum != null) {
+            						checksumMap.put(basename, cksum);
+        						}
+        						if (!obj.isNull(CHECK_POINT_OFFSET)) {
+        							long offset = obj.getLong(CHECK_POINT_OFFSET);
+        							if (offset != fileSize) {
+        								// the file is partial uploaded
+        								filesList.add(new FileWrapper(filename, offset, version, fileSize));
+        							} else {
+        								// upload completed for this file
+        								// initialize the tables for upload validation
+                						fileNames.add(basename);
+                	                    bytesMap.put(basename, fileSize);
+            		                    datasetSize += fileSize;
+        							}
+        							// for inner loop performance
+        							tempFiles.remove(filename);
+        						}
+        						versionMap.put(filename, version);
+        						break;
+        					}
+        				}
+        			} catch (JSONException e) {
+        				// TODO Auto-generated catch block
+        				e.printStackTrace();
+        			}
+                }
             }
         }
 
@@ -486,9 +488,10 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         	if (success) {
             	success = checkDataSet();
             	if (!success) {
-            		errMsg = "<p>Failure in checking the uploaded files.";
+            		errMsg = "Failure in checking the uploaded files.";
             		System.out.println(errMsg);
             		status = -1;
+            		return success;
             	}
         	}
             
