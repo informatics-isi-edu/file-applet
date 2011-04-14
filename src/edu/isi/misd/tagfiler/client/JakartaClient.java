@@ -810,7 +810,7 @@ public class JakartaClient  implements ClientURL {
             		int last = message.indexOf(error_description_end);
             		if (first != -1 && last != -1 && last > first) {
             			first += error_description_begin.length();
-            			errormessage = message.substring(first, last).replace("&quot;", "\"");
+            			errormessage = message.substring(first, last);
             		}
         		}
         	}
