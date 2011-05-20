@@ -1176,7 +1176,11 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
                 	}
                     fi.updateDownloadCheckPoint((int) (writeOffset/chunkSize), writeOffset+offset);
                     success = true;
-               }
+                }
+                
+                if (file.getTotalLength() == 0) {
+                	success = true;
+                }
                 
                 // release the open resources
                 bis.close();
