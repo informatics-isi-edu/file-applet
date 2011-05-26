@@ -384,7 +384,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             }
 
             // check result
-            if (200 != response.getStatus() && 303 != response.getStatus()) {
+            if (200 != response.getStatus() && 303 != response.getStatus() && 201 != response.getStatus()) {
                 fileUploadListener
                 .notifyLogMessage("Error creating the dataset URL entry (code="
                         + response.getStatus() + ")");
