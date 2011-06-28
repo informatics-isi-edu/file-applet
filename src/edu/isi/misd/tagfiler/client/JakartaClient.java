@@ -155,7 +155,7 @@ public class JakartaClient  implements ClientURL {
 		    public void checkServerTrusted(
 		            X509Certificate[] chain,
 		            String authType) throws CertificateException {
-		        // Oh, I am easy!
+		    	chain[0].checkValidity();
 		    }
 
 		    public X509Certificate[] getAcceptedIssuers() {
