@@ -887,7 +887,7 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.checksum"), cksum);
 					}
 					if (file.getLength() == file.getTotalLength()) {
-						params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.incomplete"), null);
+						//params += DatasetUtils.getUploadQuerySuffix(TagFilerProperties.getProperty("tagfiler.tag.incomplete"), null);
 					} 
 				} catch (FatalException e) {
 					// TODO Auto-generated catch block
@@ -947,30 +947,35 @@ public class ConcurrentJakartaClient extends JakartaClient implements Concurrent
 				}
 				long size = fi.update(file.getLength(), true);
 				if (size == 0) {
-					// send a DELETE request for 'incomplete' tag
-					tagBaseUrl.append("(")
-						.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.incomplete")))
-						.append(")");
-					System.out.println("Sending DELETE query: "+tagBaseUrl);
 					response.release();
-					response = delete(tagBaseUrl.toString(), cookie);
-	                if (response == null) {
-	                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(tagBaseUrl.toString()) + "\"." +
-	                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-	                	return;
-	                } else {
-                        updateSessionCookie();
-	                    status = response.getStatus();
-	                    response.release();
-	                    if (status != 200) {
-		                    String errMsg = "<p>Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag.<p>Status ";
-		                    errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
-		                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \""  + DatasetUtils.urlDecode(tagBaseUrl.toString()) + "\"." + errMsg);
-			                return;
-	                    } else {
-	                    	notifyFileTransfered(fi.getName(), file.getLength());
-	                    }
-	                }
+					response = null;
+					if (file.getLength() != file.getTotalLength()) {
+						// send a DELETE request for 'incomplete' tag
+						tagBaseUrl.append("(")
+							.append(DatasetUtils.urlEncode(TagFilerProperties.getProperty("tagfiler.tag.incomplete")))
+							.append(")");
+						System.out.println("Sending DELETE query: "+tagBaseUrl);
+						response = delete(tagBaseUrl.toString(), cookie);
+		                if (response == null) {
+		                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(tagBaseUrl.toString()) + "\"." +
+		                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
+		                	return;
+		                } else {
+	                        updateSessionCookie();
+		                    status = response.getStatus();
+		                    response.release();
+		                    if (status != 200) {
+			                    String errMsg = "<p>Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag.<p>Status ";
+			                    errMsg += (status == 200) ? "" : ConcurrentJakartaClient.getStatusMessage(response);
+			                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \""  + DatasetUtils.urlDecode(tagBaseUrl.toString()) + "\"." + errMsg);
+				                return;
+		                    } else {
+		                    	notifyFileTransfered(fi.getName(), file.getLength());
+		                    }
+		                }
+					} else {
+                    	notifyFileTransfered(fi.getName(), file.getLength());
+					}
 				}
 				else if (size > 0) {
 					long position = file.getTotalLength() - size;
