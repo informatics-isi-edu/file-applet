@@ -63,6 +63,9 @@ public abstract class AbstractFileTransferSession implements FileTransfer {
     // total amount of bytes to be uploaded/downloaded
     protected long datasetSize = 0;
 
+    // the number of sent requests for upload/download
+    protected long sentRequests = 0;
+
     // custom tags that are used
     protected CustomTagMap customTagMap;
 

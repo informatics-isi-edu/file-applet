@@ -354,8 +354,8 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             }
             
             long t1 = System.currentTimeMillis();
-            System.out.println("Upload time: " + (t1-t2) + " ms.");
-            System.out.println("Upload rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-t2)) + " MB/s.");
+            long uploadTime = t1 - t2;
+            double uploadRate = DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(uploadTime));
             // then create and tag the dataset url entry
             String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(dataset, datasetId, tagFilerServerURL,
@@ -516,6 +516,16 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             if (200 == status) {
                 fileUploadListener.notifyLogMessage("Dataset URL entry created successfully.");
                 success = true;
+                if (enableChecksum) {
+                	sentRequests /= 2;
+                }
+                double fileRate = DatasetUtils.roundTwoDecimals(((double) files.size())*1000/uploadTime);
+                double requestRate = DatasetUtils.roundTwoDecimals(((double) sentRequests)*1000/uploadTime);
+                System.out.println("Total files: " + files.size());
+                System.out.println("Total bytes: " + uploadSize);
+                System.out.println("Total upload requests: " + sentRequests);
+                System.out.println("Upload time: " + uploadTime + " ms");
+                System.out.println("Upload rate: [" + uploadRate + " MB/sec, " + fileRate + " files/sec, " + requestRate + " requests/sec, " + (uploadSize/files.size()) + " bytes/file]");
         		fileUploadListener.notifySuccess(dataset, datasetVersion);
             } else {
                 fileUploadListener
@@ -626,6 +636,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifyChunkTransfered(long size) {
 		// TODO Auto-generated method stub
+		sentRequests++;
 		fileUploadListener.notifyChunkTransfered(false, size);
 	}
 
@@ -686,6 +697,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifyFileTransfered(long size) {
 		// TODO Auto-generated method stub
+		sentRequests++;
 		fileUploadListener.notifyChunkTransfered(true, size);
 	}
 

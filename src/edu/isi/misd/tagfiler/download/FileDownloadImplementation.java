@@ -487,6 +487,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	 */
 	public void notifyChunkTransfered(long size) {
 		// TODO Auto-generated method stub
+		sentRequests++;
 		fileDownloadListener.notifyChunkTransfered(false, size);
 	}
 
@@ -548,10 +549,21 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 	public void notifyFileTransfered(long size) {
 		// TODO Auto-generated method stub
 		fileDownloadListener.notifyChunkTransfered(true, size);
+		sentRequests++;
 		if (fileDownloadListener.getFilesCompleted() == fileNames.size()) {
 	        long t1 = System.currentTimeMillis();
-	        System.out.println("Download time: " + (t1-start) + " ms.");
-	        System.out.println("Download rate: " + DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(t1-start)) + " MB/s.");
+            if (enableChecksum) {
+            	sentRequests /= 2;
+            }
+            long downloadTime = t1 - start;
+            double downloadRate = DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/downloadTime);
+            double fileRate = DatasetUtils.roundTwoDecimals(((double) fileNames.size())*1000/downloadTime);
+            double requestRate = DatasetUtils.roundTwoDecimals(((double) sentRequests)*1000/downloadTime);
+            System.out.println("Total files: " + fileNames.size());
+            System.out.println("Total bytes: " + datasetSize);
+            System.out.println("Total download requests: " + sentRequests);
+            System.out.println("Download time: " + downloadTime + " ms");
+            System.out.println("Download rate: [" + downloadRate + " MB/sec, " + fileRate + " files/sec, " + requestRate + " requests/sec, " + (datasetSize/fileNames.size()) + " bytes/file]");
             if (!((AbstractTagFilerApplet) applet).allowChunksTransfering()) {
                 ClientUtils.enableExpirationWarning(applet);
             }
