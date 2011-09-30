@@ -124,6 +124,7 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
 
         super.createUI();
 
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         fileChooser.setDialogTitle(TagFilerProperties
                 .getProperty("tagfiler.filedialog.SelectDirectoryToUpload"));
         
@@ -346,7 +347,15 @@ public class TagFilerUploadApplet extends AbstractTagFilerApplet {
         }
         if (JFileChooser.APPROVE_OPTION == result) {
             File selectedDirectory = fileChooser.getSelectedFile();
-            fileUpload.setBaseDirectory(selectedDirectory.getAbsolutePath());
+            if (selectedDirectory.isDirectory()) {
+                fileUpload.setBaseDirectory(selectedDirectory.getAbsolutePath());
+            } else {
+            	String parent = selectedDirectory.getParent();
+            	if (parent == null) {
+            		parent = "";
+            	}
+                fileUpload.setBaseDirectory(parent);
+            }
             filesList.clear();
             addFilesToList(new File[] { selectedDirectory });
             enableUpload();

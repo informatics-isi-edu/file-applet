@@ -290,7 +290,6 @@ public abstract class AbstractTagFilerApplet extends JApplet {
 
         // file chooser window
         fileChooser = new JFileChooser();
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setMultiSelectionEnabled(false);
 
         getContentPane().setBackground(Color.white);

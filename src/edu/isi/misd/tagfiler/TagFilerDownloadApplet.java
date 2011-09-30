@@ -139,6 +139,7 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
 
         super.createUI();
 
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setDialogTitle(TagFilerProperties
                 .getProperty("tagfiler.filedialog.SelectDirectoryToDownload"));
         
