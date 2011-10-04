@@ -253,7 +253,9 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         for (String tag : tags) {
             String value = "";
 			try {
-				value = tagsValues.getString(tag);
+				if (!tagsValues.isNull(tag)) {
+					value = tagsValues.getString(tag);
+				}
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -165,11 +165,13 @@ public class DatasetUtils {
 
             Set<String> tagNames = customTagMap.getTagNames();
             for (String tagName : tagNames) {
-                restURL.append("&")
-                        .append(DatasetUtils.urlEncode(tagName))
-                        .append("=")
-                        .append(DatasetUtils.urlEncode(customTagMap
-                                .getValue(tagName)));
+            	String value = customTagMap.getValue(tagName);
+            	if (value != null && value.length() > 0) {
+                	restURL.append("&")
+                    .append(DatasetUtils.urlEncode(tagName))
+                    .append("=")
+                    .append(DatasetUtils.urlEncode(value));
+            	}
             }
         } catch (UnsupportedEncodingException e) {
             throw new FatalException(e);
