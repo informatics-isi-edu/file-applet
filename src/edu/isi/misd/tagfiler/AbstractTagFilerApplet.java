@@ -481,6 +481,10 @@ public abstract class AbstractTagFilerApplet extends JApplet {
      */
     public void redirect(String urlStr) {
         if (urlStr == null) throw new IllegalArgumentException(urlStr);
+        String config = eval("getConfig()");
+        if (config.length() > 0) {
+        	urlStr += "&" + config;
+        }
         System.out.println("redirect: " + urlStr);
         try {
             final URL url = new URL(urlStr);
