@@ -357,9 +357,14 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             long uploadTime = t1 - t2;
             double uploadRate = DatasetUtils.roundTwoDecimals(((double) datasetSize)/1000/(uploadTime));
             // then create and tag the dataset url entry
+            String config = applet.eval("getConfig()");
+            String studyType = null;
+            if (config.length() > 0) {
+            	studyType = config.split("=")[1];
+            }
             String datasetURLQuery = DatasetUtils
                     .getDatasetURLUploadQuery(dataset, datasetId, tagFilerServerURL,
-                            customTagMap);
+                            customTagMap, studyType);
             String datasetBody = DatasetUtils.getDatasetURLUploadBody(
             		datasetId, tagFilerServerURL);
             

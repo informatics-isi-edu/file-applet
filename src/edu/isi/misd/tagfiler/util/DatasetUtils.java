@@ -71,6 +71,8 @@ public class DatasetUtils {
     
     private static final String IMAGE_SET = "Image Set";
     
+    private static final String STUDY_TYPE = "Study Type";
+    
     private static final String UPLOAD_BODY = "action=put&type=url&url=";
     
     private static final String LIMIT_NONE = "&limit=none";
@@ -145,7 +147,7 @@ public class DatasetUtils {
      * @thows FatalException if the URL cannot be constructed
      */
     public static final String getDatasetURLUploadQuery(String datasetName, String key,
-            String tagFilerServer, CustomTagMap customTagMap)
+            String tagFilerServer, CustomTagMap customTagMap, String studyType)
             throws FatalException {
 
         if (datasetName == null || datasetName.length() == 0 || customTagMap == null ||
@@ -163,6 +165,12 @@ public class DatasetUtils {
                     .append("&")
                     .append(TagFilerProperties.getProperty("tagfiler.tag.incomplete"));
 
+            if (studyType != null) {
+            	restURL.append("&")
+            	.append(DatasetUtils.urlEncode(STUDY_TYPE))
+            	.append("=")
+            	.append(DatasetUtils.urlEncode(studyType));
+            }
             Set<String> tagNames = customTagMap.getTagNames();
             for (String tagName : tagNames) {
             	String value = customTagMap.getValue(tagName);
