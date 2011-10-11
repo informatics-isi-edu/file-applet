@@ -182,14 +182,8 @@ public abstract class AbstractFileTransferSession implements FileTransfer {
         	response.release();
         	return null;
         }
-		String values = null;
-		try {
-			values = DatasetUtils.urlDecode(response.getEntityString());
-			System.out.println("Files Response: "+values);
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		String values = response.getEntityString();
+		System.out.println("Files Response: "+values);
 		JSONArray array = null;
 		try {
 			array = new JSONArray(values);

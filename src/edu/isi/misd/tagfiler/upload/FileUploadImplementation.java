@@ -496,6 +496,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             		errMsg = "Failure in checking the uploaded files.";
             		System.out.println(errMsg);
             		status = -1;
+            		notifyFailure(" Failure in checking the uploaded files.", false);
             		return success;
             	}
         	}
@@ -562,6 +563,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         	JSONArray tagsValues = getFilesTagValues(applet, fileUploadListener);
         	if (tagsValues != null) {
             	if (fileNames.size() != tagsValues.length()) {
+            		System.out.println("fileNames.size(): " + fileNames.size() + " is different from tagsValues.length(): " + tagsValues.length() +".");
             		return result;
             	}
         		for (int i=0; i < tagsValues.length(); i++) {
@@ -570,6 +572,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     // get the file name
                     String file = fileTags.getString(NAME).substring(dataset.length());
                     if (!fileNames.remove(file)) {
+                		System.out.println("file: \"" + file + "\" not found in fileNames.");
                     	return result;
                     }
 
@@ -577,29 +580,37 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                     long bytes = fileTags.getLong(BYTES);
                     Long size = bytesMap.remove(file);
                     if (size == null || size != bytes) {
+                    	System.out.println("file: \"" + file + "\" size is: " + size + ", bytes: " + bytes + ".");
                     	return result;
                     }
                     
                     if (enableChecksum) {
                     	if (fileTags.isNull(SHA256SUM)) {
+                    		System.out.println("file: \"" + file + "\" SHA256SUM is NULL.");
                     		return result;
                     	}
                         String checksum = fileTags.getString(SHA256SUM);
                         String cksum = checksumMap.remove(file);
                         if (!checksum.equals(cksum)) {
+                        	System.out.println("file: \"" + file + "\" checksum tag: " + checksum + ",  checksum file: " + cksum + ".");
                         	return result;
                         }
                     }
         		}
         		if (fileNames.size() != 0) {
+        			System.out.println("Files not uploaded:");
+        			for (String file : fileNames) {
+        				System.out.println("\t" + file);
+        			}
         			return result;
         		}
                 result = true;
+        	} else {
+        		System.out.println("JSONArray tagsValues is NULL");
         	}
         } catch (Exception e) {
             e.printStackTrace();
             fileUploadListener.notifyError(e);
-            result = false;
         }
 
         return result;
