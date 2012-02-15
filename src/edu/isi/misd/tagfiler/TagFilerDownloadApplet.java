@@ -32,6 +32,7 @@ import javax.swing.SwingUtilities;
 import edu.isi.misd.tagfiler.download.FileDownload;
 import edu.isi.misd.tagfiler.download.FileDownloadImplementation;
 import edu.isi.misd.tagfiler.download.FileDownloadListener;
+import edu.isi.misd.tagfiler.exception.FatalException;
 import edu.isi.misd.tagfiler.util.DatasetUtils;
 import edu.isi.misd.tagfiler.util.TagFilerProperties;
 
@@ -451,7 +452,13 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
         // make sure the Dataset Name exists
     	StringBuffer errorMessage = new StringBuffer();
     	StringBuffer status = new StringBuffer();
-        if (fileDownload.verifyValidControlNumber(defaultControlNumber, defaultVersion, status, errorMessage)) {
+    	boolean valid = false;
+    	try {
+    		valid = fileDownload.verifyValidControlNumber(defaultControlNumber, defaultVersion, status, errorMessage);
+    	} catch (FatalException e) {
+    		e.printStackTrace();
+    	}
+        if (valid) {
             final List<String> fileList = fileDownload
                     .getFiles(defaultControlNumber, defaultVersion);
 

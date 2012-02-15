@@ -19,6 +19,7 @@ package edu.isi.misd.tagfiler.download;
 import java.util.List;
 
 import edu.isi.misd.tagfiler.FileTransfer;
+import edu.isi.misd.tagfiler.exception.FatalException;
 
 /**
  * Interface for a file download process to the tag server.
@@ -69,6 +70,6 @@ public interface FileDownload extends FileTransfer {
      * @return true if a dataset with the particular Dataset Name exists,
      *         false otherwise
      */
-    public boolean verifyValidControlNumber(String controlNumber, int version, StringBuffer status, StringBuffer errorMessage);
+    public boolean verifyValidControlNumber(String controlNumber, int version, StringBuffer status, StringBuffer errorMessage) throws FatalException;
 
 }

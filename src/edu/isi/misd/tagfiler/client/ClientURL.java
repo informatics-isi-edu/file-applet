@@ -254,4 +254,10 @@ public interface ClientURL {
      *            the number of retries
      */
     public void setRetryCount(int count);
+    
+	/**
+     * Get the reason of the exception9s)
+     * 
+     */
+    public String getReason();
 }

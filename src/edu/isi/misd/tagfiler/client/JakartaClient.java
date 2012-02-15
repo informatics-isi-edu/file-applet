@@ -25,6 +25,7 @@ import java.net.URLDecoder;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
@@ -65,6 +66,7 @@ import org.apache.http.util.EntityUtils;
 
 import edu.isi.misd.tagfiler.AbstractTagFilerApplet;
 import edu.isi.misd.tagfiler.util.ClientUtils;
+import edu.isi.misd.tagfiler.util.DatasetUtils;
 
 /**
  * Class for HTTP requests
@@ -114,6 +116,24 @@ public class JakartaClient  implements ClientURL {
 		}
 	}
 	
+	/**
+     * Get the reason of the exception9s)
+     * 
+     */
+    public String getReason() {
+        HashSet <String> array = new HashSet <String>();
+        if (connectException != null) {
+        	array.add(connectException);
+        }
+        if (clientProtocolException != null) {
+        	array.add(clientProtocolException);
+        }
+        if (ioException != null) {
+        	array.add(ioException);
+        }
+        return DatasetUtils.join(array, ", ");
+	}
+
 	/**
      * Setter method
      * 
@@ -632,6 +652,10 @@ public class JakartaClient  implements ClientURL {
 			if (++count > retries) {
 				break;
 			} else {
+				// just in case
+				if (response != null) {
+					response.release();
+				}
 				// sleep before retrying
 				int delay = (int) Math.ceil((0.75 + Math.random() * 0.5) * Math.pow(10, count) * 0.00001);
 				System.out.println("Retry delay: " + delay + " ms.");

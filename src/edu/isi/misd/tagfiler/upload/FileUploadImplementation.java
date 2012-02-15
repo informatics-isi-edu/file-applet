@@ -19,6 +19,7 @@ package edu.isi.misd.tagfiler.upload;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -162,9 +163,13 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = client.getSequenceNumber(query, table, cookie);
 
         if (response == null) {
-			notifyFailure("Failure in uploading a study. Can not get a sequence number from table \"" + table + "\".\\n\\n" +
-					TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-        	return null;
+        	HashSet<String> errMsg = new HashSet<String>();
+        	errMsg.add(client.getReason());
+        	errMsg.add(TagFilerProperties.getProperty("tagfiler.message.upload.ControlNumberError"));
+        	errMsg.add("Failure in uploading a study. Can not get a sequence number from table \"" + table + "\".");
+        	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+        	fileUploadListener.notifyLogMessage(DatasetUtils.join(errMsg, "\n"));
+        	throw new FatalException(DatasetUtils.join(errMsg, "<br/>"));
         }
         synchronized (this) {
             cookie = client.updateSessionCookie(applet, cookie);
@@ -379,10 +384,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
             if (response == null) {
-            	notifyFailure("Can not create the URL entry for the dataset \"" + dataset + "\".\\n\\n" + 
-            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-            	success = false;
-            	return success;
+            	HashSet<String> errMsg = new HashSet<String>();
+            	errMsg.add(client.getReason());
+            	errMsg.add("Can not create the URL entry for the dataset \"" + dataset + "\".");
+            	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+            	fileUploadListener.notifyLogMessage(DatasetUtils.join(errMsg, "\n"));
+            	throw new FatalException(DatasetUtils.join(errMsg, "<br/>"));
             }
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);
@@ -413,10 +420,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery);
                 response = client.delete(datasetURLQuery, cookie);
                 if (response == null) {
-                	notifyFailure("Can not delete the \"vcontains\" tag of the dataset \"" + dataset + "\".\\n\\n" +
-                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-                	success = false;
-                	return success;
+                	HashSet<String> errMsg = new HashSet<String>();
+                	errMsg.add(client.getReason());
+                	errMsg.add("Can not delete the \"vcontains\" tag of the dataset \"" + dataset + "\".");
+                	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+                	fileUploadListener.notifyLogMessage(DatasetUtils.join(errMsg, "\n"));
+                	throw new FatalException(DatasetUtils.join(errMsg, "<br/>"));
                 } else {
                     synchronized (this) {
                         cookie = client.updateSessionCookie(applet, cookie);
@@ -452,10 +461,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             t2 = System.currentTimeMillis();
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             if (response == null) {
-            	notifyFailure("Can not register the files for the dataset \"" + dataset + "\".\\n\\n" + 
-            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-            	success = false;
-            	return success;
+            	HashSet<String> errMsg = new HashSet<String>();
+            	errMsg.add(client.getReason());
+            	errMsg.add("Can not register the files for the dataset \"" + dataset + "\".");
+            	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+            	fileUploadListener.notifyLogMessage(DatasetUtils.join(errMsg, "\n"));
+            	throw new FatalException(DatasetUtils.join(errMsg, "<br/>"));
             }
             
             synchronized (this) {
@@ -474,9 +485,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 				System.out.println("Sending DELETE query: "+datasetURLQuery);
 				response = client.delete(datasetURLQuery, cookie);
                 if (response == null) {
-                	notifyFailure(" Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(datasetURLQuery) + "\"." +
-                			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-                	return false;
+                	HashSet<String> errMsgs = new HashSet<String>();
+                	errMsgs.add(client.getReason());
+                	errMsgs.add("Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(datasetURLQuery) + "\".");
+                	errMsgs.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+                	fileUploadListener.notifyLogMessage(DatasetUtils.join(errMsgs, "\n"));
+                	throw new FatalException(DatasetUtils.join(errMsgs, "<br/>"));
                 } else {
                     updateSessionCookie();
                     status = response.getStatus();
@@ -506,10 +520,12 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Sending Upload Validate Action: \"" + datasetURLQuery + "\".");
             response = client.validateAction(datasetURLQuery, datasetId, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
             if (response == null) {
-            	notifyFailure("Can not validate upload for the dataset \"" + dataset + "\".\\n\\n" +
-            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-            	success = false;
-            	return success;
+            	HashSet<String> errMsgs = new HashSet<String>();
+            	errMsgs.add(client.getReason());
+            	errMsgs.add("Can not validate upload for the dataset \"" + dataset + "\".");
+            	errMsgs.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+            	fileUploadListener.notifyLogMessage(DatasetUtils.join(errMsgs, "\n"));
+            	throw new FatalException(DatasetUtils.join(errMsgs, "<br/>"));
             }
             synchronized (this) {
                 cookie = client.updateSessionCookie(applet, cookie);

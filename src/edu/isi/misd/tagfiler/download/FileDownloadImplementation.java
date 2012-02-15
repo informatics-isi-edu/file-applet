@@ -24,6 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
@@ -246,7 +247,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * 
      * @throws UnsupportedEncodingException
      */
-    private void setCustomTags() throws UnsupportedEncodingException {
+    private void setCustomTags() throws UnsupportedEncodingException, FatalException {
     	JSONObject tagsValues = getDatasetTagValues();
         Set<String> tags = customTagMap.getTagNames();
 	StringBuffer buffer = new StringBuffer();
@@ -342,7 +343,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * @return true if a dataset with the particular Dataset Name exists,
      *         false otherwise
      */
-    public boolean verifyValidControlNumber(String controlNumber, int version, StringBuffer code, StringBuffer errorMessage) {
+    public boolean verifyValidControlNumber(String controlNumber, int version, StringBuffer code, StringBuffer errorMessage)  throws FatalException {
         if (controlNumber == null || controlNumber.length() == 0) throw new IllegalArgumentException(controlNumber);
         boolean valid = false;
         ClientURLResponse response = null;
@@ -352,9 +353,12 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	response = client.verifyValidControlNumber(url, cookie);
             if (response == null) {
             	dataset = controlNumber;
-            	notifyFailure("Can not verify control number: \"" + controlNumber + "\" for the dataset \"" + dataset + "\".\\n\\n" +
-            			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-            	return valid;
+            	HashSet<String> errMsg = new HashSet<String>();
+            	errMsg.add(client.getReason());
+            	errMsg.add("Can not verify control number: \"" + controlNumber + "\" for the dataset \"" + dataset + "\".");
+            	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+            	fileDownloadListener.notifyLogMessage(DatasetUtils.join(errMsg, "\n"));
+            	throw new FatalException(DatasetUtils.join(errMsg, "<br/>"));
             }
         	int status = response.getStatus();
             if ((status == 200 || status == 303) && response.checkResponseHeaderPattern(
@@ -411,7 +415,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
      * Get the values for the custom tags of the dataset
      * @return the JSON Object with the tags values
      */
-    private JSONObject getDatasetTagValues() {
+    private JSONObject getDatasetTagValues() throws FatalException {
     	String tags = DatasetUtils.joinEncode(customTagMap.getTagNames(), ",");
         String query = null;
 		try {
@@ -424,9 +428,12 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		System.out.println("Dataset Query: "+query);
         ClientURLResponse response = client.getTagsValues(query, cookie);
         if (response == null) {
-        	notifyFailure("Can not get the tags for the dataset \"" + dataset + "\".\\n\\n" +
-        			TagFilerProperties.getProperty("tagfiler.connection.lost"), true);
-        	return null;
+        	HashSet<String> errMsg = new HashSet<String>();
+        	errMsg.add(client.getReason());
+        	errMsg.add("Can not get the tags for the dataset \"" + dataset + "\".");
+        	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
+        	fileDownloadListener.notifyLogMessage(DatasetUtils.join(errMsg, "\n"));
+        	throw new FatalException(DatasetUtils.join(errMsg, "<br/>"));
         }
 
 	cookie = client.updateSessionCookie(applet, cookie);
