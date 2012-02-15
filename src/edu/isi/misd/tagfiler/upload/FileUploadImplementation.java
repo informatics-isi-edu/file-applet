@@ -19,7 +19,6 @@ package edu.isi.misd.tagfiler.upload;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -163,7 +162,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
         ClientURLResponse response = client.getSequenceNumber(query, table, cookie);
 
         if (response == null) {
-        	HashSet<String> errMsg = new HashSet<String>();
+        	ArrayList<String> errMsg = new ArrayList<String>();
         	errMsg.add(client.getReason());
         	errMsg.add(TagFilerProperties.getProperty("tagfiler.message.upload.ControlNumberError"));
         	errMsg.add("Failure in uploading a study. Can not get a sequence number from table \"" + table + "\".");
@@ -384,7 +383,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             
             if (response == null) {
-            	HashSet<String> errMsg = new HashSet<String>();
+            	ArrayList<String> errMsg = new ArrayList<String>();
             	errMsg.add(client.getReason());
             	errMsg.add("Can not create the URL entry for the dataset \"" + dataset + "\".");
             	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
@@ -420,7 +419,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
                 fileUploadListener.notifyLogMessage("Query: " + datasetURLQuery);
                 response = client.delete(datasetURLQuery, cookie);
                 if (response == null) {
-                	HashSet<String> errMsg = new HashSet<String>();
+                	ArrayList<String> errMsg = new ArrayList<String>();
                 	errMsg.add(client.getReason());
                 	errMsg.add("Can not delete the \"vcontains\" tag of the dataset \"" + dataset + "\".");
                 	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
@@ -461,7 +460,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             t2 = System.currentTimeMillis();
             System.out.println("Elapsed time: " + (t2-t1) + " ms.");
             if (response == null) {
-            	HashSet<String> errMsg = new HashSet<String>();
+            	ArrayList<String> errMsg = new ArrayList<String>();
             	errMsg.add(client.getReason());
             	errMsg.add("Can not register the files for the dataset \"" + dataset + "\".");
             	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
@@ -485,7 +484,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 				System.out.println("Sending DELETE query: "+datasetURLQuery);
 				response = client.delete(datasetURLQuery, cookie);
                 if (response == null) {
-                	HashSet<String> errMsgs = new HashSet<String>();
+                	ArrayList<String> errMsgs = new ArrayList<String>();
                 	errMsgs.add(client.getReason());
                 	errMsgs.add("Can not delete the \""+TagFilerProperties.getProperty("tagfiler.tag.incomplete")+"\" tag of the dataset \"" + DatasetUtils.urlDecode(datasetURLQuery) + "\".");
                 	errMsgs.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
@@ -520,7 +519,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
             System.out.println("Sending Upload Validate Action: \"" + datasetURLQuery + "\".");
             response = client.validateAction(datasetURLQuery, datasetId, success ? "success" : "failure", datasetSize, files.size(), "upload", cookie);
             if (response == null) {
-            	HashSet<String> errMsgs = new HashSet<String>();
+            	ArrayList<String> errMsgs = new ArrayList<String>();
             	errMsgs.add(client.getReason());
             	errMsgs.add("Can not validate upload for the dataset \"" + dataset + "\".");
             	errMsgs.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));

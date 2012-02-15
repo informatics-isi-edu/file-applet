@@ -24,7 +24,6 @@ import java.io.ObjectInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
@@ -353,7 +352,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
         	response = client.verifyValidControlNumber(url, cookie);
             if (response == null) {
             	dataset = controlNumber;
-            	HashSet<String> errMsg = new HashSet<String>();
+            	ArrayList<String> errMsg = new ArrayList<String>();
             	errMsg.add(client.getReason());
             	errMsg.add("Can not verify control number: \"" + controlNumber + "\" for the dataset \"" + dataset + "\".");
             	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));
@@ -428,7 +427,7 @@ public class FileDownloadImplementation extends AbstractFileTransferSession
 		System.out.println("Dataset Query: "+query);
         ClientURLResponse response = client.getTagsValues(query, cookie);
         if (response == null) {
-        	HashSet<String> errMsg = new HashSet<String>();
+        	ArrayList<String> errMsg = new ArrayList<String>();
         	errMsg.add(client.getReason());
         	errMsg.add("Can not get the tags for the dataset \"" + dataset + "\".");
         	errMsg.add(TagFilerProperties.getProperty("tagfiler.connection.lost"));

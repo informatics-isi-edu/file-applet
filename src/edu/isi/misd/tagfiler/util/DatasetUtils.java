@@ -564,6 +564,35 @@ public class DatasetUtils {
      * Join the elements of the set
      * 
      * @param strings
+     *            the list of elements
+     * @param delimiter
+     *            the delimiter
+     * @return the join string of the set elements
+     */
+	public static String join(List<String> strings, String delimiter){
+		  if(strings==null || delimiter == null) {
+		    return "";
+		  }
+		 
+		  StringBuffer buf = new StringBuffer();
+		  boolean first = true;
+		  
+		  for (String value : strings) {
+			  if (first) {
+				  first = false;
+			  } else {
+			      buf.append(delimiter);
+			  }
+			  buf.append(value);
+		  }
+		 
+		  return buf.toString();
+		}
+
+    /**
+     * Join the elements of the set
+     * 
+     * @param strings
      *            the set of elements
      * @param delimiter
      *            the delimiter
