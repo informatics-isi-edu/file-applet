@@ -260,4 +260,12 @@ public interface ClientURL {
      * 
      */
     public String getReason();
+
+    /**
+     * Set the cookie name
+     * 
+     * @param name
+     *            the cookie name
+     */
+    public void setCookieName(String name);
 }

@@ -92,7 +92,7 @@ public class ClientUtils {
     public static void setCookieInBrowser(AbstractTagFilerApplet applet, String cookie) {
         // TODO: I think this will wipe out any other cookies for this domain.
         // Perhaps we should append/replace.
-	String jstext = "setCookie(\"webauthn\", \"" + cookie + "\")";
+	String jstext = "setCookie(\""+applet.getCookieName()+"\", \"" + cookie + "\")";
 	applet.getWindow().eval(jstext);
     }
 

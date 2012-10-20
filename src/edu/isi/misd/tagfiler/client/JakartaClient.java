@@ -97,6 +97,9 @@ public class JakartaClient  implements ClientURL {
 	// number of retries if the connection is broken
 	protected int retries;
 	
+	// the cookie name
+	protected String cookieName;
+	
 	// exception messages got during the retries if the connection is broken
 	protected String connectException;
 	protected String clientProtocolException;
@@ -396,7 +399,7 @@ public class JakartaClient  implements ClientURL {
      */
     public String updateSessionCookie(AbstractTagFilerApplet applet, String cookie) {
     	for (Cookie candidate : httpclient.getCookieStore().getCookies()) {
-        	if (candidate.getName().equals("webauthn")) {
+        	if (candidate.getName().equals(cookieName)) {
         		String value = getCookieValue(candidate);
         		if (browser) {
                     ClientUtils.setCookieInBrowser(applet, value);
@@ -416,7 +419,7 @@ public class JakartaClient  implements ClientURL {
      */
     public String getSessionCookie() {
     	for (Cookie candidate : httpclient.getCookieStore().getCookies()) {
-    		if (candidate.getName().equals("webauthn")) {
+    		if (candidate.getName().equals(cookieName)) {
         		return getCookieValue(candidate);
         	}
         }
@@ -682,7 +685,7 @@ public class JakartaClient  implements ClientURL {
     private void setCookie(String cookie, HttpUriRequest request) {
     	if (cookie != null) {
     		//httpclient.getCookieStore().clear();
-        	request.setHeader("Cookie", "webauthn="+cookie);
+        	request.setHeader("Cookie", cookieName+"="+cookie);
     	}
     }
     
@@ -704,7 +707,21 @@ public class JakartaClient  implements ClientURL {
 		return value;
     }
     
-    synchronized private void debug(HttpUriRequest request) {
+    /**
+	 * @return the cookieName
+	 */
+	public String getCookieName() {
+		return cookieName;
+	}
+
+	/**
+	 * @param cookieName the cookieName to set
+	 */
+	public void setCookieName(String cookieName) {
+		this.cookieName = cookieName;
+	}
+
+	synchronized private void debug(HttpUriRequest request) {
 		Header headers[] = request.getAllHeaders();
         for (int i=0; i<headers.length; i++) {
         	try {

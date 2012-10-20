@@ -90,6 +90,7 @@ public class FileUploadImplementation extends AbstractFileTransferSession
     client.setChunkSize(((AbstractTagFilerApplet) applet).getChunkSize());
     client.setRetryCount(((AbstractTagFilerApplet) applet).getMaxRetries());
     applet.setClient((ConcurrentJakartaClient) client);
+    client.setCookieName(applet.getCookieName());
     }
 
     /**
@@ -749,13 +750,15 @@ public class FileUploadImplementation extends AbstractFileTransferSession
 	public void updateSessionCookie() {
 		// TODO Auto-generated method stub
 		String newCookie = client.getSessionCookie();
-		String oldKey = cookie.split("\\|")[0];
-		String newKey = newCookie.split("\\|")[0];
-		long t = System.currentTimeMillis();
-		boolean mustUpdate = (t - lastCookieUpdate) >= cookieUpdatePeriod || !oldKey.equals(newKey);
-		if (mustUpdate) {
-			lastCookieUpdate = t;
-	        cookie = client.updateSessionCookie(applet, cookie);
+		if (newCookie != null) {
+			String oldKey = cookie.split("\\|")[0];
+			String newKey = newCookie.split("\\|")[0];
+			long t = System.currentTimeMillis();
+			boolean mustUpdate = (t - lastCookieUpdate) >= cookieUpdatePeriod || !oldKey.equals(newKey);
+			if (mustUpdate) {
+				lastCookieUpdate = t;
+		        cookie = client.updateSessionCookie(applet, cookie);
+			}
 		}
 	}
 

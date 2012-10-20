@@ -124,6 +124,8 @@ public abstract class AbstractTagFilerApplet extends JApplet {
     protected Timer filesTimer;
 
     
+    protected String cookieName = null;
+
     protected int maxConnections = 2;
 
     protected int socketBufferSize = 8192;
@@ -168,9 +170,15 @@ public abstract class AbstractTagFilerApplet extends JApplet {
             throw new IllegalArgumentException("NULL JavaScript window");
         }
 
+        // arguments
+        cookieName = this.getParameter(COOKIE_NAME_PROPERTY);
+        if (cookieName == null || cookieName.length() == 0) {
+            throw new IllegalArgumentException(cookieName
+                    + " must be" + " specified as a parameter to the applet.");
+        }
 
-        sessionCookie = ClientUtils.getCookieFromBrowser(this,
-                TagFilerProperties.getProperty(COOKIE_NAME_PROPERTY));
+
+        sessionCookie = ClientUtils.getCookieFromBrowser(this, cookieName);
 
         // arguments
         tagFilerServerURL = this.getParameter(TAGFILER_SERVER_URL_PARAM);
@@ -481,6 +489,8 @@ public abstract class AbstractTagFilerApplet extends JApplet {
      */
     public void redirect(String urlStr) {
         if (urlStr == null) throw new IllegalArgumentException(urlStr);
+        eval("redirectApplet", urlStr);
+        /*
         String config = eval("getConfig()");
         if (config.length() > 0) {
         	urlStr += "&" + config;
@@ -492,6 +502,7 @@ public abstract class AbstractTagFilerApplet extends JApplet {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+        */
     }
 
     /**
@@ -573,6 +584,13 @@ public abstract class AbstractTagFilerApplet extends JApplet {
 		return window;
 	}
 	
+	/**
+	 * @return the cookieName
+	 */
+	public String getCookieName() {
+		return cookieName;
+	}
+
 	public void setClient(ConcurrentJakartaClient client) {
 		this.client = client;
 	}
