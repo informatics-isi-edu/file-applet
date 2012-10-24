@@ -459,7 +459,10 @@ public class TagFilerDownloadApplet extends AbstractTagFilerApplet {
     		e.printStackTrace();
     	}
         if (valid) {
-            final List<String> fileList = fileDownload
+    		eval("setTransmissionNumber", defaultControlNumber);
+    		eval("setVersion", "" + defaultVersion);
+
+        	final List<String> fileList = fileDownload
                     .getFiles(defaultControlNumber, defaultVersion);
 
             if (fileList.size() > 0) {
